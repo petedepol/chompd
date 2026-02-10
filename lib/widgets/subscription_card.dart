@@ -38,10 +38,10 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
       try {
         return _parseHexColor(widget.subscription.brandColor!);
       } catch (_) {
-        return ChompdColors.mint; // Safe fallback
+        return ChompdColors.mint;
       }
     }
-    return ChompdColors.mint; // Visible on dark cards
+    return ChompdColors.mint;
   }
 
   static Color _parseHexColor(String hex) {
@@ -57,6 +57,14 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
     final isTrialUrgent = trialDays != null && trialDays <= 3;
     final color = _brandColor;
 
+    final borderColor = isTrialUrgent
+        ? ChompdColors.amber.withValues(alpha: 0.27)
+        : ChompdColors.border;
+
+    final accentColor = isTrialUrgent
+        ? ChompdColors.amber.withValues(alpha: 0.6)
+        : color.withValues(alpha: 0.5);
+
     Widget card = GestureDetector(
       onTap: () {
         HapticService.instance.light();
@@ -67,47 +75,22 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
       onTapCancel: () => setState(() => _pressed = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: _pressed ? ChompdColors.bgElevated : ChompdColors.bgCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border(
-            left: BorderSide(
-              color: isTrialUrgent
-                  ? ChompdColors.amber.withValues(alpha: 0.6)
-                  : color.withValues(alpha: 0.5),
-              width: 3,
-            ),
-            top: BorderSide(
-              color: isTrialUrgent
-                  ? ChompdColors.amber.withValues(alpha: 0.27)
-                  : ChompdColors.border,
-            ),
-            right: BorderSide(
-              color: isTrialUrgent
-                  ? ChompdColors.amber.withValues(alpha: 0.27)
-                  : ChompdColors.border,
-            ),
-            bottom: BorderSide(
-              color: isTrialUrgent
-                  ? ChompdColors.amber.withValues(alpha: 0.27)
-                  : ChompdColors.border,
-            ),
-          ),
+          border: Border.all(color: borderColor),
           boxShadow: [
-            // Subtle depth shadow
             BoxShadow(
               color: Colors.black.withValues(alpha: _pressed ? 0.0 : 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
-            // Brand colour glow (very subtle)
             BoxShadow(
               color: color.withValues(alpha: _pressed ? 0.0 : 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
-            // Extra glow for trial-urgent cards
             if (isTrialUrgent)
               BoxShadow(
                 color: ChompdColors.amberGlow,
@@ -116,116 +99,134 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
               ),
           ],
         ),
-        child: Row(
+        child: Stack(
           children: [
-            // ─── Service Icon ───
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    color.withValues(alpha: 0.87),
-                    color.withValues(alpha: 0.53),
-                  ],
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                subscription.iconName ?? subscription.name[0],
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
+            // Left accent bar — positioned over the left edge
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              width: 3,
+              child: ColoredBox(color: accentColor),
             ),
-
-            const SizedBox(width: 12),
-
-            // ─── Name + Renewal ───
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Card content with left padding accounting for accent
+            Padding(
+              padding: const EdgeInsets.fromLTRB(17, 12, 14, 12),
+              child: Row(
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          subscription.name,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: ChompdColors.text,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                  // ─── Service Icon ───
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.87),
+                          color.withValues(alpha: 0.53),
+                        ],
                       ),
-                      if (trialDays != null) ...[
-                        const SizedBox(width: 6),
-                        TrialBadge(daysRemaining: trialDays),
+                      boxShadow: [
+                        BoxShadow(
+                          color: color.withValues(alpha: 0.2),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
                       ],
-                      // Trap badge
-                      if (subscription.isTrap == true) ...[
-                        const SizedBox(width: 6),
-                        _TrapBadge(subscription: subscription),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      subscription.iconName ??
+                          (subscription.name.isNotEmpty
+                              ? subscription.name[0]
+                              : '?'),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  // ─── Name + Renewal ───
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                subscription.name,
+                                style: const TextStyle(
+                                  fontSize: 13.5,
+                                  fontWeight: FontWeight.w600,
+                                  color: ChompdColors.text,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (trialDays != null) ...[
+                              const SizedBox(width: 6),
+                              TrialBadge(daysRemaining: trialDays),
+                            ],
+                            if (subscription.isTrap == true) ...[
+                              const SizedBox(width: 6),
+                              _TrapBadge(subscription: subscription),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          'Renews in ${subscription.daysUntilRenewal} days',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: ChompdColors.textDim,
+                          ),
+                        ),
                       ],
+                    ),
+                  ),
+
+                  // ─── Price ───
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '${Subscription.currencySymbol(subscription.currency)}${subscription.price.toStringAsFixed(2)}',
+                        style: (subscription.isTrap == true)
+                            ? ChompdTypography.priceCard.copyWith(
+                                decoration: TextDecoration.lineThrough,
+                                color: ChompdColors.textDim,
+                                fontSize: 11,
+                              )
+                            : ChompdTypography.priceCard,
+                      ),
+                      if (subscription.isTrap == true &&
+                          subscription.realPrice != null)
+                        Text(
+                          '\u2192 ${Subscription.currencySymbol(subscription.currency)}${subscription.realPrice!.toStringAsFixed(2)}',
+                          style: GoogleFonts.spaceMono(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: subscription.trapSeverity == 'high'
+                                ? ChompdColors.red
+                                : ChompdColors.amber,
+                          ),
+                        )
+                      else
+                        Text(
+                          '/${subscription.cycle.shortLabel}',
+                          style: ChompdTypography.cycleLabel,
+                        ),
                     ],
                   ),
-                  const SizedBox(height: 1),
-                  Text(
-                    'Renews in ${subscription.daysUntilRenewal} days',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: ChompdColors.textDim,
-                    ),
-                  ),
                 ],
               ),
-            ),
-
-            // ─── Price ───
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${Subscription.currencySymbol(subscription.currency)}${subscription.price.toStringAsFixed(2)}',
-                  style: (subscription.isTrap == true)
-                      ? ChompdTypography.priceCard.copyWith(
-                          decoration: TextDecoration.lineThrough,
-                          color: ChompdColors.textDim,
-                          fontSize: 11,
-                        )
-                      : ChompdTypography.priceCard,
-                ),
-                if (subscription.isTrap == true &&
-                    subscription.realPrice != null)
-                  Text(
-                    '\u2192 ${Subscription.currencySymbol(subscription.currency)}${subscription.realPrice!.toStringAsFixed(2)}',
-                    style: GoogleFonts.spaceMono(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: subscription.trapSeverity == 'high'
-                          ? ChompdColors.red
-                          : ChompdColors.amber,
-                    ),
-                  )
-                else
-                  Text(
-                    '/${subscription.cycle.shortLabel}',
-                    style: ChompdTypography.cycleLabel,
-                  ),
-              ],
             ),
           ],
         ),
@@ -251,13 +252,11 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
         confirmDismiss: (direction) async {
           HapticService.instance.selection();
           if (direction == DismissDirection.endToStart) {
-            // Swipe left → delete
             widget.onDelete?.call();
           } else {
-            // Swipe right → edit
             widget.onEdit?.call();
           }
-          return false; // Don't actually dismiss — let the callbacks handle it
+          return false;
         },
         child: card,
       );
