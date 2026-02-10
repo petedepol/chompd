@@ -6,6 +6,7 @@ import '../models/nudge_candidate.dart';
 import '../providers/subscriptions_provider.dart';
 import '../screens/detail/detail_screen.dart';
 import '../services/haptic_service.dart';
+import 'mascot_image.dart';
 
 /// Dismissible inline card shown on the home screen when the
 /// nudge engine identifies a subscription worth reviewing.
@@ -35,7 +36,7 @@ class NudgeCard extends ConsumerWidget {
       direction: DismissDirection.horizontal,
       onDismissed: (_) => _dismiss(ref),
       child: Container(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: ChompdColors.bgCard,
@@ -52,22 +53,9 @@ class NudgeCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Piranha thinking placeholder (32px purple circle)
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: const BoxDecoration(
-                    color: ChompdColors.purple,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: const Text(
-                    '?',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                const MascotImage(
+                  asset: 'piranha_thinking.png',
+                  size: 32,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -130,16 +118,25 @@ class NudgeCard extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: () => _dismiss(ref),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 10),
-                    child: const Text(
-                      'I need this',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ChompdColors.textDim,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => _dismiss(ref),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: ChompdColors.border,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: const Text(
+                        'Keep it',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: ChompdColors.textDim,
+                        ),
                       ),
                     ),
                   ),

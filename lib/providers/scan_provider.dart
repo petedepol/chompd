@@ -188,6 +188,19 @@ class ScanNotifier extends StateNotifier<ScanState> {
     state = const ScanState();
   }
 
+  /// Append a system message to the current conversation.
+  void _addSystemMessage(String text) {
+    state = state.copyWith(
+      messages: [
+        ...state.messages,
+        ChatMessage(
+          type: ChatMessageType.system,
+          text: text,
+        ),
+      ],
+    );
+  }
+
   /// Start a scan with a screenshot image.
   ///
   /// For Sprint 3 prototype, [scenario] triggers mock data.
@@ -219,13 +232,23 @@ class ScanNotifier extends StateNotifier<ScanState> {
       if (useMockData) {
         result = await AiScanService.mock(scenario);
       } else {
-        assert(imageBytes != null && mimeType != null,
-            'imageBytes and mimeType required for real API calls');
+        if (imageBytes == null || mimeType == null) {
+          _addSystemMessage('Unable to process image. Please try again.');
+          state = state.copyWith(phase: ScanPhase.idle);
+          return;
+        }
+
         const apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
+        if (apiKey.isEmpty) {
+          _addSystemMessage('AI scanning is not configured. Please contact support.');
+          state = state.copyWith(phase: ScanPhase.idle);
+          return;
+        }
+
         final service = AiScanService(apiKey: apiKey);
         result = await service.analyseScreenshot(
-          imageBytes: imageBytes!,
-          mimeType: mimeType!,
+          imageBytes: imageBytes,
+          mimeType: mimeType,
         );
       }
 
@@ -562,13 +585,23 @@ class ScanNotifier extends StateNotifier<ScanState> {
       if (useMockData) {
         output = await AiScanService.mockWithTrap(scenario);
       } else {
-        assert(imageBytes != null && mimeType != null,
-            'imageBytes and mimeType required for real API calls');
+        if (imageBytes == null || mimeType == null) {
+          _addSystemMessage('Unable to process image. Please try again.');
+          state = state.copyWith(phase: ScanPhase.idle);
+          return;
+        }
+
         const apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
+        if (apiKey.isEmpty) {
+          _addSystemMessage('AI scanning is not configured. Please contact support.');
+          state = state.copyWith(phase: ScanPhase.idle);
+          return;
+        }
+
         final service = AiScanService(apiKey: apiKey);
         output = await service.analyseScreenshotWithTrap(
-          imageBytes: imageBytes!,
-          mimeType: mimeType!,
+          imageBytes: imageBytes,
+          mimeType: mimeType,
         );
       }
 

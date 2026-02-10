@@ -10,6 +10,9 @@ class NudgeEngine {
   /// sorted by priority (1 = highest).
   List<NudgeCandidate> evaluate(List<Subscription> subs) {
     final candidates = <NudgeCandidate>[];
+    final totalYearly = subs
+        .where((s) => s.isActive)
+        .fold(0.0, (sum, s) => sum + s.yearlyEquivalent);
 
     for (final sub in subs.where((s) => s.isActive)) {
       // Skip if user explicitly confirmed keeping within last 90 days
@@ -21,12 +24,16 @@ class NudgeEngine {
 
       // Rule 1: Expensive + old — over £10/mo, not reviewed in 90+ days
       if (sub.monthlyEquivalent >= 10 && _daysSinceLastReview(sub) > 90) {
+        final sym = Subscription.currencySymbol(sub.currency);
+        final pct = totalYearly > 0
+            ? (sub.yearlyEquivalent / totalYearly * 100).round()
+            : 0;
         candidates.add(NudgeCandidate(
           sub: sub,
           reason: NudgeReason.expensiveUnreviewed,
           message:
-              'You\'ve been paying \u00A3${sub.monthlyEquivalent.toStringAsFixed(2)}/mo '
-              'for ${_monthsActive(sub)} months. Still using it?',
+              'You\'ve been paying $sym${sub.monthlyEquivalent.toStringAsFixed(2)}/mo '
+              'for ${_monthsActive(sub)} months \u2014 $pct% of your yearly spend. Still using it?',
           priority: 2,
         ));
       }
@@ -36,13 +43,14 @@ class NudgeEngine {
           sub.trialExpiresAt != null &&
           DateTime.now().isAfter(sub.trialExpiresAt!) &&
           _daysSinceLastReview(sub) > 14) {
+        final sym = Subscription.currencySymbol(sub.currency);
         candidates.add(NudgeCandidate(
           sub: sub,
           reason: NudgeReason.trialConverted,
           message:
               'Your ${sub.name} trial converted '
               '${_daysAgo(sub.trialExpiresAt!)} days ago. '
-              'Worth keeping at \u00A3${sub.price.toStringAsFixed(2)}/${sub.cycle.shortLabel}?',
+              'Worth keeping at $sym${sub.price.toStringAsFixed(2)}/${sub.cycle.shortLabel}?',
           priority: 1,
         ));
       }
@@ -51,13 +59,17 @@ class NudgeEngine {
       if (sub.monthlyEquivalent >= 15 &&
           sub.daysUntilRenewal <= 7 &&
           sub.daysUntilRenewal > 0) {
+        final sym = Subscription.currencySymbol(sub.currency);
+        final pct = totalYearly > 0
+            ? (sub.yearlyEquivalent / totalYearly * 100).round()
+            : 0;
         candidates.add(NudgeCandidate(
           sub: sub,
           reason: NudgeReason.renewalApproaching,
           message:
               '${sub.name} renews in ${sub.daysUntilRenewal} days '
-              'at \u00A3${sub.price.toStringAsFixed(2)}. '
-              'That\'s \u00A3${sub.yearlyEquivalent.toStringAsFixed(2)}/year. Still worth it?',
+              'at $sym${sub.price.toStringAsFixed(2)} \u2014 '
+              '$pct% of your yearly spend. Still worth it?',
           priority: 2,
         ));
       }
@@ -71,13 +83,14 @@ class NudgeEngine {
       if (sameCategorySubs.length >= 2 && _daysSinceLastReview(sub) > 60) {
         final totalMonthly = [sub, ...sameCategorySubs]
             .fold(0.0, (sum, s) => sum + s.monthlyEquivalent);
+        final sym = Subscription.currencySymbol(sub.currency);
         candidates.add(NudgeCandidate(
           sub: sub,
           reason: NudgeReason.duplicateCategory,
           message:
               'You have ${sameCategorySubs.length + 1} ${sub.category} '
               'subscriptions totalling '
-              '\u00A3${totalMonthly.toStringAsFixed(2)}/mo. Need them all?',
+              '$sym${totalMonthly.toStringAsFixed(2)}/mo. Need them all?',
           priority: 3,
         ));
       }
@@ -86,13 +99,17 @@ class NudgeEngine {
       if (sub.cycle == BillingCycle.yearly &&
           sub.daysUntilRenewal <= 30 &&
           sub.daysUntilRenewal > 7) {
+        final sym = Subscription.currencySymbol(sub.currency);
+        final pct = totalYearly > 0
+            ? (sub.yearlyEquivalent / totalYearly * 100).round()
+            : 0;
         candidates.add(NudgeCandidate(
           sub: sub,
           reason: NudgeReason.annualRenewalSoon,
           message:
               '${sub.name} renews in ${sub.daysUntilRenewal} days '
-              'for \u00A3${sub.price.toStringAsFixed(2)}. '
-              'That\'s a big one \u2014 still using it?',
+              'for $sym${sub.price.toStringAsFixed(2)} \u2014 '
+              '$pct% of your total. Still using it?',
           priority: 1,
         ));
       }

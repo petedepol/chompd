@@ -7,6 +7,7 @@ import '../../models/cancel_guide.dart';
 import '../../models/subscription.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/haptic_service.dart';
+import '../../widgets/cancel_celebration.dart';
 import '../refund/refund_rescue_screen.dart';
 
 class CancelGuideScreen extends ConsumerStatefulWidget {
@@ -52,18 +53,156 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
 
   void _handleCancelSubscription() {
     HapticService.instance.light();
-    ref.read(subscriptionsProvider.notifier).cancel(widget.subscription.uid);
+    _showCancelReasonSheet();
+  }
+
+  void _showCancelReasonSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.fromLTRB(
+          20, 20, 20, MediaQuery.of(ctx).padding.bottom + 20,
+        ),
+        decoration: const BoxDecoration(
+          color: ChompdColors.bgElevated,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: ChompdColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            const Text(
+              'Why are you cancelling?',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: ChompdColors.text,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              'Quick tap \u2014 helps us improve Chompd.',
+              style: TextStyle(
+                fontSize: 12,
+                color: ChompdColors.textDim,
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            ..._cancelReasons.map((reason) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.of(ctx).pop();
+                      _completeCancellation(reason);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ChompdColors.bgCard,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: ChompdColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            reason.emoji,
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              reason.label,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: ChompdColors.text,
+                              ),
+                            ),
+                          ),
+                          const Icon(
+                            Icons.chevron_right_rounded,
+                            size: 18,
+                            color: ChompdColors.textDim,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                )),
+
+            // Skip option
+            Center(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  _completeCancellation(null);
+                },
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Skip',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: ChompdColors.textDim,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _completeCancellation(_CancelReason? reason) {
+    final sub = widget.subscription;
+
+    // Log the reason (for analytics later)
+    if (reason != null) {
+      debugPrint('[CancelGuide] ${sub.name} cancelled: ${reason.label}');
+    }
+
+    ref.read(subscriptionsProvider.notifier).cancel(sub.uid);
+
     if (mounted) {
-      Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${widget.subscription.name} marked as cancelled'),
-          backgroundColor: ChompdColors.mint,
-          duration: const Duration(seconds: 2),
+      Navigator.of(context).pop(); // Pop the cancel guide
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        barrierColor: Colors.transparent,
+        builder: (ctx) => CancelCelebration(
+          subscription: sub,
+          onDismiss: () => Navigator.of(ctx).pop(),
         ),
       );
     }
   }
+
+  static const _cancelReasons = [
+    _CancelReason('\uD83D\uDCB8', 'Too expensive'),
+    _CancelReason('\uD83D\uDE34', 'Don\u2019t use it enough'),
+    _CancelReason('\u23F8\uFE0F', 'Taking a break'),
+    _CancelReason('\uD83D\uDD04', 'Switching to something else'),
+    _CancelReason('\uD83E\uDD37', 'Other'),
+  ];
 
   void _handleOpenCancelPage() {
     HapticService.instance.light();
@@ -400,4 +539,10 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
       ),
     );
   }
+}
+
+class _CancelReason {
+  final String emoji;
+  final String label;
+  const _CancelReason(this.emoji, this.label);
 }

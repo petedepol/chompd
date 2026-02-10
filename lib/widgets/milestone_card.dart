@@ -84,8 +84,13 @@ class Milestone {
 /// Horizontal scrollable milestone progress cards.
 class MilestoneTrack extends StatelessWidget {
   final double totalSaved;
+  final String currencySymbol;
 
-  const MilestoneTrack({super.key, required this.totalSaved});
+  const MilestoneTrack({
+    super.key,
+    required this.totalSaved,
+    this.currencySymbol = '\u00A3',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -119,6 +124,7 @@ class MilestoneTrack extends StatelessWidget {
             isCurrent: isCurrent,
             fillProgress: fill,
             totalSaved: totalSaved,
+            currencySymbol: currencySymbol,
           );
         },
       ),
@@ -132,6 +138,7 @@ class _MilestoneChip extends StatelessWidget {
   final bool isCurrent;
   final double fillProgress;
   final double totalSaved;
+  final String currencySymbol;
 
   const _MilestoneChip({
     required this.milestone,
@@ -139,6 +146,7 @@ class _MilestoneChip extends StatelessWidget {
     required this.isCurrent,
     required this.fillProgress,
     required this.totalSaved,
+    this.currencySymbol = '\u00A3',
   });
 
   @override
@@ -179,7 +187,7 @@ class _MilestoneChip extends StatelessWidget {
               Text(milestone.emoji, style: const TextStyle(fontSize: 18)),
               const Spacer(),
               Text(
-                '\u00A3${milestone.amount.toInt()}',
+                '$currencySymbol${milestone.amount.toInt()}',
                 style: ChompdTypography.mono(
                   size: 11,
                   weight: FontWeight.w700,
@@ -219,7 +227,7 @@ class _MilestoneChip extends StatelessWidget {
           Text(
             isReached
                 ? '\u2713 Reached!'
-                : '\u00A3${remaining.toStringAsFixed(0)} to go',
+                : '$currencySymbol${remaining.toStringAsFixed(0)} to go',
             style: ChompdTypography.mono(
               size: 8,
               color: isReached ? ChompdColors.mint : ChompdColors.textDim,

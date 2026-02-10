@@ -9,10 +9,12 @@ import '../models/subscription.dart';
 /// with legend dots below. Matches the CatBar in the design prototype.
 class CategoryBar extends StatelessWidget {
   final List<Subscription> subscriptions;
+  final String currencySymbol;
 
   const CategoryBar({
     super.key,
     required this.subscriptions,
+    this.currencySymbol = '\u00A3',
   });
 
   @override
@@ -84,7 +86,7 @@ class CategoryBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 3),
                 Text(
-                  '\u00A3${entry.value.toStringAsFixed(0)}',
+                  '$currencySymbol${entry.value.toStringAsFixed(0)}',
                   style: ChompdTypography.mono(
                     size: 10,
                     color: ChompdColors.textMid,

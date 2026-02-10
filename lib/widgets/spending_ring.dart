@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/theme.dart';
+import '../models/subscription.dart';
 import '../providers/budget_provider.dart';
+import '../providers/currency_provider.dart';
 import '../providers/spend_view_provider.dart';
 import '../providers/subscriptions_provider.dart';
 import '../services/haptic_service.dart';
@@ -13,12 +15,15 @@ import '../services/haptic_service.dart';
 ///
 /// Shows total spend as a gradient arc with budget context.
 /// Tap to toggle between monthly and yearly views.
+///
+/// Size is responsive by default: 42% of screen width, clamped
+/// between 140–220px. Override with an explicit [size] if needed.
 class SpendingRing extends ConsumerStatefulWidget {
-  final double size;
+  final double? size;
 
   const SpendingRing({
     super.key,
-    this.size = 160.0,
+    this.size,
   });
 
   @override
@@ -65,25 +70,31 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
     final totalMonthly = ref.watch(monthlySpendProvider);
     final totalYearly = ref.watch(yearlySpendProvider);
     final budget = ref.watch(budgetProvider);
+    final currency = ref.watch(currencyProvider);
+    final symbol = Subscription.currencySymbol(currency);
 
     final isYearly = view == SpendView.yearly;
     final displayAmount = isYearly ? totalYearly : totalMonthly;
     final displayBudget = isYearly ? budget * 12 : budget;
     final overBudget = displayAmount > displayBudget;
+    final percentage = (displayAmount / displayBudget).clamp(0.0, 1.0);
+
+    // Responsive size: 42% of screen width, clamped 140–220px.
+    final screenWidth = MediaQuery.of(context).size.width;
+    final ringSize = widget.size ?? (screenWidth * 0.42).clamp(140.0, 220.0);
 
     return GestureDetector(
       onTap: _toggleView,
       child: SizedBox(
-        width: widget.size,
-        height: widget.size,
+        width: ringSize,
+        height: ringSize,
         child: AnimatedBuilder(
           animation: _progress,
           builder: (context, child) {
             return CustomPaint(
               painter: _RingPainter(
                 progress: _progress.value,
-                percentage:
-                    (displayAmount / displayBudget).clamp(0.0, 1.0),
+                percentage: percentage,
                 overBudget: overBudget,
               ),
               child: child,
@@ -114,7 +125,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
 
                     // Amount
                     Text(
-                      '\u00A3${animatedTotal.toStringAsFixed(2)}',
+                      '$symbol${animatedTotal.toStringAsFixed(2)}',
                       style: ChompdTypography.priceHero,
                     ),
                     const SizedBox(height: 2),
@@ -124,14 +135,16 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                       duration: const Duration(milliseconds: 300),
                       child: Text(
                         overBudget
-                            ? '\u00A3${(displayAmount - displayBudget).toStringAsFixed(0)} over budget'
-                            : 'of \u00A3${displayBudget.toStringAsFixed(0)} budget',
+                            ? '$symbol${(displayAmount - displayBudget).toStringAsFixed(0)} over budget'
+                            : 'of $symbol${displayBudget.toStringAsFixed(0)} budget',
                         key: ValueKey('budget_$isYearly'),
                         style: TextStyle(
                           fontSize: 10,
                           color: overBudget
                               ? ChompdColors.red
-                              : ChompdColors.textDim,
+                              : percentage > 0.9
+                                  ? ChompdColors.amber
+                                  : ChompdColors.textDim,
                         ),
                       ),
                     ),
@@ -191,10 +204,30 @@ class _RingPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
 
       if (overBudget) {
-        arcPaint.color = ChompdColors.red;
-      } else if (percentage > 0.8) {
-        arcPaint.color = ChompdColors.amber;
+        // Over budget: red with pulsing intensity
+        arcPaint.shader = const LinearGradient(
+          colors: [Color(0xFFEF4444), Color(0xFFF87171)],
+        ).createShader(rect);
+      } else if (percentage > 0.9) {
+        // 90-100%: amber bleeding into red — danger zone
+        final urgency = (percentage - 0.9) / 0.1; // 0.0 → 1.0
+        arcPaint.shader = LinearGradient(
+          colors: [
+            Color.lerp(ChompdColors.amber, ChompdColors.red, urgency)!,
+            Color.lerp(const Color(0xFFFCD34D), ChompdColors.red, urgency * 0.7)!,
+          ],
+        ).createShader(rect);
+      } else if (percentage > 0.7) {
+        // 70-90%: mint fading into amber — caution zone
+        final caution = (percentage - 0.7) / 0.2; // 0.0 → 1.0
+        arcPaint.shader = LinearGradient(
+          colors: [
+            Color.lerp(ChompdColors.mintDark, ChompdColors.amber, caution)!,
+            Color.lerp(ChompdColors.mint, const Color(0xFFFCD34D), caution)!,
+          ],
+        ).createShader(rect);
       } else {
+        // 0-70%: healthy mint gradient
         arcPaint.shader = const LinearGradient(
           colors: [ChompdColors.mintDark, ChompdColors.mint],
         ).createShader(rect);
@@ -209,11 +242,18 @@ class _RingPainter extends CustomPainter {
       );
 
       // Subtle glow effect
-      final glowColor = overBudget
-          ? ChompdColors.red
-          : percentage > 0.8
-              ? ChompdColors.amber
-              : ChompdColors.mint;
+      final Color glowColor;
+      if (overBudget) {
+        glowColor = ChompdColors.red;
+      } else if (percentage > 0.9) {
+        final urgency = (percentage - 0.9) / 0.1;
+        glowColor = Color.lerp(ChompdColors.amber, ChompdColors.red, urgency)!;
+      } else if (percentage > 0.7) {
+        final caution = (percentage - 0.7) / 0.2;
+        glowColor = Color.lerp(ChompdColors.mint, ChompdColors.amber, caution)!;
+      } else {
+        glowColor = ChompdColors.mint;
+      }
 
       final glowPaint = Paint()
         ..style = PaintingStyle.stroke

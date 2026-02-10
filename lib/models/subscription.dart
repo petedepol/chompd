@@ -237,6 +237,20 @@ class Subscription {
         return '\$';
       case 'EUR':
         return '\u20AC';
+      case 'JPY':
+        return '\u00A5';
+      case 'CAD':
+        return 'C\$';
+      case 'AUD':
+        return 'A\$';
+      case 'PLN':
+        return 'z\u0142';
+      case 'CHF':
+        return 'CHF';
+      case 'SEK':
+      case 'NOK':
+      case 'DKK':
+        return 'kr';
       default:
         return '$code ';
     }

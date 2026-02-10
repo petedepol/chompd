@@ -5,6 +5,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../../config/theme.dart';
 import '../../models/subscription.dart';
 import '../../providers/calendar_provider.dart';
+import '../../providers/currency_provider.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/date_helpers.dart';
 import '../detail/detail_screen.dart';
@@ -25,9 +26,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
 
+  String get _currencySymbol =>
+      Subscription.currencySymbol(ref.read(currencyProvider));
+
   @override
   Widget build(BuildContext context) {
     final calendar = ref.watch(renewalCalendarProvider);
+    ref.watch(currencyProvider); // Rebuild when currency changes
 
     return Scaffold(
       backgroundColor: ChompdColors.bg,
@@ -218,16 +223,43 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           // Tweak 2: Bold renewal dates, dim empty dates
           defaultBuilder: (context, day, focusedDay) {
             final key = DateTime(day.year, day.month, day.day);
-            final hasRenewal = calendar[key]?.isNotEmpty ?? false;
-            return Center(
-              child: Text(
-                '${day.day}',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: hasRenewal ? FontWeight.w600 : FontWeight.w400,
-                  color: hasRenewal
-                      ? ChompdColors.text
-                      : ChompdColors.textDim,
+            final daySubs = calendar[key] ?? [];
+            final hasRenewal = daySubs.isNotEmpty;
+            final daySpend =
+                daySubs.fold(0.0, (sum, s) => sum + s.price);
+
+            // High-cost day glow: ≥£50 red, ≥£30 amber
+            Color? glowColor;
+            if (daySpend >= 50) {
+              glowColor = ChompdColors.red;
+            } else if (daySpend >= 30) {
+              glowColor = ChompdColors.amber;
+            }
+
+            return Container(
+              decoration: glowColor != null
+                  ? BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: glowColor.withValues(alpha: 0.25),
+                          blurRadius: 12,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    )
+                  : null,
+              child: Center(
+                child: Text(
+                  '${day.day}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight:
+                        hasRenewal ? FontWeight.w600 : FontWeight.w400,
+                    color: glowColor ?? (hasRenewal
+                        ? ChompdColors.text
+                        : ChompdColors.textDim),
+                  ),
                 ),
               ),
             );
@@ -368,7 +400,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             const Spacer(),
             if (subs.isNotEmpty)
               Text(
-                '\u00A3${dayTotal.toStringAsFixed(2)}',
+                '$_currencySymbol${dayTotal.toStringAsFixed(2)}',
                 style: ChompdTypography.mono(
                   size: 16,
                   weight: FontWeight.w700,
@@ -523,6 +555,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       }
     }
 
+    // Most expensive single day
+    MapEntry<DateTime, List<Subscription>>? priciest;
+    double priciestSpend = 0;
+    for (final entry in monthEntries) {
+      final daySpend =
+          entry.value.fold(0.0, (sum, s) => sum + s.price);
+      if (daySpend > priciestSpend) {
+        priciestSpend = daySpend;
+        priciest = entry;
+      }
+    }
+
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -547,7 +591,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               const SizedBox(width: 10),
               _StatPill(
                 label: 'Total',
-                value: '\u00A3${totalSpend.toStringAsFixed(2)}',
+                value: '$_currencySymbol${totalSpend.toStringAsFixed(2)}',
                 color: ChompdColors.mint,
               ),
             ],
@@ -578,10 +622,56 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Expanded(
                     child: Text(
                       '${busiest.value.length} renewals on ${DateHelpers.shortDate(busiest.key)} '
-                      'totalling \u00A3${busiest.value.fold(0.0, (s, sub) => s + sub.price).toStringAsFixed(2)}',
+                      'totalling $_currencySymbol${busiest.value.fold(0.0, (s, sub) => s + sub.price).toStringAsFixed(2)}',
                       style: const TextStyle(
                         fontSize: 11,
                         color: ChompdColors.amber,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+
+          // Most expensive day insight
+          if (priciest != null && priciestSpend >= 30) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: priciestSpend >= 50
+                    ? ChompdColors.red.withValues(alpha: 0.08)
+                    : ChompdColors.amberGlow,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: priciestSpend >= 50
+                      ? ChompdColors.red.withValues(alpha: 0.2)
+                      : ChompdColors.amber.withValues(alpha: 0.2),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.local_fire_department_rounded,
+                    size: 14,
+                    color: priciestSpend >= 50
+                        ? ChompdColors.red
+                        : ChompdColors.amber,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Biggest day: ${DateHelpers.shortDate(priciest.key)} '
+                      '\u2014 $_currencySymbol${priciestSpend.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: priciestSpend >= 50
+                            ? ChompdColors.red
+                            : ChompdColors.amber,
                       ),
                     ),
                   ),

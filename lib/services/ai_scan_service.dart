@@ -1,6 +1,6 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/constants.dart';
@@ -8,9 +8,10 @@ import '../models/scan_result.dart';
 import '../models/trap_result.dart';
 import '../models/scan_output.dart';
 
-/// Toggle between mock data and real Claude Haiku API calls.
-/// Set to `false` to use the live API (requires API key via --dart-define).
-const useMockData = true;
+/// In debug builds, use mock data. In release, use real API.
+/// Override with --dart-define=USE_MOCK=true to force mock in release.
+const _forceMock = bool.fromEnvironment('USE_MOCK');
+final useMockData = _forceMock || kDebugMode;
 
 /// Claude Haiku integration for screenshot scanning.
 ///

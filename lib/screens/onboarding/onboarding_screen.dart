@@ -275,23 +275,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Icon container with amber tint
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: ChompdColors.bgElevated,
-                          border: Border.all(
-                            color: ChompdColors.amber,
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.notifications_active,
-                          color: ChompdColors.amber,
-                          size: 40,
-                        ),
+                      // Piranha mascot — alert
+                      const MascotImage(
+                        asset: 'piranha_alert.png',
+                        size: 120,
+                        fadeIn: true,
                       ),
                       const SizedBox(height: 32),
                       // Title
@@ -381,26 +369,11 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Icon container with mint gradient
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              ChompdColors.mint,
-                              ChompdColors.mintDark,
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.rocket_launch,
-                          color: ChompdColors.bg,
-                          size: 40,
-                        ),
+                      // Piranha mascot — celebrate
+                      const MascotImage(
+                        asset: 'piranha_celebrate.png',
+                        size: 120,
+                        fadeIn: true,
                       ),
                       const SizedBox(height: 32),
                       // Title

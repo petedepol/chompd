@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/constants.dart';
 import '../../config/theme.dart';
+import '../../models/subscription.dart';
 import '../../providers/budget_provider.dart';
+import '../../providers/currency_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/subscriptions_provider.dart';
@@ -264,7 +266,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'SUBSNAP PRO',
+                          'CHOMPD PRO',
                           style: ChompdTypography.sectionLabel.copyWith(
                             color: ChompdColors.mint,
                           ),
@@ -352,6 +354,29 @@ class SettingsScreen extends ConsumerWidget {
 
                     const SizedBox(height: 28),
                   ],
+
+                  // ─── Currency ───
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.currency_exchange_outlined,
+                        size: 16,
+                        color: ChompdColors.mint,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'CURRENCY',
+                        style: ChompdTypography.sectionLabel.copyWith(
+                          color: ChompdColors.mint,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  _CurrencySetting(ref: ref),
+
+                  const SizedBox(height: 28),
 
                   // ─── Monthly Budget ───
                   Row(
@@ -1131,6 +1156,8 @@ class _BudgetSetting extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final budget = ref.watch(budgetProvider);
+    final currency = ref.watch(currencyProvider);
+    final symbol = Subscription.currencySymbol(currency);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1189,7 +1216,7 @@ class _BudgetSetting extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    '\u00A3${budget.toStringAsFixed(0)}',
+                    '$symbol${budget.toStringAsFixed(0)}',
                     style: ChompdTypography.mono(
                       size: 14,
                       weight: FontWeight.w700,
@@ -1229,7 +1256,7 @@ class _BudgetSetting extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    '\u00A3${preset.toStringAsFixed(0)}',
+                    '$symbol${preset.toStringAsFixed(0)}',
                     style: ChompdTypography.mono(
                       size: 12,
                       weight: FontWeight.w700,
@@ -1294,7 +1321,7 @@ class _BudgetSetting extends StatelessWidget {
                   color: ChompdColors.text,
                 ),
                 decoration: InputDecoration(
-                  prefixText: '\u00A3 ',
+                  prefixText: '${Subscription.currencySymbol(ref.read(currencyProvider))} ',
                   prefixStyle: ChompdTypography.mono(
                     size: 20,
                     weight: FontWeight.w700,
@@ -1362,6 +1389,81 @@ class _BudgetSetting extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Currency selector — horizontal wrapping chips.
+class _CurrencySetting extends StatelessWidget {
+  final WidgetRef ref;
+  const _CurrencySetting({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    final current = ref.watch(currencyProvider);
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ChompdColors.bgCard,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: ChompdColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Display currency',
+            style: TextStyle(
+              fontSize: 12,
+              color: ChompdColors.textDim,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: supportedCurrencies.map((c) {
+              final code = c['code'] as String;
+              final symbol = c['symbol'] as String;
+              final isSelected = current == code;
+              return GestureDetector(
+                onTap: () {
+                  ref.read(currencyProvider.notifier).setCurrency(code);
+                  HapticService.instance.selection();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? ChompdColors.mint.withValues(alpha: 0.12)
+                        : ChompdColors.bgElevated,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: isSelected
+                          ? ChompdColors.mint.withValues(alpha: 0.5)
+                          : ChompdColors.border,
+                    ),
+                  ),
+                  child: Text(
+                    '$symbol $code',
+                    style: ChompdTypography.mono(
+                      size: 12,
+                      weight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                      color: isSelected
+                          ? ChompdColors.mint
+                          : ChompdColors.textMid,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

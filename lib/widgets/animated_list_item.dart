@@ -51,8 +51,9 @@ class _AnimatedListItemState extends State<AnimatedListItem>
       CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
 
-    // Stagger based on index
-    Future.delayed(widget.staggerDelay * widget.index, () {
+    // Stagger based on index, but cap at 10 items (500ms max delay)
+    final delay = widget.staggerDelay * (widget.index.clamp(0, 10));
+    Future.delayed(delay, () {
       if (mounted) _controller.forward();
     });
   }

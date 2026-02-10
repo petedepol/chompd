@@ -88,7 +88,7 @@
 - **Splash screen** — `lib/screens/splash/splash_screen.dart` (PARKED — user polishing with piranha mascot assets)
 - **Onboarding flow** — `lib/screens/onboarding/onboarding_screen.dart` (PARKED — user polishing with piranha mascot assets)
 - **App entry flow** — `lib/app.dart` with splash → onboarding → home transitions, onboarding "seen" flag persisted via SharedPreferences
-- **D3 Liquid Glass bottom nav bar** — `lib/widgets/bottom_nav_bar.dart` (PARKED — user polishing)
+- **Floating Scan FAB** — standalone 64px mint gradient FAB in home_screen.dart (replaced bottom nav bar)
 - **Deferred to device testing:** iOS/Android home screen widgets, Siri Shortcuts
 
 ### Sprint 8 — Subscription Defence Suite (Tier 0) ✅
@@ -182,10 +182,11 @@
   - Over-budget indicator below SpendingRing (piranha_sad.png)
   - Detail screen trap info (piranha_alert.png)
   - Trap skipped celebration view (piranha_celebrate_anim.gif)
-- **Glassmorphic 3D PNG nav icons** — `assets/nav_icons/` (nav_subs.png, nav_scan.png, nav_saved.png)
-  - Replaced SVG icons with Image.asset() PNGs
-  - Active: full opacity, Inactive: 0.4 opacity
-  - Removed flutter_svg dependency entirely
+- **Floating Scan FAB** — replaced full bottom nav bar with standalone 64px floating action button
+  - Mint gradient with breathing glow animation (3.5s cycle) + specular sweep (4s)
+  - Tap scale feedback (150ms, 0.92x) + haptic
+  - Positioned bottom-right, camera icon, triggers scan/add flow
+  - Removed bottom_nav_bar.dart, nav_icons assets, and flutter_svg dependency
 - **Trap Scanner gaps closed**
   - Real Claude API integration with `useMockData` toggle in scan_provider.dart
   - DodgedTrap persistence via SharedPreferences
@@ -271,8 +272,7 @@ lib/
     ├── toast_overlay.dart            (feedback messages)
     ├── scan_shimmer.dart             (scan loading animation)
     ├── nudge_card.dart               (inline "should I keep this?" card)
-    ├── mascot_image.dart             (reusable piranha mascot widget)
-    └── bottom_nav_bar.dart           (glassmorphic nav with 3D PNG icons)
+    └── mascot_image.dart             (reusable piranha mascot widget)
 ```
 
 ---

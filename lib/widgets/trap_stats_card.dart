@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../config/theme.dart';
+import '../models/subscription.dart';
+import '../providers/currency_provider.dart';
 import '../providers/trap_stats_provider.dart';
 import 'mascot_image.dart';
 
@@ -11,9 +13,11 @@ class TrapStatsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final trapStats = ref.watch(trapStatsProvider);
+    final currency = ref.watch(currencyProvider);
+    final symbol = Subscription.currencySymbol(currency);
 
     if (!trapStats.hasStats) {
-      return const SizedBox.shrink();
+      return const SizedBox.shrink(); // No padding when empty
     }
 
     final breakdownItems = <String>[];
@@ -29,7 +33,9 @@ class TrapStatsCard extends ConsumerWidget {
 
     final breakdownText = breakdownItems.join(' · ');
 
-    return Container(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: Container(
       decoration: BoxDecoration(
         color: ChompdColors.bgCard,
         borderRadius: BorderRadius.circular(16),
@@ -61,7 +67,7 @@ class TrapStatsCard extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '£${trapStats.totalSaved.toStringAsFixed(2)}',
+            '$symbol${trapStats.totalSaved.toStringAsFixed(2)}',
             style: GoogleFonts.spaceMono(
               color: ChompdColors.mint,
               fontSize: 28,
@@ -85,6 +91,7 @@ class TrapStatsCard extends ConsumerWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

@@ -9,6 +9,11 @@ class CurrencyUtils {
     'JPY': '\u00A5',
     'CAD': 'C\$',
     'AUD': 'A\$',
+    'PLN': 'z\u0142',
+    'CHF': 'CHF',
+    'SEK': 'kr',
+    'NOK': 'kr',
+    'DKK': 'kr',
   };
 
   /// Get currency symbol for an ISO 4217 code.

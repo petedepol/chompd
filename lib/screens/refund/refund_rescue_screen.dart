@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../config/theme.dart';
 import '../../data/refund_paths_data.dart';
@@ -53,11 +55,11 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
     });
   }
 
-  void _copyEmail() {
+  void _copyEmail() async {
     HapticService.instance.light();
     final email = buildDisputeEmail(sub);
-    debugPrint('Dispute email:\n$email');
-    // TODO: Wire up Clipboard.setData when flutter/services imported
+    await Clipboard.setData(ClipboardData(text: email));
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Text('Email copied to clipboard'),
@@ -157,7 +159,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               '${sub.name} charged you '
-              '\u00A3${sub.price.toStringAsFixed(2)}',
+              '${Subscription.currencySymbol(sub.currency)}${sub.price.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -347,10 +349,12 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     HapticService.instance.light();
-                    debugPrint('Open refund page: ${template.url}');
-                    // TODO: Wire url_launcher
+                    final url = Uri.parse(template.url!);
+                    if (await canLaunchUrl(url)) {
+                      await launchUrl(url, mode: LaunchMode.externalApplication);
+                    }
                   },
                   child: Container(
                     width: double.infinity,

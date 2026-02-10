@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'config/theme.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/splash/splash_screen.dart';
+import 'utils/share_handler.dart';
 
 const _kOnboardingSeenKey = 'onboarding_seen';
+
+/// Global navigator key — used by ShareHandler to push routes
+/// when images arrive via the OS Share Sheet.
+final navigatorKey = GlobalKey<NavigatorState>();
 
 /// Root application widget.
 class ChompdApp extends StatelessWidget {
@@ -16,6 +22,7 @@ class ChompdApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Chompd',
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
       theme: ChompdTheme.dark,
       home: const _AppEntry(),
@@ -43,12 +50,31 @@ class _AppEntryState extends State<_AppEntry> {
   void initState() {
     super.initState();
     _checkOnboardingStatus();
+    _initShareHandler();
+  }
+
+  @override
+  void dispose() {
+    ShareHandler.instance.dispose();
+    super.dispose();
   }
 
   Future<void> _checkOnboardingStatus() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _hasSeenOnboarding = prefs.getBool(_kOnboardingSeenKey) ?? false;
+    });
+  }
+
+  void _initShareHandler() {
+    // Defer to next frame so the widget tree is built and
+    // ProviderScope is available via context.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final container = ProviderScope.containerOf(context);
+      ShareHandler.instance.init(
+        navigatorKey: navigatorKey,
+        container: container,
+      );
     });
   }
 

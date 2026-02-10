@@ -202,39 +202,70 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                   child: Column(
                     children: const [
                       _FeatureRow(
-                        icon: Icons.all_inclusive_rounded,
-                        text: 'Unlimited subscriptions',
+                        icon: Icons.savings_outlined,
+                        text: 'Save \u00A3100\u2013\u00A3500/year on hidden waste',
+                      ),
+                      SizedBox(height: 14),
+                      _FeatureRow(
+                        icon: Icons.timer_off_outlined,
+                        text: 'Never miss a trial expiry again',
                       ),
                       SizedBox(height: 14),
                       _FeatureRow(
                         icon: Icons.auto_awesome,
-                        text: 'Unlimited AI scans',
+                        text: 'Unlimited AI trap scanning',
+                      ),
+                      SizedBox(height: 14),
+                      _FeatureRow(
+                        icon: Icons.all_inclusive_rounded,
+                        text: 'Track every subscription you have',
                       ),
                       SizedBox(height: 14),
                       _FeatureRow(
                         icon: Icons.notifications_active_outlined,
-                        text: '7d, 3d, 1d advance reminders',
-                      ),
-                      SizedBox(height: 14),
-                      _FeatureRow(
-                        icon: Icons.timer_outlined,
-                        text: 'Trial countdown alerts',
-                      ),
-                      SizedBox(height: 14),
-                      _FeatureRow(
-                        icon: Icons.savings_outlined,
-                        text: 'Money saved gamification',
+                        text: 'Early warnings: 7d, 3d, 1d before charges',
                       ),
                       SizedBox(height: 14),
                       _FeatureRow(
                         icon: Icons.share_outlined,
-                        text: 'Share savings card',
+                        text: 'Shareable savings cards',
                       ),
                     ],
                   ),
                 ),
 
                 const Spacer(flex: 2),
+
+                // ─── Savings Context ───
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 24,
+                    right: 24,
+                    bottom: 16,
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ChompdColors.mint.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: ChompdColors.mint.withValues(alpha: 0.12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Pays for itself after cancelling just one forgotten subscription.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                        color: ChompdColors.mint,
+                      ),
+                    ),
+                  ),
+                ),
 
                 // ─── Price Card ───
                 Padding(

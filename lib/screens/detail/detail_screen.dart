@@ -162,13 +162,41 @@ class DetailScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    // Annual cost (only shown when not already yearly)
+                    // Annual cost reframe (confronting pill)
                     if (sub.cycle != BillingCycle.yearly) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: ChompdColors.bgElevated,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: sub.yearlyEquivalent > 100
+                                ? ChompdColors.amber.withValues(alpha: 0.2)
+                                : ChompdColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          'That\u2019s ${Subscription.currencySymbol(sub.currency)}${sub.yearlyEquivalent.toStringAsFixed(0)} per year',
+                          style: ChompdTypography.mono(
+                            size: 12,
+                            weight: FontWeight.w600,
+                            color: sub.yearlyEquivalent > 100
+                                ? ChompdColors.amber
+                                : ChompdColors.textMid,
+                          ),
+                        ),
+                      ),
+                      // Lifetime projection
                       const SizedBox(height: 4),
                       Text(
-                        '\u00A3${sub.yearlyEquivalent.toStringAsFixed(2)}/yr',
-                        style: ChompdTypography.mono(
-                          size: 12,
+                        '${Subscription.currencySymbol(sub.currency)}${(sub.yearlyEquivalent * 3).toStringAsFixed(0)} over 3 years',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontStyle: FontStyle.italic,
                           color: ChompdColors.textDim,
                         ),
                       ),
@@ -238,7 +266,13 @@ class DetailScreen extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          '$daysLeft days',
+                          daysLeft == 0
+                              ? '${Subscription.currencySymbol(sub.currency)}${sub.price.toStringAsFixed(2)} charges today'
+                              : daysLeft == 1
+                                  ? '${Subscription.currencySymbol(sub.currency)}${sub.price.toStringAsFixed(2)} charges tomorrow'
+                                  : daysLeft <= 3
+                                      ? '$daysLeft days \u2014 ${Subscription.currencySymbol(sub.currency)}${sub.price.toStringAsFixed(2)} soon'
+                                      : '$daysLeft days',
                           style: ChompdTypography.mono(
                             size: 12,
                             weight: FontWeight.w700,
@@ -308,7 +342,7 @@ class DetailScreen extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            '\u00A3${(sub.price * 4).toStringAsFixed(2)}',
+                            '${Subscription.currencySymbol(sub.currency)}${(sub.price * 4).toStringAsFixed(2)}',
                             style: ChompdTypography.mono(
                               size: 13,
                               weight: FontWeight.w700,
@@ -457,14 +491,45 @@ class DetailScreen extends ConsumerWidget {
   }
 
   List<Widget> _buildPaymentHistory(Subscription sub) {
+    // Calculate real payment dates from createdAt → now based on billing cycle.
+    final payments = <DateTime>[];
     final now = DateTime.now();
-    final months = <String>[];
-    for (int i = 0; i < 4; i++) {
-      final date = DateTime(now.year, now.month - i, 1);
-      months.add(DateHelpers.monthYear(date));
+    final start = sub.createdAt;
+
+    // Walk backwards from the most recent renewal to createdAt.
+    // nextRenewal is the *upcoming* one, so the last paid date
+    // is one cycle before nextRenewal.
+    DateTime cursor = _subtractCycle(sub.nextRenewal, sub.cycle);
+
+    // Collect past payments (most recent first), up to 12 entries max.
+    while (!cursor.isBefore(start) && payments.length < 12) {
+      if (!cursor.isAfter(now)) {
+        payments.add(cursor);
+      }
+      cursor = _subtractCycle(cursor, sub.cycle);
     }
-    return months.asMap().entries.map((entry) {
-      final isLast = entry.key == months.length - 1;
+
+    // If no payments yet (e.g. new trial), show a hint.
+    if (payments.isEmpty) {
+      return [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            'No payments yet — started ${DateHelpers.shortDate(start)}',
+            style: const TextStyle(
+              fontSize: 12,
+              color: ChompdColors.textDim,
+            ),
+          ),
+        ),
+      ];
+    }
+
+    final symbol = Subscription.currencySymbol(sub.currency);
+
+    return payments.asMap().entries.map((entry) {
+      final isLast = entry.key == payments.length - 1;
+      final date = entry.value;
       return Column(
         children: [
           Padding(
@@ -473,14 +538,14 @@ class DetailScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  entry.value,
+                  DateHelpers.shortDate(date),
                   style: const TextStyle(
                     fontSize: 12,
                     color: ChompdColors.textMid,
                   ),
                 ),
                 Text(
-                  '\u00A3${sub.price.toStringAsFixed(2)}',
+                  '$symbol${sub.price.toStringAsFixed(2)}',
                   style: ChompdTypography.mono(
                     size: 12,
                     color: ChompdColors.text,
@@ -493,6 +558,20 @@ class DetailScreen extends ConsumerWidget {
         ],
       );
     }).toList();
+  }
+
+  /// Subtract one billing cycle from a date.
+  static DateTime _subtractCycle(DateTime date, BillingCycle cycle) {
+    switch (cycle) {
+      case BillingCycle.weekly:
+        return date.subtract(const Duration(days: 7));
+      case BillingCycle.monthly:
+        return DateTime(date.year, date.month - 1, date.day);
+      case BillingCycle.quarterly:
+        return DateTime(date.year, date.month - 3, date.day);
+      case BillingCycle.yearly:
+        return DateTime(date.year - 1, date.month, date.day);
+    }
   }
 
   void _openEditForm(BuildContext context, WidgetRef ref, Subscription sub) {
@@ -512,6 +591,18 @@ class DetailScreen extends ConsumerWidget {
         MaterialPageRoute(
           builder: (_) =>
               CancelGuideScreen(subscription: sub, guide: guide),
+        ),
+      );
+    } else {
+      // Fallback: show generic advice
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'No specific guide for ${sub.name} yet. Try searching "${sub.name} cancel subscription" online.',
+            style: const TextStyle(fontSize: 12),
+          ),
+          backgroundColor: ChompdColors.bgElevated,
+          duration: const Duration(seconds: 4),
         ),
       );
     }

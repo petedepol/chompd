@@ -33,10 +33,15 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
   bool _pressed = false;
 
   Color get _brandColor {
-    if (widget.subscription.brandColor != null) {
-      return _parseHexColor(widget.subscription.brandColor!);
+    if (widget.subscription.brandColor != null &&
+        widget.subscription.brandColor!.isNotEmpty) {
+      try {
+        return _parseHexColor(widget.subscription.brandColor!);
+      } catch (_) {
+        return ChompdColors.mint; // Safe fallback
+      }
     }
-    return ChompdColors.textDim;
+    return ChompdColors.mint; // Visible on dark cards
   }
 
   static Color _parseHexColor(String hex) {
@@ -66,20 +71,50 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
         decoration: BoxDecoration(
           color: _pressed ? ChompdColors.bgElevated : ChompdColors.bgCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isTrialUrgent
-                ? ChompdColors.amber.withValues(alpha: 0.27)
-                : ChompdColors.border,
+          border: Border(
+            left: BorderSide(
+              color: isTrialUrgent
+                  ? ChompdColors.amber.withValues(alpha: 0.6)
+                  : color.withValues(alpha: 0.5),
+              width: 3,
+            ),
+            top: BorderSide(
+              color: isTrialUrgent
+                  ? ChompdColors.amber.withValues(alpha: 0.27)
+                  : ChompdColors.border,
+            ),
+            right: BorderSide(
+              color: isTrialUrgent
+                  ? ChompdColors.amber.withValues(alpha: 0.27)
+                  : ChompdColors.border,
+            ),
+            bottom: BorderSide(
+              color: isTrialUrgent
+                  ? ChompdColors.amber.withValues(alpha: 0.27)
+                  : ChompdColors.border,
+            ),
           ),
-          boxShadow: isTrialUrgent
-              ? [
-                  BoxShadow(
-                    color: ChompdColors.amberGlow,
-                    blurRadius: 16,
-                    spreadRadius: 0,
-                  ),
-                ]
-              : null,
+          boxShadow: [
+            // Subtle depth shadow
+            BoxShadow(
+              color: Colors.black.withValues(alpha: _pressed ? 0.0 : 0.15),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+            // Brand colour glow (very subtle)
+            BoxShadow(
+              color: color.withValues(alpha: _pressed ? 0.0 : 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+            // Extra glow for trial-urgent cards
+            if (isTrialUrgent)
+              BoxShadow(
+                color: ChompdColors.amberGlow,
+                blurRadius: 16,
+                spreadRadius: 0,
+              ),
+          ],
         ),
         child: Row(
           children: [
@@ -164,7 +199,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '\u00A3${subscription.price.toStringAsFixed(2)}',
+                  '${Subscription.currencySymbol(subscription.currency)}${subscription.price.toStringAsFixed(2)}',
                   style: (subscription.isTrap == true)
                       ? ChompdTypography.priceCard.copyWith(
                           decoration: TextDecoration.lineThrough,
@@ -176,7 +211,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                 if (subscription.isTrap == true &&
                     subscription.realPrice != null)
                   Text(
-                    '\u2192 \u00A3${subscription.realPrice!.toStringAsFixed(2)}',
+                    '\u2192 ${Subscription.currencySymbol(subscription.currency)}${subscription.realPrice!.toStringAsFixed(2)}',
                     style: GoogleFonts.spaceMono(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,

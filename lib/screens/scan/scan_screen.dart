@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../config/theme.dart';
 import '../../models/scan_result.dart';
@@ -273,52 +275,124 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
           const SizedBox(height: 32),
 
-          // ─── Test Scenario Buttons (prototype only) ───
-          Text(
-            'TEST SCENARIOS',
-            style: ChompdTypography.sectionLabel,
+          // Camera scan button
+          GestureDetector(
+            onTap: () => _pickImage(ImageSource.camera),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [ChompdColors.purple, Color(0xFF8B5CF6)],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: ChompdColors.purple.withValues(alpha: 0.27),
+                    blurRadius: 20,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              alignment: Alignment.center,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.camera_alt_rounded, size: 18, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text(
+                    'Take Photo',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
+
           const SizedBox(height: 12),
 
-          _ScenarioButton(
-            label: 'Clear Email',
-            subtitle: 'Netflix \u2022 Tier 1 auto-detect',
-            icon: '\u26A1',
-            color: ChompdColors.mint,
-            onTap: () => _startTestScan('clear_email'),
+          // Gallery picker button
+          GestureDetector(
+            onTap: () => _pickImage(ImageSource.gallery),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: ChompdColors.border),
+              ),
+              alignment: Alignment.center,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.photo_library_outlined, size: 18, color: ChompdColors.textMid),
+                  SizedBox(width: 8),
+                  Text(
+                    'Choose from Gallery',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: ChompdColors.textMid,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 6),
-          _ScenarioButton(
-            label: 'Learned Match',
-            subtitle: 'Kindle Unlimited \u2022 Tier 2 confirm',
-            icon: '\uD83D\uDC4D',
-            color: ChompdColors.blue,
-            onTap: () => _startTestScan('learned_match'),
-          ),
-          const SizedBox(height: 6),
-          _ScenarioButton(
-            label: 'Ambiguous Charge',
-            subtitle: 'Microsoft \u2022 Tier 3 multi-choice',
-            icon: '\uD83D\uDCAC',
-            color: ChompdColors.purple,
-            onTap: () => _startTestScan('ambiguous'),
-          ),
-          const SizedBox(height: 6),
-          _ScenarioButton(
-            label: 'Trial + Currency',
-            subtitle: 'Figma Pro \u2022 Tier 3, 2 questions',
-            icon: '\u23F0',
-            color: ChompdColors.amber,
-            onTap: () => _startTestScan('trial'),
-          ),
-          const SizedBox(height: 6),
-          _ScenarioButton(
-            label: 'Multi-Sub Statement',
-            subtitle: '4 charges \u2022 Mixed tiers',
-            icon: '\uD83D\uDCCB',
-            color: ChompdColors.pink,
-            onTap: () => _startTestScan('multi'),
-          ),
+
+          // ─── Test Scenario Buttons (debug only) ───
+          if (kDebugMode) ...[
+            const SizedBox(height: 32),
+            Text(
+              'TEST SCENARIOS',
+              style: ChompdTypography.sectionLabel,
+            ),
+            const SizedBox(height: 12),
+
+            _ScenarioButton(
+              label: 'Clear Email',
+              subtitle: 'Netflix \u2022 Tier 1 auto-detect',
+              icon: '\u26A1',
+              color: ChompdColors.mint,
+              onTap: () => _startTestScan('clear_email'),
+            ),
+            const SizedBox(height: 6),
+            _ScenarioButton(
+              label: 'Learned Match',
+              subtitle: 'Kindle Unlimited \u2022 Tier 2 confirm',
+              icon: '\uD83D\uDC4D',
+              color: ChompdColors.blue,
+              onTap: () => _startTestScan('learned_match'),
+            ),
+            const SizedBox(height: 6),
+            _ScenarioButton(
+              label: 'Ambiguous Charge',
+              subtitle: 'Microsoft \u2022 Tier 3 multi-choice',
+              icon: '\uD83D\uDCAC',
+              color: ChompdColors.purple,
+              onTap: () => _startTestScan('ambiguous'),
+            ),
+            const SizedBox(height: 6),
+            _ScenarioButton(
+              label: 'Trial + Currency',
+              subtitle: 'Figma Pro \u2022 Tier 3, 2 questions',
+              icon: '\u23F0',
+              color: ChompdColors.amber,
+              onTap: () => _startTestScan('trial'),
+            ),
+            const SizedBox(height: 6),
+            _ScenarioButton(
+              label: 'Multi-Sub Statement',
+              subtitle: '4 charges \u2022 Mixed tiers',
+              icon: '\uD83D\uDCCB',
+              color: ChompdColors.pink,
+              onTap: () => _startTestScan('multi'),
+            ),
+          ],
 
           const Spacer(),
         ],
@@ -334,6 +408,51 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     }
     ref.read(scanCounterProvider.notifier).increment();
     ref.read(scanProvider.notifier).startScan(scenario: scenario);
+  }
+
+  /// Pick an image from camera or gallery and start a real AI scan.
+  Future<void> _pickImage(ImageSource source) async {
+    final canScan = ref.read(canScanProvider);
+    if (!canScan) {
+      await showPaywall(context, trigger: PaywallTrigger.scanLimit);
+      return;
+    }
+
+    try {
+      final picker = ImagePicker();
+      final picked = await picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1920,
+        imageQuality: 85,
+      );
+
+      if (picked == null) return; // User cancelled
+
+      final bytes = await picked.readAsBytes();
+      final mimeType = picked.mimeType ??
+          (picked.path.toLowerCase().endsWith('.png')
+              ? 'image/png'
+              : 'image/jpeg');
+
+      ref.read(scanCounterProvider.notifier).increment();
+      ref.read(scanProvider.notifier).startScan(
+            imageBytes: bytes,
+            mimeType: mimeType,
+          );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            source == ImageSource.camera
+                ? 'Could not access camera. Check permissions.'
+                : 'Could not access photo library. Check permissions.',
+          ),
+          backgroundColor: ChompdColors.bgElevated,
+        ),
+      );
+    }
   }
 
   // ─── Trap Skipped Celebration View ───

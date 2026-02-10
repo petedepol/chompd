@@ -98,31 +98,13 @@ class _SplashScreenState extends State<SplashScreen>
                 opacity: _iconOpacity.value,
                 child: Transform.scale(
                   scale: _iconScale.value,
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          ChompdColors.mintDark,
-                          ChompdColors.mint,
-                        ],
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: ChompdColors.mint.withValues(alpha: 0.4),
-                          blurRadius: 20,
-                          spreadRadius: 2,
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      Icons.camera_alt_rounded,
-                      color: ChompdColors.text,
-                      size: 36,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.asset(
+                      'assets/mascot/piranha_icon.png',
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
@@ -147,7 +129,7 @@ class _SplashScreenState extends State<SplashScreen>
               Opacity(
                 opacity: _taglineOpacity.value,
                 child: Text(
-                  'Track. Snap. Save.',
+                  'Scan. Track. Bite back.',
                   style: ChompdTypography.mono(
                     size: 12,
                     color: ChompdColors.textDim,

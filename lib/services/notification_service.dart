@@ -145,6 +145,9 @@ class NotificationService {
           0,
         );
 
+        // Skip if the scheduled time has already passed
+        if (scheduledAt.isBefore(DateTime.now())) continue;
+
         final notification = ScheduledNotification(
           id: _nextId++,
           channelId: NotificationChannels.renewalReminder,
@@ -184,6 +187,9 @@ class NotificationService {
           9,
           0,
         );
+
+        // Skip if the scheduled time has already passed
+        if (scheduledAt.isBefore(DateTime.now())) continue;
 
         final notification = ScheduledNotification(
           id: _nextId++,
@@ -311,7 +317,7 @@ class NotificationService {
       final total = todayRenewals.fold(0.0, (sum, s) => sum + s.price);
       title = '${todayRenewals.length} subscription(s) renewing today';
       body =
-          '${todayRenewals.map((s) => s.name).join(", ")} \u2014 ${Subscription.currencySymbol("GBP")}${total.toStringAsFixed(2)} total';
+          '${todayRenewals.map((s) => s.name).join(", ")} \u2014 ${Subscription.currencySymbol(todayRenewals.first.currency)}${total.toStringAsFixed(2)} total';
     } else {
       title = '${expiringTrials.length} trial(s) expiring today';
       body =
@@ -434,7 +440,7 @@ class NotificationService {
     if (renewals.isNotEmpty) {
       final total = renewals.fold(0.0, (sum, s) => sum + s.price);
       parts.add(
-        'Renewals: ${renewals.map((s) => s.name).join(", ")} (\u00A3${total.toStringAsFixed(2)})',
+        'Renewals: ${renewals.map((s) => s.name).join(", ")} (${Subscription.currencySymbol(renewals.first.currency)}${total.toStringAsFixed(2)})',
       );
     }
 

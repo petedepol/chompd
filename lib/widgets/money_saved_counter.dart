@@ -8,10 +8,12 @@ import '../config/theme.dart';
 /// with a smooth counting animation.
 class MoneySavedCounter extends StatefulWidget {
   final double amount;
+  final String currencySymbol;
 
   const MoneySavedCounter({
     super.key,
     required this.amount,
+    this.currencySymbol = '\u00A3',
   });
 
   @override
@@ -60,7 +62,7 @@ class _MoneySavedCounterState extends State<MoneySavedCounter>
       animation: _countAnimation,
       builder: (context, child) {
         return Text(
-          '\u00A3${_countAnimation.value.toStringAsFixed(0)}',
+          '${widget.currencySymbol}${_countAnimation.value.toStringAsFixed(0)}',
           style: ChompdTypography.mono(
             size: 14,
             weight: FontWeight.w700,

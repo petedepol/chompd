@@ -117,8 +117,7 @@ chompd/
 │   │   ├── price_breakdown_card.dart # Trial → real price visual
 │   │   ├── trap_stats_card.dart    # Home screen Unchompd savings counter
 │   │   ├── nudge_card.dart         # Inline subscription review nudge
-│   │   ├── mascot_image.dart       # Reusable piranha mascot widget
-│   │   └── bottom_nav_bar.dart     # Glassmorphic bottom nav with PNG icons
+│   │   └── mascot_image.dart       # Reusable piranha mascot widget
 │   └── utils/
 │       ├── currency.dart
 │       ├── date_helpers.dart
@@ -134,10 +133,6 @@ chompd/
 │   │   ├── piranha_sad.png         # Errors, over budget
 │   │   ├── piranha_alert.png       # Trap detected warning
 │   │   └── piranha_thumbsup.png    # Scan success
-│   ├── nav_icons/                  # Bottom nav bar 3D glassmorphic icons
-│   │   ├── nav_subs.png            # Card stack (SUBS tab)
-│   │   ├── nav_scan.png            # Camera lens (Scan FAB)
-│   │   └── nav_saved.png           # Shield (SAVED tab)
 │   ├── animations/                 # Lottie (confetti only)
 │   └── fonts/
 ├── docs/                           # Design docs & reference
