@@ -1,0 +1,9 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    # prefer_trailing_commas not a built-in rule — use require_trailing_commas if desired
+    avoid_print: true
+    prefer_single_quotes: true

@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SubSnap — Competitive Analysis & Design Direction</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #14141f;
+  --surface2: #1c1c2e;
+  --border: #2a2a3e;
+  --text: #e8e8f0;
+  --text-dim: #8888a8;
+  --accent: #6ee7b7;
+  --accent2: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --good: #6ee7b7;
+  --purple: #a78bfa;
+  --blue: #60a5fa;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* Header */
+.hero {
+  padding: 80px 0 40px;
+  text-align: center;
+  position: relative;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(110,231,183,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero h1 {
+  font-size: 3.2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 12px;
+}
+.hero h1 span { color: var(--accent); }
+.hero p { color: var(--text-dim); font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+
+/* Nav tabs */
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 40px 0;
+  flex-wrap: wrap;
+}
+.tab {
+  padding: 10px 24px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-dim);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.tab:hover { border-color: var(--accent); color: var(--text); }
+.tab.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+
+/* Sections */
+.section { display: none; padding-bottom: 60px; }
+.section.active { display: block; animation: fadeUp 0.4s ease; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  margin-bottom: 32px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Competitor Cards */
+.comp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+.comp-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.comp-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.comp-card.ours {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(110,231,183,0.08) 0%, var(--surface) 100%);
+}
+.comp-card .badge {
+  display: inline-block;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 100px;
+  margin-bottom: 16px;
+}
+.badge.paid { background: rgba(251,191,36,0.15); color: var(--warn); }
+.badge.free { background: rgba(110,231,183,0.15); color: var(--good); }
+.badge.sub { background: rgba(248,113,113,0.15); color: var(--bad); }
+.badge.ours-badge { background: rgba(110,231,183,0.3); color: var(--accent); }
+
+.comp-card h3 { font-size: 1.3rem; margin-bottom: 4px; }
+.comp-card .price { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 16px; }
+.comp-card .features { list-style: none; }
+.comp-card .features li {
+  padding: 6px 0;
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feat-yes { color: var(--good); }
+.feat-no { color: var(--bad); }
+.feat-partial { color: var(--warn); }
+
+.comp-card .weakness {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+.weakness-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--bad);
+  margin-bottom: 6px;
+}
+
+/* Design Analysis */
+.design-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 768px) { .design-grid { grid-template-columns: 1fr; } }
+
+.design-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px;
+}
+.design-card h3 { margin-bottom: 16px; font-size: 1.1rem; }
+
+.design-trait {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(42,42,62,0.5);
+  font-size: 0.88rem;
+}
+.trait-bar {
+  width: 120px;
+  height: 6px;
+  background: var(--surface2);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.trait-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s ease;
+}
+
+/* Our Concept Section */
+.phone-mockup {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 40px 0;
+}
+.phone {
+  width: 280px;
+  height: 560px;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: 36px;
+  padding: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.phone::before {
+  content: '';
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  width: 80px; height: 24px;
+  background: var(--bg);
+  border-radius: 12px;
+  z-index: 10;
+}
+.phone-screen {
+  width: 100%;
+  height: 100%;
+  background: #0d0d1a;
+  border-radius: 24px;
+  overflow: hidden;
+  padding: 40px 16px 16px;
+}
+.screen-label {
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--text-dim);
+  margin-top: 12px;
+}
+
+/* Screen: Home */
+.screen-home .header-area {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.screen-home .greeting {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.screen-home .total {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.screen-home .total-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+.screen-home .period-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin: 12px 0;
+}
+.period-btn {
+  font-size: 0.6rem;
+  padding: 4px 12px;
+  border-radius: 100px;
+  border: none;
+  background: var(--surface2);
+  color: var(--text-dim);
+  font-family: 'DM Sans', sans-serif;
+}
+.period-btn.active { background: var(--accent); color: var(--bg); }
+
+.sub-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: 12px;
+  margin-bottom: 8px;
+}
+.sub-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: white;
+  flex-shrink: 0;
+}
+.sub-info { flex: 1; }
+.sub-name { font-size: 0.78rem; font-weight: 500; }
+.sub-date { font-size: 0.6rem; color: var(--text-dim); }
+.sub-price { font-size: 0.82rem; font-weight: 700; text-align: right; }
+
+.trial-badge {
+  font-size: 0.5rem;
+  background: rgba(251,191,36,0.2);
+  color: var(--warn);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Screen: AI Scan */
+.screen-scan .scan-area {
+  border: 2px dashed var(--border);
+  border-radius: 16px;
+  height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.scan-area .scan-icon { font-size: 2rem; margin-bottom: 8px; }
+.scan-area .scan-text { font-size: 0.72rem; color: var(--text-dim); }
+
+.scan-result {
+  background: var(--surface2);
+  border-radius: 12px;
+  padding: 14px;
+  border-left: 3px solid var(--accent);
+}
+.scan-result .label {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+.scan-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 0.72rem;
+}
+.scan-field .key { color: var(--text-dim); }
+.scan-field .val { font-weight: 500; }
+
+.scan-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  margin-top: 12px;
+  cursor: pointer;
+}
+
+/* Screen: Money Saved */
+.screen-saved .saved-hero {
+  text-align: center;
+  padding: 24px 0;
+}
+.saved-amount {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.saved-label {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+.saved-bar {
+  height: 8px;
+  background: var(--surface2);
+  border-radius: 4px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+.saved-fill {
+  height: 100%;
+  width: 65%;
+  background: linear-gradient(90deg, var(--accent2), var(--accent));
+  border-radius: 4px;
+}
+.cancel-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.cancel-icon {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: white;
+}
+.cancel-info { flex: 1; }
+.cancel-name { font-size: 0.72rem; font-weight: 500; }
+.cancel-date { font-size: 0.55rem; color: var(--text-dim); }
+.cancel-amount { font-size: 0.78rem; font-weight: 700; color: var(--accent); }
+
+/* Gap Analysis */
+.gap-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+}
+.gap-table th {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+.gap-table th:last-child { text-align: center; }
+.gap-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(42,42,62,0.4);
+  font-size: 0.88rem;
+}
+.gap-table td:last-child { text-align: center; }
+.gap-table tr:hover { background: rgba(110,231,183,0.03); }
+.gap-table .highlight { background: rgba(110,231,183,0.06); }
+.gap-table .highlight td { font-weight: 600; }
+
+.status-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 2px;
+}
+.status-dot.green { background: var(--good); }
+.status-dot.red { background: var(--bad); }
+.status-dot.yellow { background: var(--warn); }
+
+/* Our Advantages */
+.adv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.adv-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+.adv-card .num {
+  font-family: 'Space Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+  opacity: 0.4;
+  margin-bottom: 8px;
+}
+.adv-card h4 { font-size: 1rem; margin-bottom: 8px; }
+.adv-card p { font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; }
+
+/* Design Direction */
+.palette {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+.color-swatch {
+  width: 56px; height: 56px;
+  border-radius: 12px;
+  position: relative;
+}
+.color-swatch::after {
+  content: attr(data-name);
+  position: absolute;
+  bottom: -18px; left: 0;
+  font-size: 0.55rem;
+  color: var(--text-dim);
+  font-family: 'Space Mono', monospace;
+  white-space: nowrap;
+}
+
+.principle-list {
+  list-style: none;
+  margin-top: 24px;
+}
+.principle-list li {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 16px;
+}
+.principle-list .icon {
+  width: 40px; height: 40px;
+  background: var(--surface2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+.principle-list h4 { font-size: 0.95rem; margin-bottom: 4px; }
+.principle-list p { font-size: 0.82rem; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="hero">
+    <h1>Sub<span>Snap</span> — Competitor Intel</h1>
+    <p>Competitive analysis, design gaps, and our concept direction for the AI-powered subscription tracker</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="competitors">Competitors</button>
+    <button class="tab" data-tab="features">Feature Gap</button>
+    <button class="tab" data-tab="design">Design Analysis</button>
+    <button class="tab" data-tab="concept">Our Concept</button>
+    <button class="tab" data-tab="advantages">Our Edge</button>
+    <button class="tab" data-tab="direction">Design Direction</button>
+  </div>
+
+  <!-- COMPETITORS -->
+  <div class="section active" id="competitors">
+    <div class="section-title">Direct Competitors — Manual Trackers</div>
+    <div class="comp-grid">
+      <div class="comp-card">
+        <span class="badge paid">$1.99 IAP</span>
+        <h3>Bobby</h3>
+        <p class="price">iOS only • By Yummygum • Since 2016</p>
+        <ul class="features">
+          <li><span class="feat-yes">✓</span> Clean, minimal list-based UI</li>
+          <li><span class="feat-yes">✓</span> Hundreds of pre-loaded services</li>
+          <li><span class="feat-yes">✓</span> Category sorting & filtering</li>
+          <li><span class="feat-yes">✓</span> Multi-currency with auto conversion</li>
+          <li><span class="feat-yes">✓</span> iCloud sync</li>
+          <li><span class="feat-no">✗</span> No AI / screenshot scanning</li>
+          <li><span class="feat-no">✗</span> No Android</li>
+          <li><span class="feat-no">✗</span> No widgets</li>
+          <li><span class="feat-no">✗</span> Infrequent updates</li>
+        </ul>
+        <div class="weakness">
+          <div class="weakness-label">Key Weakness</div>
+          "Dead simple" is both strength and limitation. Zero innovation since launch. Manual entry only. Feels like a 2017 app with a coat of paint. No trial tracking, no smart reminders.
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <span class="badge paid">$2.99 IAP</span>
+        <h3>Subscription Tracker</h3>
+        <p class="price">iOS only • Since 2020</p>
+        <ul class="features">
+          <li><span class="feat-yes">✓</span> Siri Shortcuts support</li>
+          <li><span class="feat-yes">✓</span> iOS 14 widgets</li>
+          <li><span class="feat-yes">✓</span> Custom app icons</li>
+          <li><span class="feat-yes">✓</span> iCloud sync</li>
+          <li><span class="feat-yes">✓</span> Calendar view</li>
+          <li><span class="feat-no">✗</span> No AI / screenshot scanning</li>
+          <li><span class="feat-no">✗</span> No Android</li>
+          <li><span class="feat-no">✗</span> Limited free tier (4 subs)</li>
+          <li><span class="feat-no">✗</span> No spending insights</li>
+        </ul>
+        <div class="weakness">
+          <div class="weakness-label">Key Weakness</div>
+          More feature-rich than Bobby but still purely manual. Focus on customization (icons, themes) over actual utility. No smart features — just a prettier spreadsheet.
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <span class="badge free">Free</span>
+        <h3>Subby / Loop</h3>
+        <p class="price">iOS only • Since 2024 • Solo dev</p>
+        <ul class="features">
+          <li><span class="feat-yes">✓</span> Beautiful minimal design</li>
+          <li><span class="feat-yes">✓</span> Bubbles view (motion-reactive)</li>
+          <li><span class="feat-yes">✓</span> Quick stats & insights</li>
+          <li><span class="feat-yes">✓</span> Auto currency conversion</li>
+          <li><span class="feat-yes">✓</span> Privacy-first (on-device)</li>
+          <li><span class="feat-no">✗</span> No AI features</li>
+          <li><span class="feat-no">✗</span> No Android</li>
+          <li><span class="feat-no">✗</span> Small service database</li>
+          <li><span class="feat-partial">~</span> Reminders exist but buried</li>
+        </ul>
+        <div class="weakness">
+          <div class="weakness-label">Key Weakness</div>
+          Newest and best-designed competitor. The "bubbles view" is creative but gimmicky. Still manual entry only. Solo dev = slow feature velocity. Already renamed twice (Subby → Loop → back to Subby).
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <span class="badge free">Free concept</span>
+        <h3>Trackizer</h3>
+        <p class="price">UI Kit only • Figma • Not a real app</p>
+        <ul class="features">
+          <li><span class="feat-yes">✓</span> Dark theme with gradients</li>
+          <li><span class="feat-yes">✓</span> Skeuomorphic glows</li>
+          <li><span class="feat-yes">✓</span> 12 screen UI kit</li>
+          <li><span class="feat-yes">✓</span> Beautiful charts/graphs</li>
+          <li><span class="feat-no">✗</span> Not a real app</li>
+          <li><span class="feat-no">✗</span> Concept only</li>
+        </ul>
+        <div class="weakness">
+          <div class="weakness-label">Key Weakness</div>
+          The most popular Figma subscription tracker kit (165K views on Dribbble). Sets design expectations high but nobody has built it. Many competitor apps look worse than this free concept.
+        </div>
+      </div>
+    </div>
+
+    <div class="section-title" style="margin-top:48px">Indirect Competitors — Bank-Linked</div>
+    <div class="comp-grid">
+      <div class="comp-card">
+        <span class="badge sub">$7-14/mo</span>
+        <h3>Rocket Money</h3>
+        <p class="price">iOS + Android • Formerly Truebill</p>
+        <ul class="features">
+          <li><span class="feat-yes">✓</span> Auto-detects subscriptions via Plaid</li>
+          <li><span class="feat-yes">✓</span> Bill negotiation service</li>
+          <li><span class="feat-yes">✓</span> Cancellation concierge</li>
+          <li><span class="feat-yes">✓</span> Credit score tracking</li>
+          <li><span class="feat-no">✗</span> Requires bank account linking</li>
+          <li><span class="feat-no">✗</span> Expensive ($84-168/year)</li>
+          <li><span class="feat-no">✗</span> Privacy concerns</li>
+        </ul>
+        <div class="weakness">
+          <div class="weakness-label">Key Weakness</div>
+          Great features but requires full financial access. Many users uncomfortable linking bank accounts. Expensive for what's essentially a subscription tracker. Sometimes cancels things users wanted to keep.
+        </div>
+      </div>
+
+      <div class="comp-card">
+        <span class="badge sub">$12.99/mo</span>
+        <h3>PocketGuard</h3>
+        <p class="price">iOS + Android • Full budgeting app</p>
+        <ul class="features">
+          <li><span class="feat-yes">✓</span> Auto subscription detection</li>
+          <li><span class="feat-yes">✓</span> Full budgeting tools</li>
+          <li><span class="feat-yes">✓</span> Bill payment tracker</li>
+          <li><span class="feat-no">✗</span> Requires bank linking</li>
+          <li><span class="feat-no">✗</span> $156/year or $75/year</li>
+          <li><span class="feat-no">✗</span> Overkill for just tracking subs</li>
+        </ul>
+        <div class="weakness">
+          <div class="weakness-label">Key Weakness</div>
+          Full finance app that happens to track subscriptions. Overwhelming for users who just want to know what they're paying for. Massive privacy requirements.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURE GAP -->
+  <div class="section" id="features">
+    <div class="section-title">Feature Comparison Matrix</div>
+    <div style="overflow-x: auto;">
+    <table class="gap-table">
+      <thead>
+        <tr>
+          <th>Feature</th>
+          <th>Bobby</th>
+          <th>Sub Tracker</th>
+          <th>Subby</th>
+          <th>Rocket $</th>
+          <th style="color:var(--accent)">SubSnap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>AI Screenshot Scan</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td class="highlight"><span class="status-dot green"></span> <strong>Yes ✦</strong></td>
+        </tr>
+        <tr>
+          <td>Manual Quick-Add</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td><span class="status-dot yellow"></span> Auto</td>
+          <td class="highlight"><span class="status-dot green"></span> Yes</td>
+        </tr>
+        <tr>
+          <td>Cross-Platform</td>
+          <td><span class="status-dot red"></span> iOS</td>
+          <td><span class="status-dot red"></span> iOS</td>
+          <td><span class="status-dot red"></span> iOS</td>
+          <td><span class="status-dot green"></span> Both</td>
+          <td class="highlight"><span class="status-dot green"></span> <strong>Both ✦</strong></td>
+        </tr>
+        <tr>
+          <td>No Bank Linking</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td><span class="status-dot red"></span> Required</td>
+          <td class="highlight"><span class="status-dot green"></span> Yes</td>
+        </tr>
+        <tr>
+          <td>Smart Reminders</td>
+          <td><span class="status-dot yellow"></span> Basic</td>
+          <td><span class="status-dot yellow"></span> Basic</td>
+          <td><span class="status-dot yellow"></span> Basic</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td class="highlight"><span class="status-dot green"></span> <strong>Escalating ✦</strong></td>
+        </tr>
+        <tr>
+          <td>Trial Tracking</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot yellow"></span> Partial</td>
+          <td class="highlight"><span class="status-dot green"></span> <strong>Countdown ✦</strong></td>
+        </tr>
+        <tr>
+          <td>Money Saved Tracker</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot yellow"></span> Partial</td>
+          <td class="highlight"><span class="status-dot green"></span> <strong>Gamified ✦</strong></td>
+        </tr>
+        <tr>
+          <td>Home Screen Widget</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td class="highlight"><span class="status-dot green"></span> Yes</td>
+        </tr>
+        <tr>
+          <td>Siri Shortcuts</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot green"></span> Yes</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td><span class="status-dot red"></span> No</td>
+          <td class="highlight"><span class="status-dot green"></span> Yes</td>
+        </tr>
+        <tr>
+          <td>Price</td>
+          <td>$1.99</td>
+          <td>$2.99</td>
+          <td>Free</td>
+          <td>$7-14/mo</td>
+          <td class="highlight"><strong>Free / $4.99</strong></td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="color: var(--text-dim); font-size: 0.82rem; margin-top: 8px;">✦ = Unique or best-in-class feature vs direct competitors</p>
+  </div>
+
+  <!-- DESIGN ANALYSIS -->
+  <div class="section" id="design">
+    <div class="section-title">Design Language Analysis</div>
+    <div class="design-grid">
+      <div class="design-card">
+        <h3>Bobby</h3>
+        <div class="design-trait">
+          <span>Visual Polish</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:70%; background:var(--accent)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Innovation</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:20%; background:var(--bad)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Information Density</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:45%; background:var(--warn)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Delight Factor</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:55%; background:var(--warn)"></div></div>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 16px;">
+          <strong>Style:</strong> Bright colored cards, service logos, clean list view. Light theme default. Looks like a well-designed 2018 app. Categories use color-coded pills. Total spending shown as weekly/monthly/yearly toggle.
+        </p>
+        <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 8px;">
+          <strong>Weakness:</strong> Static feel. No animations, no micro-interactions. Color-per-subscription approach gets chaotic with 10+ items. No dark mode until v3. Header area wastes space.
+        </p>
+      </div>
+
+      <div class="design-card">
+        <h3>Subby / Loop</h3>
+        <div class="design-trait">
+          <span>Visual Polish</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:85%; background:var(--accent)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Innovation</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:70%; background:var(--accent)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Information Density</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:50%; background:var(--warn)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Delight Factor</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:80%; background:var(--accent)"></div></div>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 16px;">
+          <strong>Style:</strong> Our closest design competitor. Motion-reactive bubbles view is genuinely creative. Clean stats cards. Smooth animations. Modern iOS feel. Dark + light themes.
+        </p>
+        <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 8px;">
+          <strong>Weakness:</strong> Bubbles are fun but not practical — hard to scan quickly. Limited stats. Small service library means lots of generic icons. Solo dev polish but limited depth.
+        </p>
+      </div>
+
+      <div class="design-card">
+        <h3>Subscription Tracker</h3>
+        <div class="design-trait">
+          <span>Visual Polish</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:60%; background:var(--warn)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Innovation</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:35%; background:var(--bad)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Information Density</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:65%; background:var(--accent)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Delight Factor</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:40%; background:var(--warn)"></div></div>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 16px;">
+          <strong>Style:</strong> Most "stock iOS" feeling. Calendar view is useful but generic. Alternative app icons show effort on personality. Widgets are functional but basic.
+        </p>
+        <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 8px;">
+          <strong>Weakness:</strong> Feels like a developer's side project. Decent but forgettable. No signature interaction or visual moment. Calendar + list is the entire UX.
+        </p>
+      </div>
+
+      <div class="design-card">
+        <h3>Trackizer (Concept Kit)</h3>
+        <div class="design-trait">
+          <span>Visual Polish</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:95%; background:var(--accent)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Innovation</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:75%; background:var(--accent)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Information Density</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:70%; background:var(--accent)"></div></div>
+        </div>
+        <div class="design-trait">
+          <span>Delight Factor</span>
+          <div class="trait-bar"><div class="trait-fill" style="width:90%; background:var(--accent)"></div></div>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 16px;">
+          <strong>Style:</strong> Dark theme, gradient glows, skeuomorphic touches. Circular progress charts. Service cards with depth. The design benchmark everyone references but nobody built.
+        </p>
+        <p style="font-size: 0.78rem; color: var(--text-dim); margin-top: 8px;">
+          <strong>Opportunity:</strong> Build the app that looks this good AND has AI features. Trackizer proved the market wants premium dark UI for finance tracking. We can deliver.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUR CONCEPT -->
+  <div class="section" id="concept">
+    <div class="section-title">SubSnap — Core Screens Concept</div>
+    <div class="phone-mockup">
+
+      <!-- Screen 1: Home -->
+      <div>
+        <div class="phone">
+          <div class="phone-screen screen-home">
+            <div class="header-area">
+              <div class="greeting">Good morning, Pete</div>
+              <div class="total">£127.43</div>
+              <div class="total-label">monthly total • 8 active</div>
+              <div class="period-toggle">
+                <button class="period-btn">Week</button>
+                <button class="period-btn active">Month</button>
+                <button class="period-btn">Year</button>
+              </div>
+            </div>
+
+            <div class="sub-item">
+              <div class="sub-icon" style="background:linear-gradient(135deg,#E50914,#B20710)">N</div>
+              <div class="sub-info">
+                <div class="sub-name">Netflix</div>
+                <div class="sub-date">Renews 14 Feb</div>
+              </div>
+              <div class="sub-price">£15.99</div>
+            </div>
+
+            <div class="sub-item" style="border-left: 2px solid var(--warn)">
+              <div class="sub-icon" style="background:linear-gradient(135deg,#FF6B00,#FF9500)">A</div>
+              <div class="sub-info">
+                <div class="sub-name">Adobe CC <span class="trial-badge">Trial • 3 days left</span></div>
+                <div class="sub-date">Trial ends 11 Feb</div>
+              </div>
+              <div class="sub-price">£54.99</div>
+            </div>
+
+            <div class="sub-item">
+              <div class="sub-icon" style="background:linear-gradient(135deg,#1DB954,#169C46)">S</div>
+              <div class="sub-info">
+                <div class="sub-name">Spotify</div>
+                <div class="sub-date">Renews 22 Feb</div>
+              </div>
+              <div class="sub-price">£10.99</div>
+            </div>
+
+            <div class="sub-item">
+              <div class="sub-icon" style="background:linear-gradient(135deg,#5B5EA6,#9B9ECE)">iC</div>
+              <div class="sub-info">
+                <div class="sub-name">iCloud+</div>
+                <div class="sub-date">Renews 1 Mar</div>
+              </div>
+              <div class="sub-price">£2.99</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">Home — Subscription List</div>
+      </div>
+
+      <!-- Screen 2: AI Scan -->
+      <div>
+        <div class="phone">
+          <div class="phone-screen screen-scan">
+            <div class="scan-area">
+              <div class="scan-icon">📸</div>
+              <div class="scan-text">Screenshot shared via Share Sheet</div>
+              <div style="font-size:0.6rem; color:var(--accent); margin-top:4px">Analyzing with AI...</div>
+            </div>
+
+            <div class="scan-result">
+              <div class="label">✓ AI Detected Subscription</div>
+              <div class="scan-field"><span class="key">Service</span><span class="val">YouTube Premium</span></div>
+              <div class="scan-field"><span class="key">Price</span><span class="val">£12.99/month</span></div>
+              <div class="scan-field"><span class="key">Billing</span><span class="val">Monthly</span></div>
+              <div class="scan-field"><span class="key">Next Renewal</span><span class="val">8 March 2026</span></div>
+              <div class="scan-field"><span class="key">Trial</span><span class="val" style="color:var(--warn)">Yes — ends 8 Mar</span></div>
+            </div>
+
+            <button class="scan-btn">Add Subscription →</button>
+            <div style="text-align:center; margin-top:8px; font-size:0.6rem; color:var(--text-dim)">2 of 3 free scans remaining</div>
+          </div>
+        </div>
+        <div class="screen-label">AI Screenshot Scan</div>
+      </div>
+
+      <!-- Screen 3: Money Saved -->
+      <div>
+        <div class="phone">
+          <div class="phone-screen screen-saved">
+            <div class="saved-hero">
+              <div style="font-size:0.7rem; color:var(--text-dim); margin-bottom:4px;">You've saved</div>
+              <div class="saved-amount">£847.92</div>
+              <div class="saved-label">since you started using SubSnap</div>
+            </div>
+            <div class="saved-bar"><div class="saved-fill"></div></div>
+            <div style="font-size:0.65rem; color:var(--text-dim); text-align:center; margin-bottom:20px;">That's a weekend in Barcelona ✈️</div>
+
+            <div style="font-family:'Space Mono',monospace; font-size:0.6rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:10px;">Cancelled Subscriptions</div>
+
+            <div class="cancel-item">
+              <div class="cancel-icon" style="background:#6366f1">D+</div>
+              <div class="cancel-info">
+                <div class="cancel-name">Disney+</div>
+                <div class="cancel-date">Cancelled 3 months ago</div>
+              </div>
+              <div class="cancel-amount">+£29.97</div>
+            </div>
+
+            <div class="cancel-item">
+              <div class="cancel-icon" style="background:#ef4444">AP</div>
+              <div class="cancel-info">
+                <div class="cancel-name">Adobe Photoshop</div>
+                <div class="cancel-date">Cancelled before trial ended</div>
+              </div>
+              <div class="cancel-amount">+£659.88</div>
+            </div>
+
+            <div class="cancel-item">
+              <div class="cancel-icon" style="background:#8b5cf6">NR</div>
+              <div class="cancel-info">
+                <div class="cancel-name">NordVPN</div>
+                <div class="cancel-date">Cancelled 2 months ago</div>
+              </div>
+              <div class="cancel-amount">+£23.98</div>
+            </div>
+          </div>
+        </div>
+        <div class="screen-label">Money Saved — Gamification</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OUR ADVANTAGES -->
+  <div class="section" id="advantages">
+    <div class="section-title">Competitive Advantages</div>
+    <div class="adv-grid">
+      <div class="adv-card">
+        <div class="num">01</div>
+        <h4>Only App with AI Screenshot Scanning</h4>
+        <p>Zero competitors offer this. Screenshot → AI extracts name, price, billing cycle, renewal date, trial status. 2-second capture vs 30-second manual entry. The "wow moment" that drives conversion.</p>
+      </div>
+      <div class="adv-card">
+        <div class="num">02</div>
+        <h4>Cross-Platform (Flutter)</h4>
+        <p>Bobby, Subscription Tracker, and Subby are all iOS-only. We're the only lightweight tracker on both platforms. 71% of global users are on Android — that's a massive untapped market.</p>
+      </div>
+      <div class="adv-card">
+        <div class="num">03</div>
+        <h4>Trial-First Mentality</h4>
+        <p>No competitor properly tracks free trials. We treat trials as urgent: countdown timers, escalating reminders, visual urgency. This alone saves users hundreds per year on forgotten trials.</p>
+      </div>
+      <div class="adv-card">
+        <div class="num">04</div>
+        <h4>Smart Escalating Reminders</h4>
+        <p>Competitors offer basic "remind me X days before." We do 7-day heads up → 3-day warning → 1-day alert → morning-of notification. Configurable per subscription, aggressive for trials.</p>
+      </div>
+      <div class="adv-card">
+        <div class="num">05</div>
+        <h4>Money Saved Gamification</h4>
+        <p>Nobody tracks what you've saved by cancelling. We turn financial discipline into a game: running total, milestones ("You saved enough for a PS5!"), shareable achievements.</p>
+      </div>
+      <div class="adv-card">
+        <div class="num">06</div>
+        <h4>Privacy Without Compromise</h4>
+        <p>Unlike Rocket Money ($14/mo + bank access), we need zero financial data. Screenshots are processed and discarded. All sub data stored locally/iCloud. Privacy IS the feature, not a limitation.</p>
+      </div>
+      <div class="adv-card">
+        <div class="num">07</div>
+        <h4>One-Time $4.99 — No Irony</h4>
+        <p>"No subscription needed to track your subscriptions." This is both a marketing hook and genuine differentiator. Competitors either charge subscriptions or have zero monetization (unsustainable).</p>
+      </div>
+      <div class="adv-card">
+        <div class="num">08</div>
+        <h4>3 Free AI Scans — The Hook</h4>
+        <p>Free users get 3 AI scans + 3 manual subs. They experience the magic, build the habit, hit the limit fast. The taster costs us $0.005/user but drives 4%+ conversion. Drug dealer economics.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DESIGN DIRECTION -->
+  <div class="section" id="direction">
+    <div class="section-title">Design Direction — Our Aesthetic</div>
+
+    <h3 style="font-size:1.4rem; margin-bottom:8px;">Dark, Premium, Financial</h3>
+    <p style="color:var(--text-dim); max-width:700px; margin-bottom:32px;">Trackizer proved the market wants premium dark UI for finance apps. Bobby looks like a kids' app. Subby is clean but lacks gravitas. We go dark-first with subtle depth — glass morphism hints, gradient accents, buttery animations. Think "Bloomberg meets Spotify."</p>
+
+    <h4 style="margin-bottom:8px;">Colour Palette</h4>
+    <div class="palette">
+      <div class="color-swatch" style="background:#0a0a0f" data-name="BG"></div>
+      <div class="color-swatch" style="background:#14141f" data-name="Surface"></div>
+      <div class="color-swatch" style="background:#1c1c2e" data-name="Card"></div>
+      <div class="color-swatch" style="background:#6ee7b7" data-name="Accent"></div>
+      <div class="color-swatch" style="background:#34d399" data-name="CTA"></div>
+      <div class="color-swatch" style="background:#fbbf24" data-name="Warning"></div>
+      <div class="color-swatch" style="background:#f87171" data-name="Danger"></div>
+      <div class="color-swatch" style="background:#a78bfa" data-name="Purple"></div>
+    </div>
+
+    <ul class="principle-list" style="margin-top:48px;">
+      <li>
+        <div class="icon">🎯</div>
+        <div>
+          <h4>Signature Moment: The AI Scan</h4>
+          <p>When a screenshot is shared, the scan animation should feel magical — a sweeping light across the image, data points extracting and floating into position. This is the moment that sells Pro. It needs to be unforgettable.</p>
+        </div>
+      </li>
+      <li>
+        <div class="icon">⚡</div>
+        <div>
+          <h4>Speed Over Decoration</h4>
+          <p>Bobby users love it because it's "dead simple." We match that simplicity but add intelligence. Every screen should load instantly. Every interaction under 200ms. Animations enhance, never block.</p>
+        </div>
+      </li>
+      <li>
+        <div class="icon">🔥</div>
+        <div>
+          <h4>Urgency Without Anxiety</h4>
+          <p>Trial countdowns and renewal alerts need to feel urgent but not stressful. Warm amber for trials, subtle pulse animations. We're helping them save money, not scaring them. The tone is "friendly coach" not "angry accountant."</p>
+        </div>
+      </li>
+      <li>
+        <div class="icon">💰</div>
+        <div>
+          <h4>Celebrate Savings</h4>
+          <p>The "Money Saved" screen should feel rewarding — confetti on milestones, progress bars, equivalency messaging ("That's 47 coffees!"). Positive reinforcement keeps users engaged and turns them into evangelists.</p>
+        </div>
+      </li>
+      <li>
+        <div class="icon">📱</div>
+        <div>
+          <h4>Platform-Native Feel</h4>
+          <p>Flutter but feeling native. iOS users get SF-style blur effects and haptics. Android users get Material You dynamic colour. The app should feel like it belongs on both platforms, not like a web app in disguise.</p>
+        </div>
+      </li>
+      <li>
+        <div class="icon">🌙</div>
+        <div>
+          <h4>Dark-First, Light Available</h4>
+          <p>Default to dark theme (premium feel, better for financial apps). Offer light theme toggle. Both themes should feel intentional — not just an inverted version of each other.</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

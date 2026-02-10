@@ -1,0 +1,91 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../config/theme.dart';
+import '../providers/trap_stats_provider.dart';
+import 'mascot_image.dart';
+
+class TrapStatsCard extends ConsumerWidget {
+  const TrapStatsCard({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final trapStats = ref.watch(trapStatsProvider);
+
+    if (!trapStats.hasStats) {
+      return const SizedBox.shrink();
+    }
+
+    final breakdownItems = <String>[];
+    if (trapStats.trapsSkipped > 0) {
+      breakdownItems.add('${trapStats.trapsSkipped} dodged');
+    }
+    if (trapStats.trialsCancelled > 0) {
+      breakdownItems.add('${trapStats.trialsCancelled} cancelled');
+    }
+    if (trapStats.refundsRecovered > 0) {
+      breakdownItems.add('${trapStats.refundsRecovered} refunded');
+    }
+
+    final breakdownText = breakdownItems.join(' · ');
+
+    return Container(
+      decoration: BoxDecoration(
+        color: ChompdColors.bgCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: ChompdColors.mintGlow.withValues(alpha: 0.15),
+        ),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              const MascotImage(
+                asset: 'piranha_thumbsup.png',
+                size: 32,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Unchompd',
+                style: TextStyle(
+                  color: ChompdColors.textMid,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '£${trapStats.totalSaved.toStringAsFixed(2)}',
+            style: GoogleFonts.spaceMono(
+              color: ChompdColors.mint,
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'from subscription traps',
+            style: TextStyle(
+              color: ChompdColors.textDim,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            breakdownText,
+            style: GoogleFonts.spaceMono(
+              color: ChompdColors.textDim,
+              fontSize: 10,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
