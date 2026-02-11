@@ -403,9 +403,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       subCount: activeSubs.length,
                       totalSaved: totalSaved,
                       cancelledCount: cancelledSubs.length,
-                      currencySymbol: Subscription.currencySymbol(
-                        ref.watch(currencyProvider),
-                      ),
+                      currencyCode: ref.watch(currencyProvider),
                     ),
                   ),
                 ),
@@ -418,9 +416,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: _CompactSavings(
                       totalSaved: totalSaved,
                       cancelledCount: cancelledSubs.length,
-                      currencySymbol: Subscription.currencySymbol(
-                        ref.watch(currencyProvider),
-                      ),
+                      currencyCode: ref.watch(currencyProvider),
                     ),
                   ),
                 ),
@@ -451,9 +447,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                     child: CategoryBar(
                       subscriptions: activeSubs,
-                      currencySymbol: Subscription.currencySymbol(
-                        ref.watch(currencyProvider),
-                      ),
+                      currencyCode: ref.watch(currencyProvider),
                     ),
                   ),
                 ),
@@ -559,9 +553,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const Spacer(),
                         MoneySavedCounter(
                           amount: totalSaved,
-                          currencySymbol: Subscription.currencySymbol(
-                            ref.watch(currencyProvider),
-                          ),
+                          currencyCode: ref.watch(currencyProvider),
                         ),
                       ],
                     ),
@@ -613,9 +605,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         const SizedBox(height: 10),
                         MilestoneTrack(
                           totalSaved: totalSaved,
-                          currencySymbol: Subscription.currencySymbol(
-                            ref.watch(currencyProvider),
-                          ),
+                          currencyCode: ref.watch(currencyProvider),
                         ),
                       ],
                     ),
@@ -890,7 +880,7 @@ class _CancelledCard extends StatelessWidget {
 
             // Savings
             Text(
-              '+${Subscription.currencySymbol(cancelled.currency)}${_saved.toStringAsFixed(0)}',
+              '+${Subscription.formatPrice(_saved, cancelled.currency, decimals: 0)}',
               style: ChompdTypography.mono(
                 size: 13,
                 weight: FontWeight.w700,
@@ -1129,14 +1119,14 @@ class _YearlyBurnBanner extends StatelessWidget {
   final int subCount;
   final double totalSaved;
   final int cancelledCount;
-  final String currencySymbol;
+  final String currencyCode;
 
   const _YearlyBurnBanner({
     required this.yearlyTotal,
     required this.subCount,
     required this.totalSaved,
     required this.cancelledCount,
-    required this.currencySymbol,
+    required this.currencyCode,
   });
 
   @override
@@ -1218,7 +1208,7 @@ class _YearlyBurnBanner extends StatelessWidget {
 
           // The big number
           Text(
-            '$currencySymbol${yearlyTotal.toStringAsFixed(0)}',
+            Subscription.formatPrice(yearlyTotal, currencyCode, decimals: 0),
             style: ChompdTypography.mono(
               size: 36,
               weight: FontWeight.w700,
@@ -1242,12 +1232,12 @@ class _YearlyBurnBanner extends StatelessWidget {
             children: [
               _BurnChip(
                 label: 'monthly avg',
-                value: '$currencySymbol${monthlyAvg.toStringAsFixed(0)}',
+                value: Subscription.formatPrice(monthlyAvg, currencyCode, decimals: 0),
               ),
               const SizedBox(width: 8),
               _BurnChip(
                 label: 'daily cost',
-                value: '$currencySymbol${(yearlyTotal / 365).toStringAsFixed(2)}',
+                value: Subscription.formatPrice(yearlyTotal / 365, currencyCode),
               ),
             ],
           ),
@@ -1301,12 +1291,12 @@ class _BurnChip extends StatelessWidget {
 class _CompactSavings extends StatelessWidget {
   final double totalSaved;
   final int cancelledCount;
-  final String currencySymbol;
+  final String currencyCode;
 
   const _CompactSavings({
     required this.totalSaved,
     required this.cancelledCount,
-    required this.currencySymbol,
+    required this.currencyCode,
   });
 
   @override
@@ -1333,7 +1323,7 @@ class _CompactSavings extends StatelessWidget {
           Container(width: 1, height: 12, color: ChompdColors.mint.withValues(alpha: 0.2)),
           const SizedBox(width: 8),
           Text(
-            '$currencySymbol${totalSaved.toStringAsFixed(0)}',
+            Subscription.formatPrice(totalSaved, currencyCode, decimals: 0),
             style: ChompdTypography.mono(
               size: 14,
               weight: FontWeight.w700,

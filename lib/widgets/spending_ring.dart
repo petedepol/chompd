@@ -71,7 +71,6 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
     final totalYearly = ref.watch(yearlySpendProvider);
     final budget = ref.watch(budgetProvider);
     final currency = ref.watch(currencyProvider);
-    final symbol = Subscription.currencySymbol(currency);
 
     final isYearly = view == SpendView.yearly;
     final displayAmount = isYearly ? totalYearly : totalMonthly;
@@ -125,7 +124,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
 
                     // Amount
                     Text(
-                      '$symbol${animatedTotal.toStringAsFixed(2)}',
+                      Subscription.formatPrice(animatedTotal, currency),
                       style: ChompdTypography.priceHero,
                     ),
                     const SizedBox(height: 2),
@@ -135,8 +134,8 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                       duration: const Duration(milliseconds: 300),
                       child: Text(
                         overBudget
-                            ? '$symbol${(displayAmount - displayBudget).toStringAsFixed(0)} over budget'
-                            : 'of $symbol${displayBudget.toStringAsFixed(0)} budget',
+                            ? '${Subscription.formatPrice(displayAmount - displayBudget, currency, decimals: 0)} over budget'
+                            : 'of ${Subscription.formatPrice(displayBudget, currency, decimals: 0)} budget',
                         key: ValueKey('budget_$isYearly'),
                         style: TextStyle(
                           fontSize: 10,

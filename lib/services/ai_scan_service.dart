@@ -8,10 +8,11 @@ import '../models/scan_result.dart';
 import '../models/trap_result.dart';
 import '../models/scan_output.dart';
 
-/// In debug builds, use mock data. In release, use real API.
-/// Override with --dart-define=USE_MOCK=true to force mock in release.
+/// Use real API when ANTHROPIC_API_KEY is provided, mock data otherwise.
+/// Override with --dart-define=USE_MOCK=true to force mock even with a key.
 const _forceMock = bool.fromEnvironment('USE_MOCK');
-final useMockData = _forceMock || kDebugMode;
+const _hasApiKey = String.fromEnvironment('ANTHROPIC_API_KEY') != '';
+final useMockData = _forceMock || !_hasApiKey;
 
 /// Claude Haiku integration for screenshot scanning.
 ///
@@ -468,27 +469,36 @@ class AiScanService {
   /// Includes both subscription extraction (Task 1) and
   /// trap detection (Task 2) in a single API call.
   static const _extractionPrompt = '''
-Analyse this screenshot of a subscription confirmation, bank statement, or app store receipt.
+Analyse this screenshot. It may be a subscription confirmation email, bank statement, app store receipt, billing page, or any screen showing subscription/payment information.
 
 TASK 1 — SUBSCRIPTION EXTRACTION:
-Extract these details:
-- service_name: actual product name (e.g. "Netflix", not "NETFLIX.COM")
-- price: numeric only, no currency symbol
-- currency: ISO 4217 (GBP, USD, EUR)
-- billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly"
-- next_renewal: ISO date string, or null
-- is_trial: boolean
+Extract as many of these details as you can find in the image:
+- service_name: the actual product/service name (e.g. "Claude Pro", "Netflix", "Spotify")
+- price: numeric only, no currency symbol. If price is NOT visible in the image, set to null.
+- currency: ISO 4217 code (GBP, USD, EUR, PLN, etc). Infer from symbols, language, or context.
+- billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly". Infer from context if not explicit.
+- next_renewal: ISO date string if visible, or null
+- is_trial: boolean — true if this is a trial/introductory period
 - trial_end_date: ISO date string when trial ends, or null
 - category: one of "Entertainment", "Music", "Design", "Fitness", "Productivity", "Storage", "News", "Gaming", "Finance", "Education", "Health", "Other"
 - icon: first letter or short identifier (1-2 chars)
-- brand_color: hex colour code
-- source_type: "email" | "bank_statement" | "app_store" | "receipt"
-- confidence: per-field 0.0-1.0
-- overall_confidence: average
-- tier: 1 (certain), 2 (likely), 3 (uncertain)
+- brand_color: hex colour code for the brand
+- source_type: "email" | "bank_statement" | "app_store" | "receipt" | "billing_page" | "other"
+
+IMPORTANT RULES:
+1. If a field is NOT visible in the image, set it to null. Do NOT guess or default to 0.
+2. For price: only include it if you can see an actual price/amount in the image. If the email just confirms a subscription without showing the price, set price to null.
+3. For service_name: use the real product name. "Claude Pro" not "Anthropic". "YouTube Premium" not "Google".
+4. For billing_cycle: if the image says "next charge" with a date, calculate the cycle from context. If it says "monthly" or "annual", use that directly. If not determinable, set to null.
+5. For next_renewal: if a "next charge date" or "renewal date" is visible, parse it.
+6. Set confidence per field: 1.0 if clearly visible, 0.5 if inferred, 0.0 if not found/guessed.
+
+ALSO INCLUDE:
+- missing_fields: array of field names that could not be found in the image (e.g. ["price", "billing_cycle"])
+- extraction_notes: brief explanation of what you found and what's missing (max 2 sentences)
 
 TASK 2 — TRAP DETECTION:
-Also analyse for subscription dark patterns:
+Analyse for subscription dark patterns:
 1. Trial periods — what is the trial length? What happens after?
 2. Auto-renewal terms — is there automatic billing after the trial?
 3. Real price — what will the user actually pay per year after any intro period?
@@ -499,9 +509,9 @@ RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
 {
   "subscription": {
     "service_name": "string",
-    "price": number,
+    "price": number or null,
     "currency": "string",
-    "billing_cycle": "string",
+    "billing_cycle": "string or null",
     "next_renewal": "string or null",
     "is_trial": boolean,
     "trial_end_date": "string or null",
@@ -511,7 +521,9 @@ RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
     "source_type": "string",
     "confidence": { "name": 0.0, "price": 0.0, "cycle": 0.0, "currency": 0.0 },
     "overall_confidence": 0.0,
-    "tier": 1
+    "tier": 1,
+    "missing_fields": ["string"],
+    "extraction_notes": "string"
   },
   "trap": {
     "is_trap": boolean,
@@ -529,12 +541,11 @@ RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
 }
 
 SEVERITY GUIDE:
-- "low": Standard trial with reasonable auto-renewal. User likely knows what they're getting.
-- "medium": Intro price that significantly increases. The jump is notable but not extreme.
+- "low": Standard subscription with clear terms.
+- "medium": Intro price that significantly increases. Notable but not extreme.
 - "high": Extreme price jump OR deceptive framing. Designed to mislead.
 
-If no subscription or trap is detected, return is_trap: false and confidence: 0 in the trap object.
-If multiple subscriptions are visible, return a JSON array of subscription objects (trap applies to the primary one).
+If no subscription is detected at all, return service_name "Unknown" with overall_confidence 0.
 Return ONLY valid JSON, no markdown, no explanation.
 ''';
 }

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -25,10 +24,7 @@ import '../paywall/paywall_screen.dart';
 /// - User answers (right, accent-tinted)
 /// - Final results (left, green gradient)
 class ScanScreen extends ConsumerStatefulWidget {
-  /// Optional scenario for testing (mock data).
-  final String? testScenario;
-
-  const ScanScreen({super.key, this.testScenario});
+  const ScanScreen({super.key});
 
   @override
   ConsumerState<ScanScreen> createState() => _ScanScreenState();
@@ -44,15 +40,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     super.initState();
     // Seed the merchant DB if not already done
     MerchantDb.instance.seed();
-
-    // Auto-start scan if a test scenario is provided
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.testScenario != null) {
-        ref.read(scanProvider.notifier).startScan(
-              scenario: widget.testScenario!,
-            );
-      }
-    });
   }
 
   @override
@@ -344,70 +331,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             ),
           ),
 
-          // ─── Test Scenario Buttons (debug only) ───
-          if (kDebugMode) ...[
-            const SizedBox(height: 32),
-            Text(
-              'TEST SCENARIOS',
-              style: ChompdTypography.sectionLabel,
-            ),
-            const SizedBox(height: 12),
-
-            _ScenarioButton(
-              label: 'Clear Email',
-              subtitle: 'Netflix \u2022 Tier 1 auto-detect',
-              icon: '\u26A1',
-              color: ChompdColors.mint,
-              onTap: () => _startTestScan('clear_email'),
-            ),
-            const SizedBox(height: 6),
-            _ScenarioButton(
-              label: 'Learned Match',
-              subtitle: 'Kindle Unlimited \u2022 Tier 2 confirm',
-              icon: '\uD83D\uDC4D',
-              color: ChompdColors.blue,
-              onTap: () => _startTestScan('learned_match'),
-            ),
-            const SizedBox(height: 6),
-            _ScenarioButton(
-              label: 'Ambiguous Charge',
-              subtitle: 'Microsoft \u2022 Tier 3 multi-choice',
-              icon: '\uD83D\uDCAC',
-              color: ChompdColors.purple,
-              onTap: () => _startTestScan('ambiguous'),
-            ),
-            const SizedBox(height: 6),
-            _ScenarioButton(
-              label: 'Trial + Currency',
-              subtitle: 'Figma Pro \u2022 Tier 3, 2 questions',
-              icon: '\u23F0',
-              color: ChompdColors.amber,
-              onTap: () => _startTestScan('trial'),
-            ),
-            const SizedBox(height: 6),
-            _ScenarioButton(
-              label: 'Multi-Sub Statement',
-              subtitle: '4 charges \u2022 Mixed tiers',
-              icon: '\uD83D\uDCCB',
-              color: ChompdColors.pink,
-              onTap: () => _startTestScan('multi'),
-            ),
-          ],
-
           const Spacer(),
         ],
       ),
     );
-  }
-
-  void _startTestScan(String scenario) async {
-    final canScan = ref.read(canScanProvider);
-    if (!canScan) {
-      await showPaywall(context, trigger: PaywallTrigger.scanLimit);
-      return;
-    }
-    ref.read(scanCounterProvider.notifier).increment();
-    ref.read(scanProvider.notifier).startScan(scenario: scenario);
   }
 
   /// Pick an image from camera or gallery and start a real AI scan.
@@ -712,9 +639,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       ..uid =
           '${result.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}'
       ..name = result.serviceName
-      ..price = result.price
+      ..price = result.price ?? 0
       ..currency = result.currency
-      ..cycle = _parseCycle(result.billingCycle)
+      ..cycle = _parseCycle(result.billingCycle ?? 'monthly')
       ..nextRenewal =
           result.nextRenewal ?? now.add(const Duration(days: 30))
       ..category = result.category ?? 'Other'
@@ -756,9 +683,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         ..uid =
             '${result.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}'
         ..name = result.serviceName
-        ..price = result.price
+        ..price = result.price ?? 0
         ..currency = result.currency
-        ..cycle = _parseCycle(result.billingCycle)
+        ..cycle = _parseCycle(result.billingCycle ?? 'monthly')
         ..nextRenewal =
             result.nextRenewal ?? now.add(const Duration(days: 30))
         ..category = result.category ?? 'Other'
@@ -1387,7 +1314,7 @@ class _ResultMessageState extends State<_ResultMessage>
                       Row(
                         children: [
                           Text(
-                            '${r.currency == 'GBP' ? '\u00A3' : '\$'}${r.price.toStringAsFixed(2)}/${r.billingCycle == 'monthly' ? 'mo' : r.billingCycle}',
+                            '${Subscription.formatPrice(r.price ?? 0, r.currency)}/${r.billingCycle == 'monthly' ? 'mo' : r.billingCycle ?? 'mo'}',
                             style: ChompdTypography.mono(
                               size: 12,
                               weight: FontWeight.w700,
@@ -1490,7 +1417,7 @@ class _MultiResultMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = results.fold(0.0, (sum, r) => sum + r.price);
+    final total = results.fold(0.0, (sum, r) => sum + (r.price ?? 0));
 
     return _ChatBubble(
       isUser: false,
@@ -1635,7 +1562,7 @@ class _MiniResultRow extends StatelessWidget {
               ),
             ),
           Text(
-            '\u00A3${result.price.toStringAsFixed(2)}',
+            Subscription.formatPrice(result.price ?? 0, result.currency),
             style: ChompdTypography.mono(
               size: 11,
               weight: FontWeight.w700,
@@ -1697,86 +1624,3 @@ class _OptionPillState extends State<_OptionPill> {
   }
 }
 
-/// Scenario button for the prototype test view.
-class _ScenarioButton extends StatefulWidget {
-  final String label;
-  final String subtitle;
-  final String icon;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _ScenarioButton({
-    required this.label,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  State<_ScenarioButton> createState() => _ScenarioButtonState();
-}
-
-class _ScenarioButtonState extends State<_ScenarioButton> {
-  bool _pressed = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTapDown: (_) => setState(() => _pressed = true),
-      onTapUp: (_) {
-        setState(() => _pressed = false);
-        widget.onTap();
-      },
-      onTapCancel: () => setState(() => _pressed = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 100),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: _pressed
-              ? widget.color.withValues(alpha: 0.12)
-              : ChompdColors.bgCard,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: _pressed
-                ? widget.color.withValues(alpha: 0.4)
-                : ChompdColors.border,
-          ),
-        ),
-        child: Row(
-          children: [
-            Text(widget.icon, style: const TextStyle(fontSize: 18)),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.label,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: _pressed ? widget.color : ChompdColors.text,
-                    ),
-                  ),
-                  Text(
-                    widget.subtitle,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: ChompdColors.textDim,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 12,
-              color: ChompdColors.textDim,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

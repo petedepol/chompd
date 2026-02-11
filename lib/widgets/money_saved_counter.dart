@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../models/subscription.dart';
 
 /// Animated money saved counter with a number roll effect.
 ///
@@ -8,12 +9,12 @@ import '../config/theme.dart';
 /// with a smooth counting animation.
 class MoneySavedCounter extends StatefulWidget {
   final double amount;
-  final String currencySymbol;
+  final String currencyCode;
 
   const MoneySavedCounter({
     super.key,
     required this.amount,
-    this.currencySymbol = '\u00A3',
+    this.currencyCode = 'GBP',
   });
 
   @override
@@ -62,7 +63,7 @@ class _MoneySavedCounterState extends State<MoneySavedCounter>
       animation: _countAnimation,
       builder: (context, child) {
         return Text(
-          '${widget.currencySymbol}${_countAnimation.value.toStringAsFixed(0)}',
+          Subscription.formatPrice(_countAnimation.value, widget.currencyCode, decimals: 0),
           style: ChompdTypography.mono(
             size: 14,
             weight: FontWeight.w700,

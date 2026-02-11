@@ -223,12 +223,12 @@ class Subscription {
     }
   }
 
-  /// Price display string (e.g. "£15.99/mo").
+  /// Price display string (e.g. "£15.99/mo" or "10.00 zł/mo").
   String get priceDisplay {
-    final symbol = currencySymbol(currency);
-    return '$symbol${price.toStringAsFixed(2)}/${cycle.shortLabel}';
+    return '${formatPrice(price, currency)}/${cycle.shortLabel}';
   }
 
+  /// The currency symbol for a given ISO 4217 code.
   static String currencySymbol(String code) {
     switch (code.toUpperCase()) {
       case 'GBP':
@@ -246,7 +246,7 @@ class Subscription {
       case 'PLN':
         return 'z\u0142';
       case 'CHF':
-        return 'CHF';
+        return 'CHF ';
       case 'SEK':
       case 'NOK':
       case 'DKK':
@@ -256,19 +256,49 @@ class Subscription {
     }
   }
 
+  /// Whether the currency symbol goes after the number.
+  ///
+  /// Suffix: EUR (€), PLN (zł), SEK/NOK/DKK (kr)
+  /// Prefix: GBP (£), USD ($), JPY (¥), CAD (C$), AUD (A$), CHF
+  static bool isSymbolSuffix(String code) {
+    switch (code.toUpperCase()) {
+      case 'EUR':
+      case 'PLN':
+      case 'SEK':
+      case 'NOK':
+      case 'DKK':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  /// Format a price with the correct symbol placement.
+  ///
+  /// Prefix currencies: "£15.99", "$20.00"
+  /// Suffix currencies: "15.99 zł", "10.00 kr"
+  static String formatPrice(double amount, String currencyCode, {int decimals = 2}) {
+    final sym = currencySymbol(currencyCode);
+    final value = amount.toStringAsFixed(decimals);
+    if (isSymbolSuffix(currencyCode)) {
+      return '$value $sym';
+    }
+    return '$sym$value';
+  }
+
   /// Build a Subscription from AI scan + trap detection results.
   ///
   /// Used by the "Track Trial Anyway" flow to create a subscription
   /// with all trap metadata populated.
   static Subscription fromScanWithTrap(ScanResult scan, TrapResult trap) {
     final now = DateTime.now();
-    final cycle = BillingCycle.fromString(scan.billingCycle);
+    final cycle = BillingCycle.fromString(scan.billingCycle ?? 'monthly');
 
     final sub = Subscription()
       ..uid =
           '${scan.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}'
       ..name = scan.serviceName
-      ..price = scan.price
+      ..price = scan.price ?? 0
       ..currency = scan.currency
       ..cycle = cycle
       ..nextRenewal =

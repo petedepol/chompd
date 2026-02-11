@@ -333,7 +333,7 @@ class SettingsScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '\u00A3${AppConstants.proPrice.toStringAsFixed(2)} \u2022 One-time payment',
+                                    '${Subscription.formatPrice(AppConstants.proPrice, 'GBP')} \u2022 One-time payment',
                                     style: ChompdTypography.mono(
                                       size: 11,
                                       color: ChompdColors.textDim,
@@ -1157,7 +1157,6 @@ class _BudgetSetting extends StatelessWidget {
   Widget build(BuildContext context) {
     final budget = ref.watch(budgetProvider);
     final currency = ref.watch(currencyProvider);
-    final symbol = Subscription.currencySymbol(currency);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -1216,7 +1215,7 @@ class _BudgetSetting extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    '$symbol${budget.toStringAsFixed(0)}',
+                    Subscription.formatPrice(budget, currency, decimals: 0),
                     style: ChompdTypography.mono(
                       size: 14,
                       weight: FontWeight.w700,
@@ -1256,7 +1255,7 @@ class _BudgetSetting extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    '$symbol${preset.toStringAsFixed(0)}',
+                    Subscription.formatPrice(preset, currency, decimals: 0),
                     style: ChompdTypography.mono(
                       size: 12,
                       weight: FontWeight.w700,
@@ -1321,8 +1320,18 @@ class _BudgetSetting extends StatelessWidget {
                   color: ChompdColors.text,
                 ),
                 decoration: InputDecoration(
-                  prefixText: '${Subscription.currencySymbol(ref.read(currencyProvider))} ',
+                  prefixText: Subscription.isSymbolSuffix(ref.read(currencyProvider))
+                      ? null
+                      : '${Subscription.currencySymbol(ref.read(currencyProvider))} ',
                   prefixStyle: ChompdTypography.mono(
+                    size: 20,
+                    weight: FontWeight.w700,
+                    color: ChompdColors.mint,
+                  ),
+                  suffixText: Subscription.isSymbolSuffix(ref.read(currencyProvider))
+                      ? ' ${Subscription.currencySymbol(ref.read(currencyProvider))}'
+                      : null,
+                  suffixStyle: ChompdTypography.mono(
                     size: 20,
                     weight: FontWeight.w700,
                     color: ChompdColors.mint,

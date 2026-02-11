@@ -197,7 +197,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '${Subscription.currencySymbol(subscription.currency)}${subscription.price.toStringAsFixed(2)}',
+                        Subscription.formatPrice(subscription.price, subscription.currency),
                         style: (subscription.isTrap == true)
                             ? ChompdTypography.priceCard.copyWith(
                                 decoration: TextDecoration.lineThrough,
@@ -209,7 +209,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       if (subscription.isTrap == true &&
                           subscription.realPrice != null)
                         Text(
-                          '\u2192 ${Subscription.currencySymbol(subscription.currency)}${subscription.realPrice!.toStringAsFixed(2)}',
+                          '\u2192 ${Subscription.formatPrice(subscription.realPrice!, subscription.currency)}',
                           style: GoogleFonts.spaceMono(
                             fontSize: 13,
                             fontWeight: FontWeight.w700,

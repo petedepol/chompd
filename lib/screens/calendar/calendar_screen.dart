@@ -26,8 +26,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.month;
 
-  String get _currencySymbol =>
-      Subscription.currencySymbol(ref.read(currencyProvider));
+  String get _currencyCode => ref.read(currencyProvider);
 
   @override
   Widget build(BuildContext context) {
@@ -400,7 +399,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             const Spacer(),
             if (subs.isNotEmpty)
               Text(
-                '$_currencySymbol${dayTotal.toStringAsFixed(2)}',
+                Subscription.formatPrice(dayTotal, _currencyCode),
                 style: ChompdTypography.mono(
                   size: 16,
                   weight: FontWeight.w700,
@@ -591,7 +590,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               const SizedBox(width: 10),
               _StatPill(
                 label: 'Total',
-                value: '$_currencySymbol${totalSpend.toStringAsFixed(2)}',
+                value: Subscription.formatPrice(totalSpend, _currencyCode),
                 color: ChompdColors.mint,
               ),
             ],
@@ -622,7 +621,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Expanded(
                     child: Text(
                       '${busiest.value.length} renewals on ${DateHelpers.shortDate(busiest.key)} '
-                      'totalling $_currencySymbol${busiest.value.fold(0.0, (s, sub) => s + sub.price).toStringAsFixed(2)}',
+                      'totalling ${Subscription.formatPrice(busiest.value.fold(0.0, (s, sub) => s + sub.price), _currencyCode)}',
                       style: const TextStyle(
                         fontSize: 11,
                         color: ChompdColors.amber,
@@ -666,7 +665,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Expanded(
                     child: Text(
                       'Biggest day: ${DateHelpers.shortDate(priciest.key)} '
-                      '\u2014 $_currencySymbol${priciestSpend.toStringAsFixed(2)}',
+                      '\u2014 ${Subscription.formatPrice(priciestSpend, _currencyCode)}',
                       style: TextStyle(
                         fontSize: 11,
                         color: priciestSpend >= 50

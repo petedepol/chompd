@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/dodged_trap.dart';
 import '../models/scan_output.dart';
 import '../models/scan_result.dart';
+import '../models/subscription.dart';
 import '../models/trap_result.dart';
 import '../services/ai_scan_service.dart';
 import '../services/dodged_trap_repository.dart';
@@ -254,8 +255,12 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
       state = state.copyWith(currentResult: result);
 
+      // If critical fields are missing, ask user to fill gaps first
+      if (result.hasMissingFields) {
+        await _handleMissingData(result);
+      }
       // Route based on tier / confidence
-      if (result.tier == 1 || result.isHighConfidence) {
+      else if (result.tier == 1 || result.isHighConfidence) {
         await _handleAutoDetect(result);
       } else if (result.tier == 2) {
         await _handleQuickConfirm(result);
@@ -330,11 +335,16 @@ class ScanNotifier extends StateNotifier<ScanState> {
     final merchantDb = MerchantDb.instance;
     final alternatives = merchantDb.getAlternatives(result.serviceName);
 
+    final priceStr = result.price != null
+        ? Subscription.formatPrice(result.price!, result.currency)
+        : '?';
+    final cycleStr = result.billingCycle ?? 'month';
+
     final messages = <ChatMessage>[
       ...state.messages,
       ChatMessage(
         type: ChatMessageType.partial,
-        text: 'Found a charge for ${result.currency == 'GBP' ? '\u00A3' : '\$'}${result.price.toStringAsFixed(2)}/${result.billingCycle}.',
+        text: 'Found a charge for $priceStr/$cycleStr.',
         scanResult: result,
       ),
     ];
@@ -351,10 +361,13 @@ class ScanNotifier extends StateNotifier<ScanState> {
       );
     } else {
       // Standard Tier 3: single multi-choice question
+      final displayName = result.serviceName.contains('Microsoft')
+          ? 'Microsoft'
+          : result.serviceName.split(' ').first;
       messages.add(
         ChatMessage(
           type: ChatMessageType.question,
-          text: 'Found a charge for ${result.serviceName.contains('Microsoft') ? 'Microsoft' : result.serviceName.split(' ').first} at ${result.currency == 'GBP' ? '\u00A3' : '\$'}${result.price.toStringAsFixed(2)}/month. Which service is this?',
+          text: 'Found a charge for $displayName at $priceStr/month. Which service is this?',
           questionType: QuestionType.choose,
           options: alternatives,
         ),
@@ -377,13 +390,13 @@ class ScanNotifier extends StateNotifier<ScanState> {
     final needsInput = results.where((r) => r.needsClarification).toList();
 
     final totalMonthly =
-        results.fold(0.0, (sum, r) => sum + r.price);
+        results.fold(0.0, (sum, r) => sum + (r.price ?? 0));
 
     final messages = <ChatMessage>[
       ...state.messages,
       ChatMessage(
         type: ChatMessageType.info,
-        text: 'Found ${results.length} recurring charges totalling \u00A3${totalMonthly.toStringAsFixed(2)}/month.',
+        text: 'Found ${results.length} recurring charges totalling ${Subscription.formatPrice(totalMonthly, 'GBP')}/month.',
       ),
     ];
 
@@ -415,7 +428,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
         messages.add(
           ChatMessage(
             type: ChatMessageType.question,
-            text: 'Which service is the \u00A3${unclear.price.toStringAsFixed(2)}/mo charge for?',
+            text: 'Which service is the ${Subscription.formatPrice(unclear.price ?? 0, unclear.currency)}/mo charge for?',
             questionType: QuestionType.choose,
             options: alternatives,
           ),
@@ -450,26 +463,38 @@ class ScanNotifier extends StateNotifier<ScanState> {
       ),
     );
 
+    final currentResult = state.currentResult;
+
+    // ─── Handle missing-data price/cycle answers ───
+    if (currentResult != null && currentResult.hasMissingFields) {
+      final handled = _handleMissingDataAnswer(
+        answer,
+        currentResult,
+        messages,
+      );
+      if (handled) return;
+    }
+
     // Update the current result name if the answer changes it
-    ScanResult? updatedResult = state.currentResult;
-    if (answer != 'Other' && state.currentResult != null) {
+    ScanResult? updatedResult = currentResult;
+    if (answer != 'Other' && currentResult != null) {
       updatedResult = ScanResult(
-        serviceName: answer == state.currentResult!.serviceName
-            ? answer
-            : answer,
-        price: state.currentResult!.price,
-        currency: state.currentResult!.currency,
-        billingCycle: state.currentResult!.billingCycle,
-        nextRenewal: state.currentResult!.nextRenewal,
-        isTrial: state.currentResult!.isTrial,
-        trialEndDate: state.currentResult!.trialEndDate,
-        category: state.currentResult!.category,
-        iconName: state.currentResult!.iconName,
-        brandColor: state.currentResult!.brandColor,
-        confidence: state.currentResult!.confidence,
+        serviceName: answer,
+        price: currentResult.price,
+        currency: currentResult.currency,
+        billingCycle: currentResult.billingCycle,
+        nextRenewal: currentResult.nextRenewal,
+        isTrial: currentResult.isTrial,
+        trialEndDate: currentResult.trialEndDate,
+        category: currentResult.category,
+        iconName: currentResult.iconName,
+        brandColor: currentResult.brandColor,
+        confidence: currentResult.confidence,
         overallConfidence: 0.95, // User confirmed
-        tier: state.currentResult!.tier,
-        sourceType: state.currentResult!.sourceType,
+        tier: currentResult.tier,
+        sourceType: currentResult.sourceType,
+        missingFields: currentResult.missingFields,
+        extractionNotes: currentResult.extractionNotes,
       );
     }
 
@@ -493,6 +518,143 @@ class ScanNotifier extends StateNotifier<ScanState> {
     }
   }
 
+  /// Handle a user answer to a missing-data question (price or cycle).
+  /// Returns true if handled, false to fall through to normal logic.
+  bool _handleMissingDataAnswer(
+    String answer,
+    ScanResult currentResult,
+    List<ChatMessage> messages,
+  ) {
+    // ─── Price answer ───
+    if (currentResult.needsPrice) {
+      double? parsedPrice;
+      String? parsedCycle;
+
+      // Parse price from options like "£18/mo", "$20/mo", "15.99 zł/mo"
+      final priceMatch =
+          RegExp(r'[\£\$\€]?([\d.]+)\s*(?:z[łl])?\s*/?(?:(mo|yr|wk|qtr))?')
+              .firstMatch(answer);
+      if (priceMatch != null) {
+        parsedPrice = double.tryParse(priceMatch.group(1) ?? '');
+        final cycleHint = priceMatch.group(2);
+        if (cycleHint == 'yr') {
+          parsedCycle = 'yearly';
+        } else if (cycleHint == 'mo') {
+          parsedCycle = 'monthly';
+        } else if (cycleHint == 'wk') {
+          parsedCycle = 'weekly';
+        } else if (cycleHint == 'qtr') {
+          parsedCycle = 'quarterly';
+        }
+      }
+
+      if (parsedPrice != null) {
+        // Create updated result with user-provided price
+        final updatedMissing = currentResult.missingFields
+            .where((f) => f != 'price')
+            .toList();
+        // Also remove billing_cycle from missing if we got it from the answer
+        if (parsedCycle != null) {
+          updatedMissing.remove('billing_cycle');
+        }
+
+        final updated = ScanResult(
+          serviceName: currentResult.serviceName,
+          price: parsedPrice,
+          currency: currentResult.currency,
+          billingCycle: parsedCycle ?? currentResult.billingCycle,
+          nextRenewal: currentResult.nextRenewal,
+          isTrial: currentResult.isTrial,
+          trialEndDate: currentResult.trialEndDate,
+          category: currentResult.category,
+          iconName: currentResult.iconName,
+          brandColor: currentResult.brandColor,
+          confidence: currentResult.confidence,
+          overallConfidence: 0.85, // User-provided = high confidence
+          tier: 2,
+          sourceType: currentResult.sourceType,
+          missingFields: updatedMissing,
+          extractionNotes: currentResult.extractionNotes,
+        );
+
+        state = state.copyWith(
+          currentResult: updated,
+          messages: messages,
+        );
+
+        // Still need billing cycle?
+        if (updated.needsCycle) {
+          messages.add(ChatMessage(
+            type: ChatMessageType.question,
+            text: 'Is ${updated.serviceName} billed monthly or yearly?',
+            questionType: QuestionType.choose,
+            options: const ['Monthly', 'Yearly', 'Weekly', 'Quarterly'],
+          ));
+          state = state.copyWith(
+            messages: messages,
+            pendingQuestionIndex: messages.length - 1,
+          );
+          return true;
+        }
+
+        // All data collected — route to confirmation
+        _handleQuickConfirm(updated);
+        return true;
+      }
+    }
+
+    // ─── Billing cycle answer ───
+    if (currentResult.needsCycle) {
+      final cycleLower = answer.toLowerCase();
+      String? parsedCycle;
+      if (cycleLower.contains('month')) {
+        parsedCycle = 'monthly';
+      } else if (cycleLower.contains('year') || cycleLower.contains('annual')) {
+        parsedCycle = 'yearly';
+      } else if (cycleLower.contains('week')) {
+        parsedCycle = 'weekly';
+      } else if (cycleLower.contains('quarter')) {
+        parsedCycle = 'quarterly';
+      }
+
+      if (parsedCycle != null) {
+        final updatedMissing = currentResult.missingFields
+            .where((f) => f != 'billing_cycle')
+            .toList();
+
+        final updated = ScanResult(
+          serviceName: currentResult.serviceName,
+          price: currentResult.price,
+          currency: currentResult.currency,
+          billingCycle: parsedCycle,
+          nextRenewal: currentResult.nextRenewal,
+          isTrial: currentResult.isTrial,
+          trialEndDate: currentResult.trialEndDate,
+          category: currentResult.category,
+          iconName: currentResult.iconName,
+          brandColor: currentResult.brandColor,
+          confidence: currentResult.confidence,
+          overallConfidence: 0.85,
+          tier: 2,
+          sourceType: currentResult.sourceType,
+          missingFields: updatedMissing,
+          extractionNotes: currentResult.extractionNotes,
+        );
+
+        state = state.copyWith(
+          currentResult: updated,
+          messages: messages,
+        );
+
+        // All data collected — route to confirmation
+        _handleQuickConfirm(updated);
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   /// After a trial question, add the follow-up currency question.
   void addFollowUpQuestion() {
     if (state.currentResult == null) return;
@@ -502,7 +664,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
     messages.add(
       ChatMessage(
         type: ChatMessageType.question,
-        text: 'The price is in ${result.currency} (${result.currency == 'USD' ? '\$' : '\u00A3'}${result.price.toStringAsFixed(2)}). How should we track it?',
+        text: 'The price is in ${result.currency} (${Subscription.formatPrice(result.price ?? 0, result.currency)}). How should we track it?',
         questionType: QuestionType.choose,
         options: [
           'Convert to \u00A3 GBP',
@@ -515,6 +677,131 @@ class ScanNotifier extends StateNotifier<ScanState> {
       messages: messages,
       pendingQuestionIndex: messages.length - 1,
     );
+  }
+
+  /// Handle scans where some fields couldn't be extracted from the image.
+  /// Shows what was found and asks the user to fill in the gaps.
+  Future<void> _handleMissingData(ScanResult result) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final messages = <ChatMessage>[...state.messages];
+
+    // Show what we DID find
+    final foundParts = <String>[];
+    if (result.serviceName != 'Unknown') {
+      foundParts.add(result.serviceName);
+    }
+    if (result.nextRenewal != null) {
+      foundParts.add(
+          'renews ${result.nextRenewal!.day}/${result.nextRenewal!.month}/${result.nextRenewal!.year}');
+    }
+    if (result.billingCycle != null) {
+      foundParts.add(result.billingCycle!);
+    }
+
+    if (foundParts.isNotEmpty) {
+      messages.add(ChatMessage(
+        type: ChatMessageType.info,
+        text: 'Found: ${foundParts.join(' \u00B7 ')}',
+      ));
+    }
+
+    // Show extraction notes from AI
+    if (result.extractionNotes != null) {
+      messages.add(ChatMessage(
+        type: ChatMessageType.info,
+        text: result.extractionNotes!,
+      ));
+    }
+
+    // Ask for price if missing
+    if (result.needsPrice) {
+      final name = result.serviceName != 'Unknown'
+          ? result.serviceName
+          : 'this subscription';
+      messages.add(ChatMessage(
+        type: ChatMessageType.question,
+        text: 'I couldn\'t find the price in this image. How much is $name?',
+        questionType: QuestionType.choose,
+        options: _suggestPrices(result),
+      ));
+    }
+    // Ask for billing cycle if missing (but price was found)
+    else if (result.needsCycle) {
+      messages.add(ChatMessage(
+        type: ChatMessageType.question,
+        text: 'Is ${result.serviceName} billed monthly or yearly?',
+        questionType: QuestionType.choose,
+        options: const ['Monthly', 'Yearly', 'Weekly', 'Quarterly'],
+      ));
+    }
+    // Price and cycle both present — nothing to ask, route to confirm
+    else {
+      state = state.copyWith(
+        messages: messages,
+        currentResult: result,
+      );
+      if (result.serviceName != 'Unknown' &&
+          result.overallConfidence >= 0.7) {
+        await _handleQuickConfirm(result);
+      } else {
+        await _handleFullQuestion(result, 'clear_email');
+      }
+      return;
+    }
+
+    state = state.copyWith(
+      phase: ScanPhase.questioning,
+      messages: messages,
+      currentResult: result,
+      pendingQuestionIndex: messages.indexWhere(
+        (m) => m.type == ChatMessageType.question && !m.isAnswered,
+      ),
+    );
+  }
+
+  /// Suggest common price points based on the service name and currency.
+  List<String> _suggestPrices(ScanResult result) {
+    final currency = result.currency;
+    final sym = Subscription.currencySymbol(currency);
+    final isSuffix = Subscription.isSymbolSuffix(currency);
+
+    String fmt(double amount, String cycle) {
+      final value = amount.toStringAsFixed(2);
+      final price = isSuffix ? '$value $sym' : '$sym$value';
+      return '$price/$cycle';
+    }
+
+    // Known service prices (approximate, in their typical currency)
+    final knownPrices = <String, List<String>>{
+      'claude': [fmt(18, 'mo'), fmt(16, 'mo'), fmt(20, 'mo')],
+      'chatgpt': [fmt(20, 'mo'), fmt(200, 'yr')],
+      'netflix': [fmt(4.99, 'mo'), fmt(10.99, 'mo'), fmt(17.99, 'mo')],
+      'spotify': [fmt(10.99, 'mo'), fmt(14.99, 'mo')],
+      'youtube': [fmt(11.99, 'mo'), fmt(19.99, 'mo')],
+      'apple': [fmt(0.99, 'mo'), fmt(2.99, 'mo'), fmt(6.99, 'mo')],
+      'microsoft': [fmt(5.99, 'mo'), fmt(7.99, 'mo'), fmt(59.99, 'yr')],
+      'adobe': [fmt(9.98, 'mo'), fmt(19.97, 'mo'), fmt(52.99, 'mo')],
+      'disney': [fmt(4.99, 'mo'), fmt(7.99, 'mo'), fmt(10.99, 'mo')],
+      'amazon': [fmt(8.99, 'mo'), fmt(95, 'yr')],
+    };
+
+    // Check if we have known prices for this service
+    final nameLower = result.serviceName.toLowerCase();
+    for (final entry in knownPrices.entries) {
+      if (nameLower.contains(entry.key)) {
+        return [...entry.value, 'Other amount'];
+      }
+    }
+
+    // Generic price suggestions in the detected currency
+    return [
+      fmt(4.99, 'mo'),
+      fmt(9.99, 'mo'),
+      fmt(14.99, 'mo'),
+      fmt(19.99, 'mo'),
+      'Other amount',
+    ];
   }
 
   /// Show the final confirmed result.
@@ -603,6 +890,17 @@ class ScanNotifier extends StateNotifier<ScanState> {
           imageBytes: imageBytes,
           mimeType: mimeType,
         );
+      }
+
+      // If critical fields are missing, ask user to fill gaps first
+      if (output.subscription.hasMissingFields) {
+        // Store the trap result for after missing data is resolved
+        state = state.copyWith(
+          currentResult: output.subscription,
+          trapResult: output.trap,
+        );
+        await _handleMissingData(output.subscription);
+        return;
       }
 
       if (output.shouldShowTrapWarning) {

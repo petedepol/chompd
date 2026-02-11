@@ -364,7 +364,7 @@ class _TemplateRow extends StatelessWidget {
               ),
             ),
             Text(
-              '${Subscription.currencySymbol(template.currency)}${template.price.toStringAsFixed(2)}/${template.cycle.shortLabel}',
+              '${Subscription.formatPrice(template.price, template.currency)}/${template.cycle.shortLabel}',
               style: ChompdTypography.mono(
                 size: 12,
                 weight: FontWeight.w700,

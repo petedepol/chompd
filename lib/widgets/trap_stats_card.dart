@@ -14,7 +14,6 @@ class TrapStatsCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final trapStats = ref.watch(trapStatsProvider);
     final currency = ref.watch(currencyProvider);
-    final symbol = Subscription.currencySymbol(currency);
 
     if (!trapStats.hasStats) {
       return const SizedBox.shrink(); // No padding when empty
@@ -67,7 +66,7 @@ class TrapStatsCard extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '$symbol${trapStats.totalSaved.toStringAsFixed(2)}',
+            Subscription.formatPrice(trapStats.totalSaved, currency),
             style: GoogleFonts.spaceMono(
               color: ChompdColors.mint,
               fontSize: 28,

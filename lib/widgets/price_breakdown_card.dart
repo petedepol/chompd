@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../models/subscription.dart';
 import '../models/trap_result.dart';
 
 /// Visual price comparison card: trial price → arrow → real price.
@@ -82,7 +83,7 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '\u00A3${trap.trialPrice?.toStringAsFixed(2) ?? "0.00"}',
+                      Subscription.formatPrice(trap.trialPrice ?? 0, 'GBP'),
                       style: const TextStyle(
                         fontFamily: 'SpaceMono',
                         fontSize: 20,
@@ -125,7 +126,9 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '\u00A3${trap.realPrice?.toStringAsFixed(2) ?? "?"}',
+                      trap.realPrice != null
+                          ? Subscription.formatPrice(trap.realPrice!, 'GBP')
+                          : '?',
                       style: TextStyle(
                         fontFamily: 'SpaceMono',
                         fontSize: 20,
@@ -158,7 +161,7 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Real cost first year: \u00A3${trap.realAnnualCost!.toStringAsFixed(2)}',
+                'Real cost first year: ${Subscription.formatPrice(trap.realAnnualCost!, 'GBP')}',
                 style: const TextStyle(
                   fontFamily: 'SpaceMono',
                   fontSize: 13,

@@ -159,7 +159,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               '${sub.name} charged you '
-              '${Subscription.currencySymbol(sub.currency)}${sub.price.toStringAsFixed(2)}',
+              '${Subscription.formatPrice(sub.price, sub.currency)}',
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

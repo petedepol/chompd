@@ -180,7 +180,7 @@ class DetailScreen extends ConsumerWidget {
                           ),
                         ),
                         child: Text(
-                          'That\u2019s ${Subscription.currencySymbol(sub.currency)}${sub.yearlyEquivalent.toStringAsFixed(0)} per year',
+                          'That\u2019s ${Subscription.formatPrice(sub.yearlyEquivalent, sub.currency, decimals: 0)} per year',
                           style: ChompdTypography.mono(
                             size: 12,
                             weight: FontWeight.w600,
@@ -193,7 +193,7 @@ class DetailScreen extends ConsumerWidget {
                       // Lifetime projection
                       const SizedBox(height: 4),
                       Text(
-                        '${Subscription.currencySymbol(sub.currency)}${(sub.yearlyEquivalent * 3).toStringAsFixed(0)} over 3 years',
+                        '${Subscription.formatPrice(sub.yearlyEquivalent * 3, sub.currency, decimals: 0)} over 3 years',
                         style: const TextStyle(
                           fontSize: 10,
                           fontStyle: FontStyle.italic,
@@ -267,11 +267,11 @@ class DetailScreen extends ConsumerWidget {
                         ),
                         Text(
                           daysLeft == 0
-                              ? '${Subscription.currencySymbol(sub.currency)}${sub.price.toStringAsFixed(2)} charges today'
+                              ? '${Subscription.formatPrice(sub.price, sub.currency)} charges today'
                               : daysLeft == 1
-                                  ? '${Subscription.currencySymbol(sub.currency)}${sub.price.toStringAsFixed(2)} charges tomorrow'
+                                  ? '${Subscription.formatPrice(sub.price, sub.currency)} charges tomorrow'
                                   : daysLeft <= 3
-                                      ? '$daysLeft days \u2014 ${Subscription.currencySymbol(sub.currency)}${sub.price.toStringAsFixed(2)} soon'
+                                      ? '$daysLeft days \u2014 ${Subscription.formatPrice(sub.price, sub.currency)} soon'
                                       : '$daysLeft days',
                           style: ChompdTypography.mono(
                             size: 12,
@@ -342,7 +342,7 @@ class DetailScreen extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            '${Subscription.currencySymbol(sub.currency)}${(sub.price * 4).toStringAsFixed(2)}',
+                            Subscription.formatPrice(sub.price * 4, sub.currency),
                             style: ChompdTypography.mono(
                               size: 13,
                               weight: FontWeight.w700,
@@ -525,8 +525,6 @@ class DetailScreen extends ConsumerWidget {
       ];
     }
 
-    final symbol = Subscription.currencySymbol(sub.currency);
-
     return payments.asMap().entries.map((entry) {
       final isLast = entry.key == payments.length - 1;
       final date = entry.value;
@@ -545,7 +543,7 @@ class DetailScreen extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  '$symbol${sub.price.toStringAsFixed(2)}',
+                  Subscription.formatPrice(sub.price, sub.currency),
                   style: ChompdTypography.mono(
                     size: 12,
                     color: ChompdColors.text,
@@ -1068,8 +1066,6 @@ class _TrapInfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isHigh = subscription.trapSeverity == 'high';
     final warningColor = isHigh ? ChompdColors.red : ChompdColors.amber;
-    final symbol = Subscription.currencySymbol(subscription.currency);
-
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1126,7 +1122,7 @@ class _TrapInfoCard extends StatelessWidget {
             Row(
               children: [
                 Text(
-                  '$symbol${subscription.trialPrice!.toStringAsFixed(2)}',
+                  Subscription.formatPrice(subscription.trialPrice!, subscription.currency),
                   style: ChompdTypography.mono(
                     size: 16,
                     color: ChompdColors.textDim,
@@ -1136,7 +1132,7 @@ class _TrapInfoCard extends StatelessWidget {
                 Icon(Icons.arrow_forward, size: 14, color: warningColor),
                 const SizedBox(width: 8),
                 Text(
-                  '$symbol${subscription.realPrice!.toStringAsFixed(2)}',
+                  Subscription.formatPrice(subscription.realPrice!, subscription.currency),
                   style: ChompdTypography.mono(
                     size: 16,
                     weight: FontWeight.w700,
@@ -1159,7 +1155,7 @@ class _TrapInfoCard extends StatelessWidget {
           if (subscription.realAnnualCost != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Real annual cost: $symbol${subscription.realAnnualCost!.toStringAsFixed(2)}/yr',
+              'Real annual cost: ${Subscription.formatPrice(subscription.realAnnualCost!, subscription.currency)}/yr',
               style: const TextStyle(
                 fontSize: 11,
                 color: ChompdColors.textDim,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../models/subscription.dart';
 
 /// Milestone definition for the savings gamification system.
 class Milestone {
@@ -84,12 +85,12 @@ class Milestone {
 /// Horizontal scrollable milestone progress cards.
 class MilestoneTrack extends StatelessWidget {
   final double totalSaved;
-  final String currencySymbol;
+  final String currencyCode;
 
   const MilestoneTrack({
     super.key,
     required this.totalSaved,
-    this.currencySymbol = '\u00A3',
+    this.currencyCode = 'GBP',
   });
 
   @override
@@ -124,7 +125,7 @@ class MilestoneTrack extends StatelessWidget {
             isCurrent: isCurrent,
             fillProgress: fill,
             totalSaved: totalSaved,
-            currencySymbol: currencySymbol,
+            currencyCode: currencyCode,
           );
         },
       ),
@@ -138,7 +139,7 @@ class _MilestoneChip extends StatelessWidget {
   final bool isCurrent;
   final double fillProgress;
   final double totalSaved;
-  final String currencySymbol;
+  final String currencyCode;
 
   const _MilestoneChip({
     required this.milestone,
@@ -146,7 +147,7 @@ class _MilestoneChip extends StatelessWidget {
     required this.isCurrent,
     required this.fillProgress,
     required this.totalSaved,
-    this.currencySymbol = '\u00A3',
+    this.currencyCode = 'GBP',
   });
 
   @override
@@ -187,7 +188,7 @@ class _MilestoneChip extends StatelessWidget {
               Text(milestone.emoji, style: const TextStyle(fontSize: 18)),
               const Spacer(),
               Text(
-                '$currencySymbol${milestone.amount.toInt()}',
+                Subscription.formatPrice(milestone.amount, currencyCode, decimals: 0),
                 style: ChompdTypography.mono(
                   size: 11,
                   weight: FontWeight.w700,
@@ -227,7 +228,7 @@ class _MilestoneChip extends StatelessWidget {
           Text(
             isReached
                 ? '\u2713 Reached!'
-                : '$currencySymbol${remaining.toStringAsFixed(0)} to go',
+                : '${Subscription.formatPrice(remaining, currencyCode, decimals: 0)} to go',
             style: ChompdTypography.mono(
               size: 8,
               color: isReached ? ChompdColors.mint : ChompdColors.textDim,

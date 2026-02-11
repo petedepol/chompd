@@ -218,7 +218,7 @@ class NotificationService {
     required String currency,
     required DateTime trialExpiresAt,
   }) {
-    final priceStr = '${Subscription.currencySymbol(currency)}${realPrice.toStringAsFixed(2)}';
+    final priceStr = Subscription.formatPrice(realPrice, currency);
 
     // 72 hours before
     final alert72h = trialExpiresAt.subtract(const Duration(hours: 72));
@@ -317,7 +317,7 @@ class NotificationService {
       final total = todayRenewals.fold(0.0, (sum, s) => sum + s.price);
       title = '${todayRenewals.length} subscription(s) renewing today';
       body =
-          '${todayRenewals.map((s) => s.name).join(", ")} \u2014 ${Subscription.currencySymbol(todayRenewals.first.currency)}${total.toStringAsFixed(2)} total';
+          '${todayRenewals.map((s) => s.name).join(", ")} \u2014 ${Subscription.formatPrice(total, todayRenewals.first.currency)} total';
     } else {
       title = '${expiringTrials.length} trial(s) expiring today';
       body =
@@ -394,8 +394,7 @@ class NotificationService {
   }
 
   String _renewalBody(Subscription sub, int daysBefore) {
-    final symbol = Subscription.currencySymbol(sub.currency);
-    final price = '$symbol${sub.price.toStringAsFixed(2)}/${sub.cycle.shortLabel}';
+    final price = '${Subscription.formatPrice(sub.price, sub.currency)}/${sub.cycle.shortLabel}';
 
     if (daysBefore == 0) {
       return 'You\'ll be charged $price today. Tap to review or cancel.';
@@ -419,8 +418,7 @@ class NotificationService {
   }
 
   String _trialBody(Subscription sub, int daysBefore) {
-    final symbol = Subscription.currencySymbol(sub.currency);
-    final price = '$symbol${sub.price.toStringAsFixed(2)}/${sub.cycle.shortLabel}';
+    final price = '${Subscription.formatPrice(sub.price, sub.currency)}/${sub.cycle.shortLabel}';
 
     if (daysBefore == 0) {
       return 'Your free trial ends today! You\'ll be charged $price. Cancel now if you don\'t want to continue.';
@@ -440,7 +438,7 @@ class NotificationService {
     if (renewals.isNotEmpty) {
       final total = renewals.fold(0.0, (sum, s) => sum + s.price);
       parts.add(
-        'Renewals: ${renewals.map((s) => s.name).join(", ")} (${Subscription.currencySymbol(renewals.first.currency)}${total.toStringAsFixed(2)})',
+        'Renewals: ${renewals.map((s) => s.name).join(", ")} (${Subscription.formatPrice(total, renewals.first.currency)})',
       );
     }
 

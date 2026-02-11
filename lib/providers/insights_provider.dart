@@ -29,7 +29,7 @@ enum InsightType { saving, warning, info, celebration }
 final insightsProvider = Provider<List<Insight>>((ref) {
   final subs = ref.watch(subscriptionsProvider);
   final currency = ref.watch(currencyProvider);
-  final sym = Subscription.currencySymbol(currency);
+  // Use formatPrice for correct symbol placement per currency
   final active = subs.where((s) => s.isActive).toList();
   final cancelled = subs.where((s) => !s.isActive).toList();
   final insights = <Insight>[];
@@ -44,7 +44,7 @@ final insightsProvider = Provider<List<Insight>>((ref) {
     insights.add(Insight(
       emoji: '\uD83D\uDCB8',
       message:
-          '${priciest.name} costs you $sym${priciest.yearlyEquivalent.toStringAsFixed(0)}/year. That\u2019s your most expensive subscription.',
+          '${priciest.name} costs you ${Subscription.formatPrice(priciest.yearlyEquivalent, currency, decimals: 0)}/year. That\u2019s your most expensive subscription.',
       type: InsightType.warning,
     ));
   }
@@ -60,7 +60,7 @@ final insightsProvider = Provider<List<Insight>>((ref) {
     insights.add(Insight(
       emoji: '\uD83D\uDCA1',
       message:
-          'Switching ${monthlySubs.length} subscriptions to annual billing could save ~$sym${potentialSaving.toStringAsFixed(0)}/year.',
+          'Switching ${monthlySubs.length} subscriptions to annual billing could save ~${Subscription.formatPrice(potentialSaving, currency, decimals: 0)}/year.',
       type: InsightType.saving,
     ));
   }
@@ -87,7 +87,7 @@ final insightsProvider = Provider<List<Insight>>((ref) {
       insights.add(Insight(
         emoji: '\uD83C\uDF89',
         message:
-            'You\u2019ve saved $sym${monthsSaved.toStringAsFixed(0)} since cancelling ${cancelled.length} subscription${cancelled.length == 1 ? '' : 's'}. Nice one!',
+            'You\u2019ve saved ${Subscription.formatPrice(monthsSaved, currency, decimals: 0)} since cancelling ${cancelled.length} subscription${cancelled.length == 1 ? '' : 's'}. Nice one!',
         type: InsightType.celebration,
       ));
     }
@@ -114,7 +114,7 @@ final insightsProvider = Provider<List<Insight>>((ref) {
     insights.add(Insight(
       emoji: '\u2615',
       message:
-          'Your subscriptions cost $sym${dailyCost.toStringAsFixed(2)} per day \u2014 that\u2019s a fancy coffee, every single day.',
+          'Your subscriptions cost ${Subscription.formatPrice(dailyCost, currency)} per day \u2014 that\u2019s a fancy coffee, every single day.',
       type: InsightType.info,
     ));
   }

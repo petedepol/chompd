@@ -48,8 +48,10 @@ final purchaseProvider =
 });
 
 /// Convenience: is the user a Pro subscriber?
+/// TODO: Remove dev override before release
 final isProProvider = Provider<bool>((ref) {
-  return ref.watch(purchaseProvider) == PurchaseState.pro;
+  return true; // DEV OVERRIDE — always Pro for testing
+  // return ref.watch(purchaseProvider) == PurchaseState.pro;
 });
 
 /// Convenience: can the user add more subscriptions?

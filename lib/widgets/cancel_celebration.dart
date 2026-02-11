@@ -68,8 +68,7 @@ class _CancelCelebrationState extends State<CancelCelebration>
   @override
   Widget build(BuildContext context) {
     final yearly = widget.subscription.yearlyEquivalent;
-    final symbol =
-        Subscription.currencySymbol(widget.subscription.currency);
+    final currency = widget.subscription.currency;
 
     return GestureDetector(
       onTap: widget.onDismiss,
@@ -118,7 +117,7 @@ class _CancelCelebrationState extends State<CancelCelebration>
 
                     // Savings amount
                     Text(
-                      'You\u2019ll save $symbol${yearly.toStringAsFixed(0)}/year',
+                      'You\u2019ll save ${Subscription.formatPrice(yearly, currency, decimals: 0)}/year',
                       style: ChompdTypography.mono(
                         size: 24,
                         weight: FontWeight.w700,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
 import '../models/scan_result.dart';
+import '../models/subscription.dart';
 
 /// Toast notification overlay for scan confirmations.
 ///
@@ -156,7 +157,7 @@ class _ScanToastState extends State<ScanToast>
                     Row(
                       children: [
                         Text(
-                          '${r.currency == 'GBP' ? '\u00A3' : '\$'}${r.price.toStringAsFixed(2)}/${r.billingCycle == 'monthly' ? 'mo' : r.billingCycle}',
+                          '${Subscription.formatPrice(r.price ?? 0, r.currency)}/${r.billingCycle == 'monthly' ? 'mo' : r.billingCycle ?? 'mo'}',
                           style: ChompdTypography.mono(
                             size: 12,
                             weight: FontWeight.w700,
