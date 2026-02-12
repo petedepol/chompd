@@ -105,8 +105,13 @@ class ScanResult {
   /// Whether this needs user clarification.
   bool get needsClarification => overallConfidence < 0.90;
 
+  /// Whether this scan found no subscription at all.
+  bool get isNotFound =>
+      (serviceName == 'Unknown' || serviceName.isEmpty) &&
+      overallConfidence == 0;
+
   /// Whether critical fields are missing and need user input.
-  bool get hasMissingFields => missingFields.isNotEmpty;
+  bool get hasMissingFields => missingFields.isNotEmpty && !isNotFound;
 
   /// Whether the price specifically needs user input.
   bool get needsPrice => price == null || missingFields.contains('price');

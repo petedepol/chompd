@@ -99,7 +99,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
           SafeArea(
             child: Column(
               children: [
-                // Close button
+                // Close button — stays fixed at top
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                   child: Align(
@@ -126,319 +126,327 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                   ),
                 ),
 
-                const Spacer(flex: 2),
+                // Scrollable content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: EdgeInsets.only(bottom: bottomPadding + 20),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 32),
 
-                // ─── Pro Badge ───
-                Container(
-                  width: 72,
-                  height: 72,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(22),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        ChompdColors.mintDark,
-                        ChompdColors.mint,
-                      ],
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: ChompdColors.mint.withValues(alpha: 0.3),
-                        blurRadius: 32,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.auto_awesome,
-                    size: 32,
-                    color: ChompdColors.bg,
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
-                // ─── Title ───
-                const Text(
-                  'Chompd Pro',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w700,
-                    color: ChompdColors.text,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                // ─── Tagline ───
-                const Text(
-                  'A subscription tracker that isn\'t a subscription.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontStyle: FontStyle.italic,
-                    color: ChompdColors.textMid,
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                // Trigger-specific message
-                Text(
-                  _triggerMessage,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: ChompdColors.textDim,
-                  ),
-                ),
-
-                const SizedBox(height: 32),
-
-                // ─── Feature List ───
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 40),
-                  child: Column(
-                    children: const [
-                      _FeatureRow(
-                        icon: Icons.savings_outlined,
-                        text: 'Save \u00A3100\u2013\u00A3500/year on hidden waste',
-                      ),
-                      SizedBox(height: 14),
-                      _FeatureRow(
-                        icon: Icons.timer_off_outlined,
-                        text: 'Never miss a trial expiry again',
-                      ),
-                      SizedBox(height: 14),
-                      _FeatureRow(
-                        icon: Icons.auto_awesome,
-                        text: 'Unlimited AI trap scanning',
-                      ),
-                      SizedBox(height: 14),
-                      _FeatureRow(
-                        icon: Icons.all_inclusive_rounded,
-                        text: 'Track every subscription you have',
-                      ),
-                      SizedBox(height: 14),
-                      _FeatureRow(
-                        icon: Icons.notifications_active_outlined,
-                        text: 'Early warnings: 7d, 3d, 1d before charges',
-                      ),
-                      SizedBox(height: 14),
-                      _FeatureRow(
-                        icon: Icons.share_outlined,
-                        text: 'Shareable savings cards',
-                      ),
-                    ],
-                  ),
-                ),
-
-                const Spacer(flex: 2),
-
-                // ─── Savings Context ───
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 24,
-                    right: 24,
-                    bottom: 16,
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: ChompdColors.mint.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: ChompdColors.mint.withValues(alpha: 0.12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Pays for itself after cancelling just one forgotten subscription.',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontStyle: FontStyle.italic,
-                        color: ChompdColors.mint,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // ─── Price Card ───
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: AnimatedBuilder(
-                    animation: _glowController,
-                    builder: (context, child) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: ChompdColors.bgCard,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(
-                            color: ChompdColors.mint.withValues(alpha: 
-                              0.2 + _glowController.value * 0.15,
-                            ),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ChompdColors.mint.withValues(alpha: 
-                                0.08 + _glowController.value * 0.08,
-                              ),
-                              blurRadius:
-                                  16 + _glowController.value * 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment:
-                              MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '\u00A3${AppConstants.proPrice.toStringAsFixed(2)}',
-                                  style: ChompdTypography.mono(
-                                    size: 28,
-                                    weight: FontWeight.w700,
-                                    color: ChompdColors.mint,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                const Text(
-                                  'One-time payment. Forever.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: ChompdColors.textDim,
-                                  ),
-                                ),
+                        // ─── Pro Badge ───
+                        Container(
+                          width: 72,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(22),
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                ChompdColors.mintDark,
+                                ChompdColors.mint,
                               ],
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+                            boxShadow: [
+                              BoxShadow(
+                                color: ChompdColors.mint.withValues(alpha: 0.3),
+                                blurRadius: 32,
+                                offset: const Offset(0, 8),
                               ),
-                              decoration: BoxDecoration(
-                                color:
-                                    ChompdColors.mint.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(8),
+                            ],
+                          ),
+                          alignment: Alignment.center,
+                          child: const Icon(
+                            Icons.auto_awesome,
+                            size: 32,
+                            color: ChompdColors.bg,
+                          ),
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // ─── Title ───
+                        const Text(
+                          'Chompd Pro',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: ChompdColors.text,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // ─── Tagline ───
+                        const Text(
+                          'A subscription tracker that isn\'t a subscription.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontStyle: FontStyle.italic,
+                            color: ChompdColors.textMid,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Trigger-specific message
+                        Text(
+                          _triggerMessage,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: ChompdColors.textDim,
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // ─── Feature List ───
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: Column(
+                            children: const [
+                              _FeatureRow(
+                                icon: Icons.savings_outlined,
+                                text: 'Save \u00A3100\u2013\u00A3500/year on hidden waste',
                               ),
-                              child: const Text(
-                                'LIFETIME',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: ChompdColors.mint,
-                                  letterSpacing: 0.8,
-                                ),
+                              SizedBox(height: 14),
+                              _FeatureRow(
+                                icon: Icons.timer_off_outlined,
+                                text: 'Never miss a trial expiry again',
+                              ),
+                              SizedBox(height: 14),
+                              _FeatureRow(
+                                icon: Icons.auto_awesome,
+                                text: 'Unlimited AI trap scanning',
+                              ),
+                              SizedBox(height: 14),
+                              _FeatureRow(
+                                icon: Icons.all_inclusive_rounded,
+                                text: 'Track every subscription you have',
+                              ),
+                              SizedBox(height: 14),
+                              _FeatureRow(
+                                icon: Icons.notifications_active_outlined,
+                                text: 'Early warnings: 7d, 3d, 1d before charges',
+                              ),
+                              SizedBox(height: 14),
+                              _FeatureRow(
+                                icon: Icons.share_outlined,
+                                text: 'Shareable savings cards',
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        // ─── Savings Context ───
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: 24,
+                            right: 24,
+                            bottom: 16,
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: ChompdColors.mint.withValues(alpha: 0.06),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: ChompdColors.mint.withValues(alpha: 0.12),
                               ),
                             ),
-                          ],
+                            child: const Text(
+                              'Pays for itself after cancelling just one forgotten subscription.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontStyle: FontStyle.italic,
+                                color: ChompdColors.mint,
+                              ),
+                            ),
+                          ),
                         ),
-                      );
-                    },
-                  ),
-                ),
 
-                const SizedBox(height: 16),
+                        // ─── Price Card ───
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: AnimatedBuilder(
+                            animation: _glowController,
+                            builder: (context, child) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: ChompdColors.bgCard,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: ChompdColors.mint.withValues(alpha:
+                                      0.2 + _glowController.value * 0.15,
+                                    ),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: ChompdColors.mint.withValues(alpha:
+                                        0.08 + _glowController.value * 0.08,
+                                      ),
+                                      blurRadius:
+                                          16 + _glowController.value * 16,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '\u00A3${AppConstants.proPrice.toStringAsFixed(2)}',
+                                          style: ChompdTypography.mono(
+                                            size: 28,
+                                            weight: FontWeight.w700,
+                                            color: ChompdColors.mint,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        const Text(
+                                          'One-time payment. Forever.',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: ChompdColors.textDim,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            ChompdColors.mint.withValues(alpha: 0.12),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Text(
+                                        'LIFETIME',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                          color: ChompdColors.mint,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                        ),
 
-                // ─── Purchase Button ───
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: GestureDetector(
-                    onTap: _purchasing ? null : _handlePurchase,
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      width: double.infinity,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 16),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(16),
-                        gradient: LinearGradient(
-                          colors: _purchasing
-                              ? [
-                                  ChompdColors.mintDark
-                                      .withValues(alpha: 0.5),
-                                  ChompdColors.mint.withValues(alpha: 0.5),
-                                ]
-                              : [
-                                  ChompdColors.mintDark,
-                                  ChompdColors.mint,
+                        const SizedBox(height: 16),
+
+                        // ─── Purchase Button ───
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: GestureDetector(
+                            onTap: _purchasing ? null : _handlePurchase,
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              width: double.infinity,
+                              padding:
+                                  const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                gradient: LinearGradient(
+                                  colors: _purchasing
+                                      ? [
+                                          ChompdColors.mintDark
+                                              .withValues(alpha: 0.5),
+                                          ChompdColors.mint.withValues(alpha: 0.5),
+                                        ]
+                                      : [
+                                          ChompdColors.mintDark,
+                                          ChompdColors.mint,
+                                        ],
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color:
+                                        ChompdColors.mint.withValues(alpha: 0.27),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 4),
+                                  ),
                                 ],
+                              ),
+                              alignment: Alignment.center,
+                              child: _purchasing
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                          ChompdColors.bg,
+                                        ),
+                                      ),
+                                    )
+                                  : const Text(
+                                      'Unlock Chompd Pro',
+                                      style: TextStyle(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                        color: ChompdColors.bg,
+                                      ),
+                                    ),
+                            ),
+                          ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                ChompdColors.mint.withValues(alpha: 0.27),
-                            blurRadius: 20,
-                            offset: const Offset(0, 4),
+
+                        const SizedBox(height: 12),
+
+                        // ─── Restore Purchase ───
+                        GestureDetector(
+                          onTap: _restoring ? null : _handleRestore,
+                          child: Text(
+                            _restoring
+                                ? 'Restoring...'
+                                : 'Restore Purchase',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: ChompdColors.textDim,
+                            ),
+                          ),
+                        ),
+
+                        // Error message
+                        if (_errorMessage != null) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            _errorMessage!,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: ChompdColors.red,
+                            ),
                           ),
                         ],
-                      ),
-                      alignment: Alignment.center,
-                      child: _purchasing
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(
-                                  ChompdColors.bg,
-                                ),
-                              ),
-                            )
-                          : const Text(
-                              'Unlock Chompd Pro',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                                color: ChompdColors.bg,
-                              ),
-                            ),
+                      ],
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 12),
-
-                // ─── Restore Purchase ───
-                GestureDetector(
-                  onTap: _restoring ? null : _handleRestore,
-                  child: Text(
-                    _restoring
-                        ? 'Restoring...'
-                        : 'Restore Purchase',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: ChompdColors.textDim,
-                    ),
-                  ),
-                ),
-
-                // Error message
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    _errorMessage!,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: ChompdColors.red,
-                    ),
-                  ),
-                ],
-
-                SizedBox(height: bottomPadding + 20),
               ],
             ),
           ),
@@ -511,11 +519,13 @@ class _FeatureRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 14,
-            color: ChompdColors.text,
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 14,
+              color: ChompdColors.text,
+            ),
           ),
         ),
       ],

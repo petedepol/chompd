@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../config/theme.dart';
 import '../../models/scan_result.dart';
 import '../../models/subscription.dart';
+import '../../providers/currency_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/scan_provider.dart';
 import '../../providers/subscriptions_provider.dart';
@@ -198,7 +200,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              isPro ? 'PRO \u221E' : '$remaining scans left',
+              isPro ? 'PRO \u221E' : '$remaining scan${remaining == 1 ? '' : 's'} left',
               style: ChompdTypography.mono(
                 size: 9,
                 weight: FontWeight.w700,
@@ -955,10 +957,18 @@ class _QuestionMessage extends StatefulWidget {
 class _QuestionMessageState extends State<_QuestionMessage> {
   bool _showOtherInput = false;
   final TextEditingController _otherCtrl = TextEditingController();
+  final TextEditingController _priceCtrl = TextEditingController();
+  String _priceCurrency = 'GBP';
+  String _priceCycle = 'mo';
+
+  /// Whether this question is asking for a price (options contain "/mo" or "/yr").
+  bool get _isPriceQuestion =>
+      widget.options.any((o) => o.contains('/mo') || o.contains('/yr'));
 
   @override
   void dispose() {
     _otherCtrl.dispose();
+    _priceCtrl.dispose();
     super.dispose();
   }
 
@@ -1021,8 +1031,11 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                 ],
               ),
             )
+          else if (_showOtherInput && _isPriceQuestion)
+            // Custom price input with currency + cycle
+            _buildPriceInput()
           else if (_showOtherInput)
-            // "Other" text input
+            // Generic "Other" text input (for non-price questions)
             Row(
               children: [
                 Expanded(
@@ -1034,7 +1047,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                       color: ChompdColors.text,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Enter service name...',
+                      hintText: 'Type your answer...',
                       hintStyle: const TextStyle(
                         color: ChompdColors.textDim,
                       ),
@@ -1102,6 +1115,186 @@ class _QuestionMessageState extends State<_QuestionMessage> {
     );
   }
 
+  void _submitPrice() {
+    final price = double.tryParse(_priceCtrl.text.trim());
+    if (price == null || price <= 0) return;
+
+    final sym = Subscription.currencySymbol(_priceCurrency);
+    final isSuffix = Subscription.isSymbolSuffix(_priceCurrency);
+    final value = price.toStringAsFixed(2);
+    // Format: "£19.99/mo [GBP]" — currency code in brackets for the provider to extract
+    final priceStr = isSuffix ? '$value $sym' : '$sym$value';
+    widget.onAnswer('$priceStr/$_priceCycle [$_priceCurrency]');
+  }
+
+  Widget _buildPriceInput() {
+    final isValid = (double.tryParse(_priceCtrl.text.trim()) ?? 0) > 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Price + Currency row
+        Row(
+          children: [
+            // Price field
+            Expanded(
+              flex: 2,
+              child: TextField(
+                controller: _priceCtrl,
+                autofocus: true,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                ],
+                style: ChompdTypography.mono(
+                  size: 14,
+                  weight: FontWeight.w700,
+                ),
+                decoration: InputDecoration(
+                  hintText: '0.00',
+                  hintStyle: TextStyle(
+                    color: ChompdColors.textDim.withValues(alpha: 0.5),
+                  ),
+                  filled: true,
+                  fillColor: ChompdColors.bgElevated,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: ChompdColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: ChompdColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: ChompdColors.purple),
+                  ),
+                ),
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _submitPrice(),
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // Currency dropdown
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: ChompdColors.bgElevated,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: ChompdColors.border),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _priceCurrency,
+                  dropdownColor: ChompdColors.bgElevated,
+                  style: ChompdTypography.mono(
+                    size: 11,
+                    weight: FontWeight.w600,
+                  ),
+                  icon: const Icon(
+                    Icons.expand_more_rounded,
+                    size: 14,
+                    color: ChompdColors.textDim,
+                  ),
+                  items: supportedCurrencies
+                      .map((c) => DropdownMenuItem<String>(
+                            value: c['code'] as String,
+                            child: Text(
+                              '${c['symbol']} ${c['code']}',
+                              style: ChompdTypography.mono(
+                                size: 11,
+                                weight: FontWeight.w600,
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setState(() => _priceCurrency = v);
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 8),
+
+        // Cycle toggle + send button row
+        Row(
+          children: [
+            // Cycle chips
+            ...['mo', 'yr', 'wk', 'qtr'].map((c) {
+              final isSelected = c == _priceCycle;
+              final label = c == 'mo'
+                  ? 'Monthly'
+                  : c == 'yr'
+                      ? 'Yearly'
+                      : c == 'wk'
+                          ? 'Weekly'
+                          : 'Quarterly';
+              return Padding(
+                padding: const EdgeInsets.only(right: 6),
+                child: GestureDetector(
+                  onTap: () => setState(() => _priceCycle = c),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 150),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? ChompdColors.purple.withValues(alpha: 0.15)
+                          : ChompdColors.bgElevated,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: isSelected
+                            ? ChompdColors.purple.withValues(alpha: 0.5)
+                            : ChompdColors.border,
+                      ),
+                    ),
+                    child: Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                        color: isSelected ? ChompdColors.purple : ChompdColors.textDim,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+
+            const Spacer(),
+
+            // Send button
+            GestureDetector(
+              onTap: isValid ? _submitPrice : null,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: isValid ? ChompdColors.purple : ChompdColors.border,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Icon(
+                  Icons.send_rounded,
+                  size: 16,
+                  color: isValid ? Colors.white : ChompdColors.textDim,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildOptions() {
     if (widget.questionType == QuestionType.confirm) {
       // Confirm: large primary button + smaller alternatives
@@ -1141,7 +1334,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
               return _OptionPill(
                 label: opt,
                 onTap: () {
-                  if (opt == 'Other') {
+                  if (opt == 'Other' || opt == 'Other amount') {
                     setState(() => _showOtherInput = true);
                   } else {
                     widget.onAnswer(opt);
@@ -1161,7 +1354,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
           return _OptionPill(
             label: opt,
             onTap: () {
-              if (opt == 'Other') {
+              if (opt == 'Other' || opt == 'Other amount') {
                 setState(() => _showOtherInput = true);
               } else {
                 widget.onAnswer(opt);

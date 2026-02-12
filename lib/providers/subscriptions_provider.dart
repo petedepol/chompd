@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/subscription.dart';
+import 'currency_provider.dart';
 
 /// Provider: all subscriptions (active + cancelled).
 final subscriptionsProvider =
@@ -16,20 +17,22 @@ final cancelledSubsProvider = Provider<List<Subscription>>((ref) {
         .compareTo(a.cancelledDate ?? DateTime.now()));
 });
 
-/// Provider: total monthly spend.
+/// Provider: total monthly spend (converted to display currency).
 final monthlySpendProvider = Provider<double>((ref) {
   final subs = ref.watch(subscriptionsProvider);
+  final displayCurrency = ref.watch(currencyProvider);
   return subs
       .where((s) => s.isActive)
-      .fold(0.0, (sum, s) => sum + s.monthlyEquivalent);
+      .fold(0.0, (sum, s) => sum + s.monthlyEquivalentIn(displayCurrency));
 });
 
-/// Provider: total yearly spend.
+/// Provider: total yearly spend (converted to display currency).
 final yearlySpendProvider = Provider<double>((ref) {
   final subs = ref.watch(subscriptionsProvider);
+  final displayCurrency = ref.watch(currencyProvider);
   return subs
       .where((s) => s.isActive)
-      .fold(0.0, (sum, s) => sum + s.yearlyEquivalent);
+      .fold(0.0, (sum, s) => sum + s.yearlyEquivalentIn(displayCurrency));
 });
 
 /// Provider: subscriptions with expiring trials.
@@ -46,16 +49,17 @@ final expiringTrialsProvider = Provider<List<Subscription>>((ref) {
         (a.trialDaysRemaining ?? 99).compareTo(b.trialDaysRemaining ?? 99));
 });
 
-/// Provider: total money saved from cancelled subs.
+/// Provider: total money saved from cancelled subs (converted to display currency).
 ///
-/// Calculated as: monthlyEquivalent × months since cancellation.
+/// Calculated as: monthlyEquivalentIn(displayCurrency) × months since cancellation.
 final totalSavedProvider = Provider<double>((ref) {
   final cancelled = ref.watch(cancelledSubsProvider);
+  final displayCurrency = ref.watch(currencyProvider);
   return cancelled.fold(0.0, (sum, sub) {
     if (sub.cancelledDate == null) return sum;
     final monthsSinceCancelled =
         DateTime.now().difference(sub.cancelledDate!).inDays / 30;
-    return sum + (sub.monthlyEquivalent * monthsSinceCancelled);
+    return sum + (sub.monthlyEquivalentIn(displayCurrency) * monthsSinceCancelled);
   });
 });
 

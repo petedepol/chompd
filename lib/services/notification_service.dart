@@ -286,9 +286,11 @@ class NotificationService {
   /// Schedule a morning digest notification.
   ///
   /// Fires daily at 8:30 AM if any renewals are due today.
+  /// [displayCurrency] is used to convert mixed-currency totals.
   Future<void> scheduleMorningDigest({
     required List<Subscription> todayRenewals,
     required List<Subscription> expiringTrials,
+    String displayCurrency = 'GBP',
   }) async {
     if (!_initialised || !_permissionGranted) return;
 
@@ -312,12 +314,12 @@ class NotificationService {
 
     if (todayRenewals.isNotEmpty && expiringTrials.isNotEmpty) {
       title = '${todayRenewals.length} renewal(s) + ${expiringTrials.length} trial(s) today';
-      body = _digestBody(todayRenewals, expiringTrials);
+      body = _digestBody(todayRenewals, expiringTrials, displayCurrency);
     } else if (todayRenewals.isNotEmpty) {
-      final total = todayRenewals.fold(0.0, (sum, s) => sum + s.price);
+      final total = todayRenewals.fold(0.0, (sum, s) => sum + s.priceIn(displayCurrency));
       title = '${todayRenewals.length} subscription(s) renewing today';
       body =
-          '${todayRenewals.map((s) => s.name).join(", ")} \u2014 ${Subscription.formatPrice(total, todayRenewals.first.currency)} total';
+          '${todayRenewals.map((s) => s.name).join(", ")} \u2014 ${Subscription.formatPrice(total, displayCurrency)} total';
     } else {
       title = '${expiringTrials.length} trial(s) expiring today';
       body =
@@ -432,13 +434,14 @@ class NotificationService {
   String _digestBody(
     List<Subscription> renewals,
     List<Subscription> trials,
+    String displayCurrency,
   ) {
     final parts = <String>[];
 
     if (renewals.isNotEmpty) {
-      final total = renewals.fold(0.0, (sum, s) => sum + s.price);
+      final total = renewals.fold(0.0, (sum, s) => sum + s.priceIn(displayCurrency));
       parts.add(
-        'Renewals: ${renewals.map((s) => s.name).join(", ")} (${Subscription.formatPrice(total, renewals.first.currency)})',
+        'Renewals: ${renewals.map((s) => s.name).join(", ")} (${Subscription.formatPrice(total, displayCurrency)})',
       );
     }
 

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/constants.dart';
 import '../../config/theme.dart';
 import '../../models/subscription.dart';
+import '../../providers/currency_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 
 /// Add or edit a subscription.
@@ -171,8 +172,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                               const SizedBox(height: 6),
                               _buildDropdown<String>(
                                 value: _currency,
-                                items: ['GBP', 'USD', 'EUR'],
-                                labels: ['\u00A3 GBP', '\$ USD', '\u20AC EUR'],
+                                items: supportedCurrencies.map((c) => c['code'] as String).toList(),
+                                labels: supportedCurrencies.map((c) => '${c['symbol']} ${c['code']}').toList(),
                                 onChanged: (v) => setState(() => _currency = v!),
                               ),
                             ],

@@ -44,6 +44,9 @@ dependencies:
   # Share — generate + share branded stat cards
   share_plus: ^7.2.1
 
+  # App info
+  package_info_plus: ^8.0.0
+
   # Utilities
   uuid: ^4.3.3
   intl: ^0.19.0

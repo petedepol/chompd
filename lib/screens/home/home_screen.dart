@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,6 +16,7 @@ import '../../widgets/animated_list_item.dart';
 import '../../widgets/category_bar.dart';
 import '../../widgets/confetti_overlay.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/insight_card.dart';
 import '../../widgets/milestone_card.dart';
 import '../../widgets/money_saved_counter.dart';
 import '../../widgets/quick_add_sheet.dart';
@@ -63,13 +65,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
+      builder: (ctx) => ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          child: Container(
         padding: EdgeInsets.fromLTRB(
           20, 20, 20, MediaQuery.of(ctx).padding.bottom + 20,
         ),
-        decoration: const BoxDecoration(
-          color: ChompdColors.bgElevated,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: BoxDecoration(
+          color: ChompdColors.bgElevated.withValues(alpha: 0.85),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -186,6 +192,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
         ),
       ),
     );
@@ -430,7 +438,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 return SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: _InsightsCard(insights: insights),
+                    child: InsightCard(insights: insights),
                   ),
                 );
               }),
@@ -1344,113 +1352,3 @@ class _CompactSavings extends StatelessWidget {
   }
 }
 
-/// Rotating smart insights — one visible at a time, tappable to cycle.
-class _InsightsCard extends StatefulWidget {
-  final List<Insight> insights;
-  const _InsightsCard({required this.insights});
-
-  @override
-  State<_InsightsCard> createState() => _InsightsCardState();
-}
-
-class _InsightsCardState extends State<_InsightsCard> {
-  int _currentIndex = 0;
-
-  void _next() {
-    setState(() {
-      _currentIndex = (_currentIndex + 1) % widget.insights.length;
-    });
-    HapticService.instance.light();
-  }
-
-  Color _colorForType(InsightType type) {
-    switch (type) {
-      case InsightType.saving:
-        return ChompdColors.mint;
-      case InsightType.warning:
-        return ChompdColors.amber;
-      case InsightType.info:
-        return ChompdColors.blue;
-      case InsightType.celebration:
-        return ChompdColors.mint;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final insight = widget.insights[_currentIndex];
-    final color = _colorForType(insight.type);
-
-    return GestureDetector(
-      onTap: widget.insights.length > 1 ? _next : null,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
-          borderRadius: BorderRadius.circular(14),
-          border: Border(
-            left: BorderSide(color: color, width: 3),
-            top: const BorderSide(color: ChompdColors.border),
-            right: const BorderSide(color: ChompdColors.border),
-            bottom: const BorderSide(color: ChompdColors.border),
-          ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(insight.emoji, style: const TextStyle(fontSize: 20)),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Text(
-                      insight.message,
-                      key: ValueKey(_currentIndex),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: ChompdColors.textMid,
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                  if (widget.insights.length > 1) ...[
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        ...List.generate(
-                          widget.insights.length,
-                          (i) => Container(
-                            margin: const EdgeInsets.only(right: 4),
-                            width: i == _currentIndex ? 12 : 4,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: i == _currentIndex
-                                  ? color
-                                  : ChompdColors.border,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-                        const Spacer(),
-                        const Text(
-                          'tap for more',
-                          style: TextStyle(
-                            fontSize: 9,
-                            color: ChompdColors.textDim,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

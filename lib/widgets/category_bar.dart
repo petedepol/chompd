@@ -21,11 +21,11 @@ class CategoryBar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (subscriptions.isEmpty) return const SizedBox.shrink();
 
-    // Aggregate spend per category
+    // Aggregate monthly spend per category (converted to display currency)
     final categorySpend = <String, double>{};
     for (final sub in subscriptions) {
       categorySpend[sub.category] =
-          (categorySpend[sub.category] ?? 0) + sub.price;
+          (categorySpend[sub.category] ?? 0) + sub.monthlyEquivalentIn(currencyCode);
     }
 
     final total = categorySpend.values.fold(0.0, (a, b) => a + b);

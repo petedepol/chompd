@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 
+import '../services/exchange_rate_service.dart';
 import 'scan_result.dart';
 import 'trap_result.dart';
 
@@ -184,9 +185,20 @@ class Subscription {
 
   // ─── Computed Helpers ───
 
-  /// Days until next renewal from now.
+  /// Days until next renewal from now (can be negative if overdue).
   int get daysUntilRenewal {
     return nextRenewal.difference(DateTime.now()).inDays;
+  }
+
+  /// Human-friendly renewal label: "Renews today", "Renews tomorrow",
+  /// "Renews in 5 days", or "Renewed 4 days ago" for past dates.
+  String get renewalLabel {
+    final days = daysUntilRenewal;
+    if (days < -1) return 'Renewed ${-days} days ago';
+    if (days == -1) return 'Renewed yesterday';
+    if (days == 0) return 'Renews today';
+    if (days == 1) return 'Renews tomorrow';
+    return 'Renews in $days days';
   }
 
   /// Days remaining in trial (null if not a trial).
@@ -222,6 +234,22 @@ class Subscription {
         return price;
     }
   }
+
+  // ─── Currency Conversion Helpers ───
+
+  /// Price converted to a target currency.
+  double priceIn(String targetCurrency) =>
+      ExchangeRateService.instance.convert(price, currency, targetCurrency);
+
+  /// Monthly equivalent converted to a target currency.
+  double monthlyEquivalentIn(String targetCurrency) =>
+      ExchangeRateService.instance
+          .convert(monthlyEquivalent, currency, targetCurrency);
+
+  /// Yearly equivalent converted to a target currency.
+  double yearlyEquivalentIn(String targetCurrency) =>
+      ExchangeRateService.instance
+          .convert(yearlyEquivalent, currency, targetCurrency);
 
   /// Price display string (e.g. "£15.99/mo" or "10.00 zł/mo").
   String get priceDisplay {

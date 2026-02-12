@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../config/constants.dart';
 import '../../config/theme.dart';
@@ -13,6 +14,11 @@ import '../../services/haptic_service.dart';
 import '../../services/notification_service.dart';
 import '../../utils/csv_export.dart';
 import '../paywall/paywall_screen.dart';
+
+final _versionProvider = FutureProvider<String>((ref) async {
+  final info = await PackageInfo.fromPlatform();
+  return '${info.version} (${info.buildNumber})';
+});
 
 /// Settings screen with notification preferences.
 ///
@@ -478,7 +484,11 @@ class SettingsScreen extends ConsumerWidget {
 
                   _InfoRow(
                     label: 'Version',
-                    value: '1.0.0 (Sprint 10)',
+                    value: ref.watch(_versionProvider).when(
+                      data: (v) => v,
+                      loading: () => '...',
+                      error: (_, __) => '1.0.0',
+                    ),
                   ),
                   const SizedBox(height: 6),
                   _InfoRow(
@@ -1276,6 +1286,10 @@ class _BudgetSetting extends StatelessWidget {
   void _showCustomBudgetDialog(BuildContext context) {
     final controller = TextEditingController(
       text: ref.read(budgetProvider).toStringAsFixed(0),
+    );
+    controller.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: controller.text.length,
     );
 
     showDialog(

@@ -55,6 +55,35 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
     super.dispose();
   }
 
+  /// Amount with smaller currency symbol, handling prefix/suffix currencies.
+  Widget _buildSplitPrice(double amount, String currency) {
+    final symbol = Subscription.currencySymbol(currency);
+    final number = amount.toStringAsFixed(2);
+    final isSuffix = Subscription.isSymbolSuffix(currency);
+
+    final symbolWidget = Text(
+      symbol,
+      style: ChompdTypography.mono(
+        size: 16,
+        weight: FontWeight.w700,
+        color: ChompdColors.text,
+      ),
+    );
+    final numberWidget = Text(
+      number,
+      style: ChompdTypography.priceHero,
+    );
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: isSuffix
+          ? [numberWidget, const SizedBox(width: 2), symbolWidget]
+          : [symbolWidget, numberWidget],
+    );
+  }
+
   void _toggleView() {
     final current = ref.read(spendViewProvider);
     ref.read(spendViewProvider.notifier).state =
@@ -122,11 +151,8 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                     ),
                     const SizedBox(height: 2),
 
-                    // Amount
-                    Text(
-                      Subscription.formatPrice(animatedTotal, currency),
-                      style: ChompdTypography.priceHero,
-                    ),
+                    // Amount — smaller currency symbol
+                    _buildSplitPrice(animatedTotal, currency),
                     const SizedBox(height: 2),
 
                     // Budget context
@@ -154,7 +180,17 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                       isYearly ? 'tap for monthly' : 'tap for yearly',
                       style: ChompdTypography.mono(
                         size: 9,
-                        color: ChompdColors.textDim.withValues(alpha: 0.6),
+                        color: ChompdColors.textDim.withValues(alpha: 0.8),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    // Budget target range
+                    Text(
+                      'Budget: ${Subscription.formatPrice(0, currency, decimals: 0)} \u2013 ${Subscription.formatPrice(displayBudget, currency, decimals: 0)}',
+                      style: TextStyle(
+                        fontSize: 9,
+                        color: ChompdColors.textDim.withValues(alpha: 0.5),
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ],
@@ -262,6 +298,26 @@ class _RingPainter extends CustomPainter {
         ..color = glowColor.withValues(alpha: 0.25 * progress);
 
       canvas.drawArc(rect, -math.pi / 2, sweepAngle, false, glowPaint);
+
+      // Leading edge dot — bright circle at the tip of the arc
+      if (sweepAngle > 0.05) {
+        final endAngle = -math.pi / 2 + sweepAngle;
+        final dotCenter = Offset(
+          center.dx + radius * math.cos(endAngle),
+          center.dy + radius * math.sin(endAngle),
+        );
+
+        // Outer glow
+        final dotGlowPaint = Paint()
+          ..color = glowColor.withValues(alpha: 0.4 * progress)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+        canvas.drawCircle(dotCenter, strokeWidth * 0.8, dotGlowPaint);
+
+        // Bright core
+        final dotPaint = Paint()
+          ..color = glowColor.withValues(alpha: 0.9 * progress);
+        canvas.drawCircle(dotCenter, strokeWidth * 0.45, dotPaint);
+      }
     }
   }
 

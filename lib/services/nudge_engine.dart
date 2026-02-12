@@ -1,5 +1,6 @@
 import '../models/nudge_candidate.dart';
 import '../models/subscription.dart';
+import 'exchange_rate_service.dart';
 
 /// Heuristic nudge engine — evaluates all active subscriptions
 /// and returns candidates that deserve a "should I keep this?" prompt.
@@ -8,11 +9,23 @@ import '../models/subscription.dart';
 class NudgeEngine {
   /// Evaluate all subs and return nudge-worthy candidates,
   /// sorted by priority (1 = highest).
-  List<NudgeCandidate> evaluate(List<Subscription> subs) {
+  ///
+  /// [displayCurrency] is used to convert thresholds and calculate
+  /// percentages across mixed-currency subscriptions.
+  /// Nudge messages still show the sub's original currency.
+  List<NudgeCandidate> evaluate(
+    List<Subscription> subs, {
+    String displayCurrency = 'GBP',
+  }) {
     final candidates = <NudgeCandidate>[];
+    final fx = ExchangeRateService.instance;
     final totalYearly = subs
         .where((s) => s.isActive)
-        .fold(0.0, (sum, s) => sum + s.yearlyEquivalent);
+        .fold(0.0, (sum, s) => sum + s.yearlyEquivalentIn(displayCurrency));
+
+    // Scale GBP thresholds to display currency
+    final threshold10 = fx.convert(10, 'GBP', displayCurrency);
+    final threshold15 = fx.convert(15, 'GBP', displayCurrency);
 
     for (final sub in subs.where((s) => s.isActive)) {
       // Skip if user explicitly confirmed keeping within last 90 days
@@ -22,10 +35,11 @@ class NudgeEngine {
         if (daysSinceReview < 90) continue;
       }
 
-      // Rule 1: Expensive + old — over £10/mo, not reviewed in 90+ days
-      if (sub.monthlyEquivalent >= 10 && _daysSinceLastReview(sub) > 90) {
+      // Rule 1: Expensive + old — over £10/mo equivalent, not reviewed in 90+ days
+      if (sub.monthlyEquivalentIn(displayCurrency) >= threshold10 &&
+          _daysSinceLastReview(sub) > 90) {
         final pct = totalYearly > 0
-            ? (sub.yearlyEquivalent / totalYearly * 100).round()
+            ? (sub.yearlyEquivalentIn(displayCurrency) / totalYearly * 100).round()
             : 0;
         candidates.add(NudgeCandidate(
           sub: sub,
@@ -53,12 +67,12 @@ class NudgeEngine {
         ));
       }
 
-      // Rule 3: Renewal approaching + expensive (>£15/mo, within 7 days)
-      if (sub.monthlyEquivalent >= 15 &&
+      // Rule 3: Renewal approaching + expensive (>£15/mo equivalent, within 7 days)
+      if (sub.monthlyEquivalentIn(displayCurrency) >= threshold15 &&
           sub.daysUntilRenewal <= 7 &&
           sub.daysUntilRenewal > 0) {
         final pct = totalYearly > 0
-            ? (sub.yearlyEquivalent / totalYearly * 100).round()
+            ? (sub.yearlyEquivalentIn(displayCurrency) / totalYearly * 100).round()
             : 0;
         candidates.add(NudgeCandidate(
           sub: sub,
@@ -79,14 +93,14 @@ class NudgeEngine {
           .toList();
       if (sameCategorySubs.length >= 2 && _daysSinceLastReview(sub) > 60) {
         final totalMonthly = [sub, ...sameCategorySubs]
-            .fold(0.0, (sum, s) => sum + s.monthlyEquivalent);
+            .fold(0.0, (sum, s) => sum + s.monthlyEquivalentIn(displayCurrency));
         candidates.add(NudgeCandidate(
           sub: sub,
           reason: NudgeReason.duplicateCategory,
           message:
               'You have ${sameCategorySubs.length + 1} ${sub.category} '
               'subscriptions totalling '
-              '${Subscription.formatPrice(totalMonthly, sub.currency)}/mo. Need them all?',
+              '${Subscription.formatPrice(totalMonthly, displayCurrency)}/mo. Need them all?',
           priority: 3,
         ));
       }
@@ -96,7 +110,7 @@ class NudgeEngine {
           sub.daysUntilRenewal <= 30 &&
           sub.daysUntilRenewal > 7) {
         final pct = totalYearly > 0
-            ? (sub.yearlyEquivalent / totalYearly * 100).round()
+            ? (sub.yearlyEquivalentIn(displayCurrency) / totalYearly * 100).round()
             : 0;
         candidates.add(NudgeCandidate(
           sub: sub,

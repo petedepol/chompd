@@ -38,11 +38,12 @@ class AiScanService {
   Future<ScanOutput> analyseScreenshotWithTrap({
     required Uint8List imageBytes,
     required String mimeType,
+    String? modelOverride,
   }) async {
     final base64Image = base64Encode(imageBytes);
 
     final body = jsonEncode({
-      'model': AppConstants.aiModel,
+      'model': modelOverride ?? AppConstants.aiModel,
       'max_tokens': 4096,
       'messages': [
         {
@@ -75,7 +76,7 @@ class AiScanService {
           },
           body: body,
         )
-        .timeout(const Duration(seconds: 30));
+        .timeout(Duration(seconds: modelOverride != null ? 60 : 30));
 
     if (response.statusCode != 200) {
       throw Exception(
@@ -105,10 +106,12 @@ class AiScanService {
   Future<ScanResult> analyseScreenshot({
     required Uint8List imageBytes,
     required String mimeType,
+    String? modelOverride,
   }) async {
     final output = await analyseScreenshotWithTrap(
       imageBytes: imageBytes,
       mimeType: mimeType,
+      modelOverride: modelOverride,
     );
     return output.subscription;
   }
@@ -469,41 +472,58 @@ class AiScanService {
   /// Includes both subscription extraction (Task 1) and
   /// trap detection (Task 2) in a single API call.
   static const _extractionPrompt = '''
-Analyse this screenshot. It may be a subscription confirmation email, bank statement, app store receipt, billing page, or any screen showing subscription/payment information.
+Analyse this image carefully. It may be:
+- A subscription confirmation email
+- A bank/card transaction list or statement
+- An app store receipt or billing page
+- A payment confirmation screen
+- Any screen showing subscription or recurring payment info
 
 TASK 1 — SUBSCRIPTION EXTRACTION:
-Extract as many of these details as you can find in the image:
-- service_name: the actual product/service name (e.g. "Claude Pro", "Netflix", "Spotify")
-- price: numeric only, no currency symbol. If price is NOT visible in the image, set to null.
+Find any subscription or recurring payment services and extract:
+- service_name: the actual product/service name (e.g. "Netflix", "ScreenPal", "Claude Pro")
+- price: numeric only, no currency symbol. If price is NOT visible, set to null.
 - currency: ISO 4217 code (GBP, USD, EUR, PLN, etc). Infer from symbols, language, or context.
 - billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly". Infer from context if not explicit.
 - next_renewal: ISO date string if visible, or null
-- is_trial: boolean — true if this is a trial/introductory period
-- trial_end_date: ISO date string when trial ends, or null
+- is_trial: boolean
+- trial_end_date: ISO date string, or null
 - category: one of "Entertainment", "Music", "Design", "Fitness", "Productivity", "Storage", "News", "Gaming", "Finance", "Education", "Health", "Other"
 - icon: first letter or short identifier (1-2 chars)
 - brand_color: hex colour code for the brand
 - source_type: "email" | "bank_statement" | "app_store" | "receipt" | "billing_page" | "other"
 
+HOW TO READ BANK STATEMENTS:
+Bank and card transaction lists require extra attention:
+- Look for software/app/service names INSIDE transaction descriptions
+- Card payments often show: "VISA/MASTERCARD [card number] [amount] [currency] [merchant name]"
+- Foreign currency conversions (e.g. "8.00 USD 1 USD=3.69 PLN") strongly suggest online/digital subscriptions
+- The service name may appear at the END of a long transaction line, sometimes truncated
+- Polish bank format: "DOP. VISA ... PŁATNOŚĆ KARTĄ [amount] [currency] [service name]"
+- UK bank format: "CARD PAYMENT TO [service name]" or "[service name] [reference]"
+- Common subscription merchants to look for: Netflix, Spotify, YouTube, Apple, Google, Adobe, Microsoft, Amazon, Disney+, ChatGPT, Claude, Notion, Figma, Canva, ScreenPal, GitHub, Dropbox, iCloud, HBO, Hulu, Paramount+
+- Ignore one-off purchases (groceries, shops, restaurants, transfers)
+- If a transaction has a foreign currency conversion AND matches a known digital service, it is very likely a subscription
+
 IMPORTANT RULES:
 1. If a field is NOT visible in the image, set it to null. Do NOT guess or default to 0.
-2. For price: only include it if you can see an actual price/amount in the image. If the email just confirms a subscription without showing the price, set price to null.
-3. For service_name: use the real product name. "Claude Pro" not "Anthropic". "YouTube Premium" not "Google".
-4. For billing_cycle: if the image says "next charge" with a date, calculate the cycle from context. If it says "monthly" or "annual", use that directly. If not determinable, set to null.
-5. For next_renewal: if a "next charge date" or "renewal date" is visible, parse it.
-6. Set confidence per field: 1.0 if clearly visible, 0.5 if inferred, 0.0 if not found/guessed.
+2. For service_name: use the real product name. "Claude Pro" not "Anthropic". "ScreenPal" not "PayPro S.A."
+3. For billing_cycle: if the image says "next charge" with a date, calculate the cycle. If not explicit, infer "monthly" for most digital services.
+4. If you find a service name but not a price, still return the service with price as null — do NOT return "Unknown".
+5. If you genuinely cannot find ANY subscription or recurring service in the image, return service_name as "Unknown" with overall_confidence 0.0.
+6. Set confidence per field: 1.0 if clearly visible, 0.5 if inferred, 0.0 if not found.
 
 ALSO INCLUDE:
-- missing_fields: array of field names that could not be found in the image (e.g. ["price", "billing_cycle"])
+- missing_fields: array of field names that could not be found (e.g. ["price", "billing_cycle"])
 - extraction_notes: brief explanation of what you found and what's missing (max 2 sentences)
 
 TASK 2 — TRAP DETECTION:
 Analyse for subscription dark patterns:
 1. Trial periods — what is the trial length? What happens after?
-2. Auto-renewal terms — is there automatic billing after the trial?
+2. Auto-renewal terms — is there automatic billing?
 3. Real price — what will the user actually pay per year after any intro period?
-4. Price framing tricks — is an annual price disguised as weekly/daily to look smaller?
-5. Hidden terms — any fine print about recurring charges not prominently displayed?
+4. Price framing tricks — is an annual price disguised as weekly/daily?
+5. Hidden terms — any fine print about recurring charges?
 
 RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
 {
@@ -546,6 +566,7 @@ SEVERITY GUIDE:
 - "high": Extreme price jump OR deceptive framing. Designed to mislead.
 
 If no subscription is detected at all, return service_name "Unknown" with overall_confidence 0.
+If multiple subscriptions are visible, return the most prominent one.
 Return ONLY valid JSON, no markdown, no explanation.
 ''';
 }

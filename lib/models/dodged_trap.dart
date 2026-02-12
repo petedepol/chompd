@@ -13,7 +13,6 @@ enum DodgedTrapSource {
 /// and the Trap Dodger milestone track.
 ///
 /// Persisted via SharedPreferences (JSON-encoded list).
-/// TODO: Migrate to Isar @collection when Subscriptions move to Isar.
 class DodgedTrap {
   int id = 0;
 

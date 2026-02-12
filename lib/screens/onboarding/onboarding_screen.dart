@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
+import '../../services/notification_service.dart';
 import '../../widgets/mascot_image.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -107,18 +108,37 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Piranha mascot — welcome wave
-                const MascotImage(
-                  asset: 'piranha_wave.png',
-                  size: 200,
-                  fadeIn: true,
+                // Piranha mascot with subtle glow behind
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Background glow
+                    Container(
+                      width: 180,
+                      height: 180,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [
+                            ChompdColors.mint.withValues(alpha: 0.08),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                    const MascotImage(
+                      asset: 'piranha_wave.png',
+                      size: 220,
+                      fadeIn: true,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
                 // Title
                 Text(
-                  'Track Every Subscription',
+                  'Bite Back at Subscriptions',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.w700,
                         color: ChompdColors.text,
                       ),
@@ -126,15 +146,45 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
                 const SizedBox(height: 12),
                 // Subtitle
-                Text(
-                  'Never overpay again. Chompd watches your bills so you don\'t have to.',
-                  style: const TextStyle(
+                const Text(
+                  'Chompd tracks every subscription, catches hidden traps, and helps you cancel what you don\'t need.',
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     color: ChompdColors.textMid,
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                // Confronting stat
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: ChompdColors.bgCard,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: ChompdColors.border),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Text('💸', style: TextStyle(fontSize: 18)),
+                      SizedBox(width: 10),
+                      Flexible(
+                        child: Text(
+                          'The average person wastes £240/year on forgotten subscriptions',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ChompdColors.textMid,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -167,6 +217,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   icon: Icons.camera_alt,
                   iconColor: ChompdColors.mint,
                   title: 'Snap a screenshot',
+                  subtitle: 'Receipt, email, or bank statement',
                   isLast: false,
                 ),
                 _buildStep(
@@ -174,6 +225,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   icon: Icons.auto_awesome,
                   iconColor: ChompdColors.purple,
                   title: 'AI reads it instantly',
+                  subtitle: 'Price, renewal date, and hidden traps',
                   isLast: false,
                 ),
                 _buildStep(
@@ -181,6 +233,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   icon: Icons.check_circle,
                   iconColor: ChompdColors.mint,
                   title: 'Done. Tracked forever.',
+                  subtitle: 'Get reminders before you\'re charged',
                   isLast: true,
                 ),
               ],
@@ -196,6 +249,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     required IconData icon,
     required Color iconColor,
     required String title,
+    String? subtitle,
     required bool isLast,
   }) {
     return Column(
@@ -221,15 +275,30 @@ class _OnboardingScreenState extends State<OnboardingScreen>
               ),
             ),
             const SizedBox(width: 16),
-            // Title
+            // Title + subtitle
             Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: ChompdColors.text,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: ChompdColors.text,
+                    ),
+                  ),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: ChompdColors.textDim,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
@@ -278,16 +347,16 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       // Piranha mascot — alert
                       const MascotImage(
                         asset: 'piranha_alert.png',
-                        size: 120,
+                        size: 160,
                         fadeIn: true,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
                       // Title
                       Text(
                         'Stay Ahead of Renewals',
                         style:
                             Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontSize: 20,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.w700,
                                   color: ChompdColors.text,
                                 ),
@@ -295,15 +364,27 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       ),
                       const SizedBox(height: 12),
                       // Subtitle
-                      Text(
+                      const Text(
                         'We\'ll remind you before you\'re charged — no surprises.',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                           color: ChompdColors.textMid,
                           height: 1.5,
                         ),
                         textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      // What you get — compact feature pills
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _notifFeature('Morning of renewal'),
+                          _notifFeature('7 days before'),
+                          _notifFeature('Trial expiry alerts'),
+                        ],
                       ),
                     ],
                   ),
@@ -316,7 +397,10 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _nextPage,
+                    onPressed: () async {
+                      await NotificationService.instance.requestPermission();
+                      _nextPage();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ChompdColors.mint,
                       foregroundColor: ChompdColors.bg,
@@ -372,26 +456,26 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       // Piranha mascot — celebrate
                       const MascotImage(
                         asset: 'piranha_celebrate.png',
-                        size: 120,
+                        size: 160,
                         fadeIn: true,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 28),
                       // Title
                       Text(
                         'Add Your First Subscription',
                         style:
                             Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontSize: 20,
+                                  fontSize: 22,
                                   fontWeight: FontWeight.w700,
                                   color: ChompdColors.text,
                                 ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
-                      // Subtitle
-                      Text(
-                        'Scan a screenshot or add one manually — it takes seconds.',
-                        style: const TextStyle(
+                      // Subtitle — more urgency
+                      const Text(
+                        'Most people find forgotten subscriptions in their first scan. Let\'s see what you\'re paying for.',
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                           color: ChompdColors.textMid,
@@ -491,6 +575,27 @@ class _OnboardingScreenState extends State<OnboardingScreen>
             ),
             const SizedBox(height: 24),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _notifFeature(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: ChompdColors.amber.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: ChompdColors.amber.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: ChompdColors.amber,
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/constants.dart';
 import '../models/dodged_trap.dart';
 import '../models/scan_output.dart';
 import '../models/scan_result.dart';
@@ -202,6 +203,38 @@ class ScanNotifier extends StateNotifier<ScanState> {
     );
   }
 
+  /// Determines if a Haiku result is too poor and needs Sonnet escalation.
+  ///
+  /// Escalates when:
+  /// - No subscription found (Unknown service name)
+  /// - Very low overall confidence
+  /// - Found a name but missing both price and cycle (too incomplete)
+  /// - All per-field confidences are below 0.5
+  bool _shouldEscalate(ScanResult result) {
+    // No subscription detected at all
+    if (result.serviceName == 'Unknown' || result.serviceName.isEmpty) {
+      return true;
+    }
+
+    // Very low confidence — Haiku isn't sure about anything
+    if (result.overallConfidence < 0.3) {
+      return true;
+    }
+
+    // Found a name but no price and no cycle — too incomplete
+    if (result.price == null && result.billingCycle == null) {
+      return true;
+    }
+
+    // All per-field confidences are below 0.5
+    if (result.confidence.isNotEmpty &&
+        result.confidence.values.every((c) => c < 0.5)) {
+      return true;
+    }
+
+    return false;
+  }
+
   /// Start a scan with a screenshot image.
   ///
   /// For Sprint 3 prototype, [scenario] triggers mock data.
@@ -228,8 +261,8 @@ class ScanNotifier extends StateNotifier<ScanState> {
         return;
       }
 
-      // Get AI result
-      late final ScanResult result;
+      // Get AI result — try Haiku first, escalate to Sonnet if needed
+      late ScanResult result;
       if (useMockData) {
         result = await AiScanService.mock(scenario);
       } else {
@@ -247,13 +280,33 @@ class ScanNotifier extends StateNotifier<ScanState> {
         }
 
         final service = AiScanService(apiKey: apiKey);
+
+        // Pass 1: Haiku (fast + cheap)
         result = await service.analyseScreenshot(
           imageBytes: imageBytes,
           mimeType: mimeType,
         );
+
+        // Check if Haiku struggled — escalate to Sonnet
+        if (_shouldEscalate(result)) {
+          _addSystemMessage('Taking a closer look\u2026');
+
+          // Pass 2: Sonnet (smarter, handles complex images)
+          result = await service.analyseScreenshot(
+            imageBytes: imageBytes,
+            mimeType: mimeType,
+            modelOverride: AppConstants.aiModelFallback,
+          );
+        }
       }
 
       state = state.copyWith(currentResult: result);
+
+      // No subscription found — stop here
+      if (result.isNotFound) {
+        await _handleNotFound(result);
+        return;
+      }
 
       // If critical fields are missing, ask user to fill gaps first
       if (result.hasMissingFields) {
@@ -296,6 +349,32 @@ class ScanNotifier extends StateNotifier<ScanState> {
           scanResult: result,
         ),
       ],
+    );
+  }
+
+  /// Handle case where no subscription was found in the image.
+  Future<void> _handleNotFound(ScanResult result) async {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final messages = <ChatMessage>[...state.messages];
+
+    // Show extraction notes if available (explains what the AI saw)
+    if (result.extractionNotes != null && result.extractionNotes!.isNotEmpty) {
+      messages.add(ChatMessage(
+        type: ChatMessageType.info,
+        text: result.extractionNotes!,
+      ));
+    }
+
+    messages.add(const ChatMessage(
+      type: ChatMessageType.system,
+      text:
+          'No subscriptions found in this image. Try scanning a receipt, confirmation email, or app store screenshot instead.',
+    ));
+
+    state = state.copyWith(
+      phase: ScanPhase.idle,
+      messages: messages,
     );
   }
 
@@ -529,10 +608,18 @@ class ScanNotifier extends StateNotifier<ScanState> {
     if (currentResult.needsPrice) {
       double? parsedPrice;
       String? parsedCycle;
+      String? parsedCurrency;
 
-      // Parse price from options like "£18/mo", "$20/mo", "15.99 zł/mo"
+      // Extract explicit currency code from "[GBP]" suffix if present
+      final currencyCodeMatch = RegExp(r'\[([A-Z]{3})\]').firstMatch(answer);
+      if (currencyCodeMatch != null) {
+        parsedCurrency = currencyCodeMatch.group(1);
+      }
+
+      // Parse price from options like "£18/mo", "$20/mo", "15.99 zł/mo",
+      // "C$20.00/mo", "A$9.99/yr", "¥1500/mo", "CHF12.00/mo", "kr99.00/mo"
       final priceMatch =
-          RegExp(r'[\£\$\€]?([\d.]+)\s*(?:z[łl])?\s*/?(?:(mo|yr|wk|qtr))?')
+          RegExp(r'(?:[A-Z]*[\£\$\€\¥]|CHF|kr|z[łl])?\s*([\d.]+)\s*(?:z[łl]|kr)?\s*/?(?:(mo|yr|wk|qtr))?')
               .firstMatch(answer);
       if (priceMatch != null) {
         parsedPrice = double.tryParse(priceMatch.group(1) ?? '');
@@ -561,7 +648,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
         final updated = ScanResult(
           serviceName: currentResult.serviceName,
           price: parsedPrice,
-          currency: currentResult.currency,
+          currency: parsedCurrency ?? currentResult.currency,
           billingCycle: parsedCycle ?? currentResult.billingCycle,
           nextRenewal: currentResult.nextRenewal,
           isTrial: currentResult.isTrial,
@@ -784,6 +871,12 @@ class ScanNotifier extends StateNotifier<ScanState> {
       'adobe': [fmt(9.98, 'mo'), fmt(19.97, 'mo'), fmt(52.99, 'mo')],
       'disney': [fmt(4.99, 'mo'), fmt(7.99, 'mo'), fmt(10.99, 'mo')],
       'amazon': [fmt(8.99, 'mo'), fmt(95, 'yr')],
+      'screenpal': [fmt(3, 'mo'), fmt(6, 'mo'), fmt(8, 'mo')],
+      'notion': [fmt(8, 'mo'), fmt(10, 'mo')],
+      'figma': [fmt(12, 'mo'), fmt(15, 'mo')],
+      'canva': [fmt(10.99, 'mo'), fmt(99.99, 'yr')],
+      'github': [fmt(4, 'mo'), fmt(21, 'mo')],
+      'google': [fmt(1.49, 'mo'), fmt(3.49, 'mo'), fmt(6.99, 'mo')],
     };
 
     // Check if we have known prices for this service
@@ -868,7 +961,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
     );
 
     try {
-      late final ScanOutput output;
+      late ScanOutput output;
       if (useMockData) {
         output = await AiScanService.mockWithTrap(scenario);
       } else {
@@ -886,10 +979,30 @@ class ScanNotifier extends StateNotifier<ScanState> {
         }
 
         final service = AiScanService(apiKey: apiKey);
+
+        // Pass 1: Haiku (fast + cheap)
         output = await service.analyseScreenshotWithTrap(
           imageBytes: imageBytes,
           mimeType: mimeType,
         );
+
+        // Check if Haiku struggled — escalate to Sonnet
+        if (_shouldEscalate(output.subscription)) {
+          _addSystemMessage('Taking a closer look\u2026');
+
+          // Pass 2: Sonnet (smarter, handles complex images)
+          output = await service.analyseScreenshotWithTrap(
+            imageBytes: imageBytes,
+            mimeType: mimeType,
+            modelOverride: AppConstants.aiModelFallback,
+          );
+        }
+      }
+
+      // No subscription found — stop here
+      if (output.subscription.isNotFound) {
+        await _handleNotFound(output.subscription);
+        return;
       }
 
       // If critical fields are missing, ask user to fill gaps first

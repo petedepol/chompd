@@ -9,20 +9,21 @@ import 'package:google_fonts/google_fonts.dart';
 class ChompdColors {
   ChompdColors._();
 
-  // ─── Backgrounds ───
-  static const bg = Color(0xFF07070C);
-  static const bgCard = Color(0xFF111118);
-  static const bgElevated = Color(0xFF1A1A24);
-  static const bgGlass = Color(0xD91A1A24); // 85% opacity
+  // ─── Backgrounds (warm olive-black) ───
+  static const bg = Color(0xFF080808);
+  static const bgCard = Color(0xFF141412);
+  static const bgElevated = Color(0xFF1C1C19);
+  static const bgGlass = Color(0xD91C1C19); // 85% opacity
 
   // ─── Borders ───
-  static const border = Color(0xFF242436);
-  static const borderLight = Color(0xFF2E2E44);
+  static const border = Color(0xFF262622);
+  static const borderLight = Color(0xFF333330);
+  static const borderHighlight = Color(0xFF2E2E2A); // Top-edge highlight
 
   // ─── Text ───
-  static const text = Color(0xFFF0F0F5);
-  static const textMid = Color(0xFFA0A0B8);
-  static const textDim = Color(0xFF6A6A82);
+  static const text = Color(0xFFF0F0EC);
+  static const textMid = Color(0xFFA0A098);
+  static const textDim = Color(0xFF6A6A64);
 
   // ─── Accent: Mint (primary) ───
   static const mint = Color(0xFF6EE7B7);

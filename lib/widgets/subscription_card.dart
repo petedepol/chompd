@@ -109,6 +109,24 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
               width: 3,
               child: ColoredBox(color: accentColor),
             ),
+            // Top-light gradient — subtle "lit from above" effect
+            Positioned(
+              left: 14,
+              right: 14,
+              top: 0,
+              height: 1,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      ChompdColors.borderHighlight,
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
             // Card content with left padding accounting for accent
             Padding(
               padding: const EdgeInsets.fromLTRB(17, 12, 14, 12),
@@ -182,10 +200,12 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          'Renews in ${subscription.daysUntilRenewal} days',
-                          style: const TextStyle(
+                          subscription.renewalLabel,
+                          style: TextStyle(
                             fontSize: 11,
-                            color: ChompdColors.textDim,
+                            color: subscription.daysUntilRenewal < 0
+                                ? ChompdColors.amber
+                                : ChompdColors.textDim,
                           ),
                         ),
                       ],
@@ -333,7 +353,9 @@ class _TrapBadge extends StatelessWidget {
           Icon(Icons.warning_rounded, size: 10, color: color),
           const SizedBox(width: 3),
           Text(
-            '${subscription.trialDurationDays ?? "?"}d trap',
+            subscription.trialDurationDays != null
+                ? '${subscription.trialDurationDays}d trap'
+                : 'TRAP',
             style: GoogleFonts.spaceMono(
               fontSize: 8,
               fontWeight: FontWeight.w700,
