@@ -276,11 +276,14 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    template.timeframe,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: ChompdColors.textDim,
+                  Flexible(
+                    child: Text(
+                      template.timeframe,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: ChompdColors.textDim,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

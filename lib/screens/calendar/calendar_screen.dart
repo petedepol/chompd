@@ -137,7 +137,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           setState(() => _calendarFormat = format);
         },
         onPageChanged: (focusedDay) {
-          _focusedDay = focusedDay;
+          setState(() {
+            _focusedDay = focusedDay;
+            _selectedDay = null; // Clear day selection when changing month
+          });
         },
 
         // ─── Styling ───

@@ -299,12 +299,19 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
 
           const SizedBox(height: 12),
 
-          // Service grid
+          // Service grid + edit panel in single scrollable area
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: _filtered.length,
+              itemCount: _filtered.length + (_selectedTemplate != null ? 1 : 0),
               itemBuilder: (context, index) {
+                // Last item is the edit panel when a template is selected
+                if (_selectedTemplate != null && index == _filtered.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: _buildEditPanel(),
+                  );
+                }
                 final tpl = _filtered[index];
                 return _TemplateRow(
                   template: tpl,
@@ -312,15 +319,6 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                   onTap: () => _selectTemplate(tpl),
                 );
               },
-            ),
-          ),
-
-          // Edit panel (animated) — inside a scrollable wrapper
-          // so the keyboard doesn't cause overflow
-          Flexible(
-            flex: 0,
-            child: SingleChildScrollView(
-              child: _buildEditPanel(),
             ),
           ),
         ],
@@ -451,7 +449,7 @@ class _EditPanelContentState extends State<_EditPanelContent> {
     final isValid = (double.tryParse(widget.priceCtrl.text) ?? 0) > 0;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+      margin: const EdgeInsets.only(top: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: ChompdColors.bgCard,
