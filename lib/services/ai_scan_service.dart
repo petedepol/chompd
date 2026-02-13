@@ -98,8 +98,98 @@ class AiScanService {
         .replaceAll(RegExp(r'^```\s*$', multiLine: true), '')
         .trim();
 
-    final parsed = jsonDecode(cleanedJson) as Map<String, dynamic>;
+    final decoded = jsonDecode(cleanedJson);
+
+    // Claude may return a JSON array when it detects multiple subscriptions
+    // (e.g. bank statements). Handle both single object and array responses.
+    final Map<String, dynamic> parsed;
+    if (decoded is List) {
+      if (decoded.isEmpty) {
+        throw Exception('Claude returned an empty array');
+      }
+      parsed = decoded.first as Map<String, dynamic>;
+    } else {
+      parsed = decoded as Map<String, dynamic>;
+    }
+
     return ScanOutput.fromJson(parsed);
+  }
+
+  /// Analyse a screenshot and extract ALL subscription + trap details.
+  ///
+  /// Returns a list of [ScanOutput] when multiple subscriptions are found
+  /// (e.g. bank statements). Returns a single-item list for single results.
+  Future<List<ScanOutput>> analyseScreenshotMulti({
+    required Uint8List imageBytes,
+    required String mimeType,
+    String? modelOverride,
+  }) async {
+    final base64Image = base64Encode(imageBytes);
+
+    final body = jsonEncode({
+      'model': modelOverride ?? AppConstants.aiModel,
+      'max_tokens': 4096,
+      'messages': [
+        {
+          'role': 'user',
+          'content': [
+            {
+              'type': 'image',
+              'source': {
+                'type': 'base64',
+                'media_type': mimeType,
+                'data': base64Image,
+              },
+            },
+            {
+              'type': 'text',
+              'text': _multiExtractionPrompt,
+            },
+          ],
+        },
+      ],
+    });
+
+    final response = await http
+        .post(
+          Uri.parse(_baseUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: body,
+        )
+        .timeout(Duration(seconds: modelOverride != null ? 60 : 30));
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Claude API error ${response.statusCode}: ${response.body}',
+      );
+    }
+
+    final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+    final content = responseJson['content'] as List<dynamic>;
+    final textBlock = content.firstWhere(
+      (block) => block['type'] == 'text',
+      orElse: () => throw Exception('No text block in Claude response'),
+    );
+    final rawText = textBlock['text'] as String;
+
+    final cleanedJson = rawText
+        .replaceAll(RegExp(r'^```json?\s*', multiLine: true), '')
+        .replaceAll(RegExp(r'^```\s*$', multiLine: true), '')
+        .trim();
+
+    final decoded = jsonDecode(cleanedJson);
+
+    if (decoded is List) {
+      return decoded
+          .map((item) => ScanOutput.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } else {
+      return [ScanOutput.fromJson(decoded as Map<String, dynamic>)];
+    }
   }
 
   /// Convenience: analyse screenshot and return just subscription data.
@@ -566,7 +656,73 @@ SEVERITY GUIDE:
 - "high": Extreme price jump OR deceptive framing. Designed to mislead.
 
 If no subscription is detected at all, return service_name "Unknown" with overall_confidence 0.
-If multiple subscriptions are visible, return the most prominent one.
+If multiple subscriptions are visible, return the most prominent one only.
 Return ONLY valid JSON, no markdown, no explanation.
+''';
+
+  /// Prompt for multi-subscription extraction (bank statements, billing pages).
+  ///
+  /// Returns a JSON array of subscription+trap objects.
+  static const _multiExtractionPrompt = '''
+Analyse this image carefully. It is likely a bank statement, card transaction list, or billing page with MULTIPLE subscriptions.
+
+For EACH recurring subscription or digital service charge you find, extract:
+- service_name: the actual product/service name (e.g. "Netflix", "ScreenPal", "Claude Pro")
+- price: numeric only, no currency symbol. If price is NOT visible, set to null.
+- currency: ISO 4217 code (GBP, USD, EUR, PLN, etc). Infer from symbols, language, or context.
+- billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly". Infer from context if not explicit.
+- next_renewal: ISO date string if visible, or null
+- is_trial: boolean
+- trial_end_date: ISO date string, or null
+- category: one of "Entertainment", "Music", "Design", "Fitness", "Productivity", "Storage", "News", "Gaming", "Finance", "Education", "Health", "Other"
+- icon: first letter or short identifier (1-2 chars)
+- brand_color: hex colour code for the brand
+- source_type: "email" | "bank_statement" | "app_store" | "receipt" | "billing_page" | "other"
+- confidence: per-field scores (0.0-1.0)
+- overall_confidence: average confidence (0.0-1.0)
+- tier: 1 (auto-detect), 2 (likely match), or 3 (uncertain)
+- missing_fields: array of field names not found
+- extraction_notes: brief explanation (max 1 sentence per subscription)
+
+HOW TO READ BANK STATEMENTS:
+- Look for software/app/service names INSIDE transaction descriptions
+- Card payments often show: "VISA/MASTERCARD [card number] [amount] [currency] [merchant name]"
+- Foreign currency conversions strongly suggest online/digital subscriptions
+- Polish bank format: "DOP. VISA ... PŁATNOŚĆ KARTĄ [amount] [currency] [service name]"
+- UK bank format: "CARD PAYMENT TO [service name]"
+- Common subscription merchants: Netflix, Spotify, YouTube, Apple, Google, Adobe, Microsoft, Amazon, Disney+, ChatGPT, Claude, Notion, Figma, Canva, ScreenPal, GitHub, Dropbox, iCloud, HBO, Hulu, Paramount+
+- IGNORE one-off purchases (groceries, shops, restaurants, transfers, physical stores)
+
+IMPORTANT RULES:
+1. If a field is NOT visible in the image, set it to null. Do NOT guess or default to 0.
+2. For service_name: use the real product name. "Claude Pro" not "Anthropic".
+3. Only include charges that are CLEARLY recurring subscriptions or digital services.
+4. Set confidence per field: 1.0 if clearly visible, 0.5 if inferred, 0.0 if not found.
+
+For each subscription, also perform TRAP DETECTION (trial_bait, price_framing, hidden_renewal).
+
+RESPOND WITH A JSON ARRAY (no markdown, no backticks):
+[
+  {
+    "subscription": { ... },
+    "trap": {
+      "is_trap": false,
+      "trap_type": null,
+      "severity": "low",
+      "trial_price": null,
+      "trial_duration_days": null,
+      "real_price": null,
+      "billing_cycle": null,
+      "real_annual_cost": null,
+      "confidence": 0,
+      "warning_message": null,
+      "service_name": "string"
+    }
+  },
+  ...
+]
+
+If NO subscriptions are found, return a single-item array with service_name "Unknown" and overall_confidence 0.
+Return ONLY valid JSON array, no markdown, no explanation.
 ''';
 }

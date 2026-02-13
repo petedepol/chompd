@@ -1380,4 +1380,35 @@ class SPl extends S {
 
   @override
   String get categoryOther => 'Inne';
+
+  @override
+  String get discoveryTipsTitle => 'Gdzie szukać subskrypcji';
+
+  @override
+  String get discoveryTipBank => 'Wyciąg bankowy';
+
+  @override
+  String get discoveryTipBankDesc =>
+      'Zrób screenshot transakcji — znajdziemy wszystkie na raz';
+
+  @override
+  String get discoveryTipEmail => 'Szukaj w mailu';
+
+  @override
+  String get discoveryTipEmailDesc =>
+      'Szukaj „subskrypcja”, „rachunek” lub „odnowienie” w skrzynce';
+
+  @override
+  String get discoveryTipAppStore => 'App Store / Play Store';
+
+  @override
+  String get discoveryTipAppStoreDesc =>
+      'Ustawienia → Subskrypcje pokaże aktywne subskrypcje z appów';
+
+  @override
+  String get discoveryTipPaypal => 'PayPal i aplikacje płatnicze';
+
+  @override
+  String get discoveryTipPaypalDesc =>
+      'Sprawdź automatyczne płatności w PayPalu, Revolut lub innej appce';
 }

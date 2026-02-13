@@ -2238,6 +2238,60 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Other'**
   String get categoryOther;
+
+  /// No description provided for @discoveryTipsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Where to find subscriptions'**
+  String get discoveryTipsTitle;
+
+  /// No description provided for @discoveryTipBank.
+  ///
+  /// In en, this message translates to:
+  /// **'Bank statement'**
+  String get discoveryTipBank;
+
+  /// No description provided for @discoveryTipBankDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Screenshot your recent transactions — we’ll find them all at once'**
+  String get discoveryTipBankDesc;
+
+  /// No description provided for @discoveryTipEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email search'**
+  String get discoveryTipEmail;
+
+  /// No description provided for @discoveryTipEmailDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Search “subscription”, “receipt” or “renewal” in your inbox'**
+  String get discoveryTipEmailDesc;
+
+  /// No description provided for @discoveryTipAppStore.
+  ///
+  /// In en, this message translates to:
+  /// **'App Store / Play Store'**
+  String get discoveryTipAppStore;
+
+  /// No description provided for @discoveryTipAppStoreDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings → Subscriptions shows all active app subscriptions'**
+  String get discoveryTipAppStoreDesc;
+
+  /// No description provided for @discoveryTipPaypal.
+  ///
+  /// In en, this message translates to:
+  /// **'PayPal & payment apps'**
+  String get discoveryTipPaypal;
+
+  /// No description provided for @discoveryTipPaypalDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Check automatic payments in PayPal, Revolut or your payment app'**
+  String get discoveryTipPaypalDesc;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

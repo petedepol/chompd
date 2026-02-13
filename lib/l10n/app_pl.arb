@@ -658,5 +658,15 @@
   "categoryFinance": "Finanse",
   "categoryEducation": "Edukacja",
   "categoryHealth": "Zdrowie",
-  "categoryOther": "Inne"
+  "categoryOther": "Inne",
+
+  "discoveryTipsTitle": "Gdzie szuka\u0107 subskrypcji",
+  "discoveryTipBank": "Wyci\u0105g bankowy",
+  "discoveryTipBankDesc": "Zr\u00F3b screenshot transakcji \u2014 znajdziemy wszystkie na raz",
+  "discoveryTipEmail": "Szukaj w mailu",
+  "discoveryTipEmailDesc": "Szukaj \u201Esubskrypcja\u201D, \u201Erachunek\u201D lub \u201Eodnowienie\u201D w skrzynce",
+  "discoveryTipAppStore": "App Store / Play Store",
+  "discoveryTipAppStoreDesc": "Ustawienia \u2192 Subskrypcje poka\u017Ce aktywne subskrypcje z app\u00F3w",
+  "discoveryTipPaypal": "PayPal i aplikacje p\u0142atnicze",
+  "discoveryTipPaypalDesc": "Sprawd\u017A automatyczne p\u0142atno\u015Bci w PayPalu, Revolut lub innej appce"
 }

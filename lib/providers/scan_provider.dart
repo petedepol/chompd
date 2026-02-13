@@ -461,21 +461,33 @@ class ScanNotifier extends StateNotifier<ScanState> {
   }
 
   /// Handle multi-sub bank statement scenario.
-  Future<void> _handleMultiScan() async {
-    final results = await AiScanService.mockMulti();
+  ///
+  /// Accepts pre-fetched [results] from the real API, or falls back to mock.
+  Future<void> _handleMultiScan({List<ScanResult>? results}) async {
+    results ??= await AiScanService.mockMulti();
+
+    // Filter out "Unknown" or empty results
+    final validResults = results.where((r) => !r.isNotFound).toList();
+    if (validResults.isEmpty) {
+      _addSystemMessage('No subscriptions found in this image.');
+      state = state.copyWith(phase: ScanPhase.idle);
+      return;
+    }
 
     final autoDetected =
-        results.where((r) => r.tier == 1 || r.isHighConfidence).toList();
-    final needsInput = results.where((r) => r.needsClarification).toList();
+        validResults.where((r) => r.tier == 1 || r.isHighConfidence).toList();
+    final needsInput = validResults.where((r) => r.needsClarification).toList();
 
+    // Use the currency from the first result for formatting
+    final currency = validResults.first.currency;
     final totalMonthly =
-        results.fold(0.0, (sum, r) => sum + (r.price ?? 0));
+        validResults.fold(0.0, (sum, r) => sum + (r.price ?? 0));
 
     final messages = <ChatMessage>[
       ...state.messages,
       ChatMessage(
         type: ChatMessageType.info,
-        text: 'Found ${results.length} recurring charges totalling ${Subscription.formatPrice(totalMonthly, 'GBP')}/month.',
+        text: 'Found ${validResults.length} recurring charges totalling ${Subscription.formatPrice(totalMonthly, currency)}/month.',
       ),
     ];
 
@@ -515,10 +527,27 @@ class ScanNotifier extends StateNotifier<ScanState> {
       }
     }
 
+    // If all results are high-confidence, skip questioning and go to multi-result
+    if (needsInput.isEmpty) {
+      messages.add(
+        ChatMessage(
+          type: ChatMessageType.multiResult,
+          text: '${validResults.length} subscriptions found!',
+          multiResults: validResults,
+        ),
+      );
+      state = state.copyWith(
+        phase: ScanPhase.result,
+        messages: messages,
+        multiResults: validResults,
+      );
+      return;
+    }
+
     state = state.copyWith(
       phase: ScanPhase.questioning,
       messages: messages,
-      multiResults: results,
+      multiResults: validResults,
       pendingQuestionIndex: messages.indexWhere(
           (m) => m.type == ChatMessageType.question && !m.isAnswered),
     );
@@ -940,11 +969,13 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
   // ─── Trap Scanner Methods ───
 
-  /// Start a scan with trap detection (uses the combined scan+trap mock).
+  /// Start a scan with trap detection.
   ///
-  /// For Sprint 8 prototype, [scenario] triggers mock trap data:
-  /// - 'trap_trial_bait', 'trap_price_framing', 'trap_hidden_renewal',
-  ///   'trap_safe_trial', or any standard scenario (no trap).
+  /// Automatically detects single vs multi-subscription images:
+  /// - Single subscription (email, receipt) → standard scan + trap flow
+  /// - Multiple subscriptions (bank statement) → multi-scan flow with batch add
+  ///
+  /// For mock mode, [scenario] triggers test data.
   Future<void> startTrapScan({
     Uint8List? imageBytes,
     String? mimeType,
@@ -961,104 +992,78 @@ class ScanNotifier extends StateNotifier<ScanState> {
     );
 
     try {
-      late ScanOutput output;
       if (useMockData) {
-        output = await AiScanService.mockWithTrap(scenario);
-      } else {
-        if (imageBytes == null || mimeType == null) {
-          _addSystemMessage('Unable to process image. Please try again.');
-          state = state.copyWith(phase: ScanPhase.idle);
-          return;
-        }
+        // Mock mode
+        final output = await AiScanService.mockWithTrap(scenario);
+        await _handleSingleScanOutput(output);
+        return;
+      }
 
-        const apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
-        if (apiKey.isEmpty) {
-          _addSystemMessage('AI scanning is not configured. Please contact support.');
-          state = state.copyWith(phase: ScanPhase.idle);
-          return;
-        }
+      // ─── Real API mode ───
+      if (imageBytes == null || mimeType == null) {
+        _addSystemMessage('Unable to process image. Please try again.');
+        state = state.copyWith(phase: ScanPhase.idle);
+        return;
+      }
 
-        final service = AiScanService(apiKey: apiKey);
+      const apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
+      if (apiKey.isEmpty) {
+        _addSystemMessage('AI scanning is not configured. Please contact support.');
+        state = state.copyWith(phase: ScanPhase.idle);
+        return;
+      }
 
-        // Pass 1: Haiku (fast + cheap)
-        output = await service.analyseScreenshotWithTrap(
+      final service = AiScanService(apiKey: apiKey);
+
+      // Try multi-extraction first (handles both single and multi results)
+      List<ScanOutput> outputs = await service.analyseScreenshotMulti(
+        imageBytes: imageBytes,
+        mimeType: mimeType,
+      );
+
+      // Filter out empty/unknown results
+      outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
+
+      // If Haiku found nothing, escalate to Sonnet
+      if (outputs.isEmpty) {
+        _addSystemMessage('Taking a closer look\u2026');
+        outputs = await service.analyseScreenshotMulti(
           imageBytes: imageBytes,
           mimeType: mimeType,
+          modelOverride: AppConstants.aiModelFallback,
         );
-
-        // Check if Haiku struggled — escalate to Sonnet
-        if (_shouldEscalate(output.subscription)) {
-          _addSystemMessage('Taking a closer look\u2026');
-
-          // Pass 2: Sonnet (smarter, handles complex images)
-          output = await service.analyseScreenshotWithTrap(
-            imageBytes: imageBytes,
-            mimeType: mimeType,
-            modelOverride: AppConstants.aiModelFallback,
-          );
-        }
+        outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
+      }
+      // If Haiku found one result but it's low confidence, escalate
+      else if (outputs.length == 1 && _shouldEscalate(outputs.first.subscription)) {
+        _addSystemMessage('Taking a closer look\u2026');
+        outputs = await service.analyseScreenshotMulti(
+          imageBytes: imageBytes,
+          mimeType: mimeType,
+          modelOverride: AppConstants.aiModelFallback,
+        );
+        outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
       }
 
-      // No subscription found — stop here
-      if (output.subscription.isNotFound) {
-        await _handleNotFound(output.subscription);
+      if (outputs.isEmpty) {
+        await _handleNotFound(ScanResult(
+          serviceName: 'Unknown',
+          currency: 'GBP',
+          confidence: {},
+          overallConfidence: 0,
+          tier: 3,
+        ));
         return;
       }
 
-      // If critical fields are missing, ask user to fill gaps first
-      if (output.subscription.hasMissingFields) {
-        // Store the trap result for after missing data is resolved
-        state = state.copyWith(
-          currentResult: output.subscription,
-          trapResult: output.trap,
-        );
-        await _handleMissingData(output.subscription);
-        return;
-      }
-
-      if (output.shouldShowTrapWarning) {
-        // HIGH / MEDIUM severity trap — show full warning card
-        state = state.copyWith(
-          phase: ScanPhase.trapDetected,
-          currentResult: output.subscription,
-          trapResult: output.trap,
-          messages: [
-            ...state.messages,
-            ChatMessage(
-              type: ChatMessageType.system,
-              text: '\u26A0\uFE0F Trap detected in ${output.subscription.serviceName}!',
-            ),
-          ],
-        );
-      } else if (output.shouldShowTrialNotice) {
-        // LOW severity — show normal result with trial info notice
-        state = state.copyWith(
-          phase: ScanPhase.result,
-          currentResult: output.subscription,
-          trialNotice: output.trap,
-          messages: [
-            ...state.messages,
-            ChatMessage(
-              type: ChatMessageType.result,
-              text: 'Found ${output.subscription.serviceName}!',
-              scanResult: output.subscription,
-            ),
-          ],
-        );
+      // Route based on result count
+      if (outputs.length == 1) {
+        // Single subscription → standard flow with trap detection
+        await _handleSingleScanOutput(outputs.first);
       } else {
-        // No trap — standard flow
-        state = state.copyWith(
-          phase: ScanPhase.result,
-          currentResult: output.subscription,
-          messages: [
-            ...state.messages,
-            ChatMessage(
-              type: ChatMessageType.result,
-              text: 'Found ${output.subscription.serviceName}!',
-              scanResult: output.subscription,
-            ),
-          ],
-        );
+        // Multiple subscriptions → multi-scan flow (add all at once)
+        final results = outputs.map((o) => o.subscription).toList();
+        await _handleMultiScan(results: results);
       }
     } catch (e) {
       state = state.copyWith(
@@ -1072,6 +1077,67 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ),
         ],
       );
+    }
+  }
+
+  /// Handle a single scan output (subscription + trap detection).
+  Future<void> _handleSingleScanOutput(ScanOutput output) async {
+    // No subscription found
+    if (output.subscription.isNotFound) {
+      await _handleNotFound(output.subscription);
+      return;
+    }
+
+    // If critical fields are missing, ask user to fill gaps first
+    if (output.subscription.hasMissingFields) {
+      state = state.copyWith(
+        currentResult: output.subscription,
+        trapResult: output.trap,
+      );
+      await _handleMissingData(output.subscription);
+      return;
+    }
+
+    if (output.shouldShowTrapWarning) {
+      // HIGH / MEDIUM severity trap — show full warning card
+      state = state.copyWith(
+        phase: ScanPhase.trapDetected,
+        currentResult: output.subscription,
+        trapResult: output.trap,
+        messages: [
+          ...state.messages,
+          ChatMessage(
+            type: ChatMessageType.system,
+            text: '\u26A0\uFE0F Trap detected in ${output.subscription.serviceName}!',
+          ),
+        ],
+      );
+    } else if (output.shouldShowTrialNotice) {
+      // LOW severity — show normal result with trial info notice
+      state = state.copyWith(
+        phase: ScanPhase.result,
+        currentResult: output.subscription,
+        trialNotice: output.trap,
+        messages: [
+          ...state.messages,
+          ChatMessage(
+            type: ChatMessageType.result,
+            text: 'Found ${output.subscription.serviceName}!',
+            scanResult: output.subscription,
+          ),
+        ],
+      );
+    } else {
+      // No trap — route based on confidence
+      state = state.copyWith(currentResult: output.subscription);
+
+      if (output.subscription.tier == 1 || output.subscription.isHighConfidence) {
+        await _handleAutoDetect(output.subscription);
+      } else if (output.subscription.tier == 2) {
+        await _handleQuickConfirm(output.subscription);
+      } else {
+        await _handleFullQuestion(output.subscription, 'clear_email');
+      }
     }
   }
 

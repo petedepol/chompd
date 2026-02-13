@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
 import '../utils/l10n_extension.dart';
+import 'discovery_tips_card.dart';
 import 'mascot_image.dart';
 
 enum _EmptyStateType { custom, noSubscriptions, noTrials, noSavings }
@@ -137,6 +138,11 @@ class EmptyState extends StatelessWidget {
                 height: 1.5,
               ),
             ),
+            // Show discovery tips only on the main "no subscriptions" state
+            if (_type == _EmptyStateType.noSubscriptions) ...[
+              const SizedBox(height: 24),
+              const DiscoveryTipsCard(),
+            ],
           ],
         ),
       ),

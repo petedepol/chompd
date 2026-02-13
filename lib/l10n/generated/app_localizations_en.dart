@@ -1352,4 +1352,35 @@ class SEn extends S {
 
   @override
   String get categoryOther => 'Other';
+
+  @override
+  String get discoveryTipsTitle => 'Where to find subscriptions';
+
+  @override
+  String get discoveryTipBank => 'Bank statement';
+
+  @override
+  String get discoveryTipBankDesc =>
+      'Screenshot your recent transactions — we’ll find them all at once';
+
+  @override
+  String get discoveryTipEmail => 'Email search';
+
+  @override
+  String get discoveryTipEmailDesc =>
+      'Search “subscription”, “receipt” or “renewal” in your inbox';
+
+  @override
+  String get discoveryTipAppStore => 'App Store / Play Store';
+
+  @override
+  String get discoveryTipAppStoreDesc =>
+      'Settings → Subscriptions shows all active app subscriptions';
+
+  @override
+  String get discoveryTipPaypal => 'PayPal & payment apps';
+
+  @override
+  String get discoveryTipPaypalDesc =>
+      'Check automatic payments in PayPal, Revolut or your payment app';
 }

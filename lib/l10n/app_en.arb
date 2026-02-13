@@ -658,5 +658,15 @@
   "categoryFinance": "Finance",
   "categoryEducation": "Education",
   "categoryHealth": "Health",
-  "categoryOther": "Other"
+  "categoryOther": "Other",
+
+  "discoveryTipsTitle": "Where to find subscriptions",
+  "discoveryTipBank": "Bank statement",
+  "discoveryTipBankDesc": "Screenshot your recent transactions — we\u2019ll find them all at once",
+  "discoveryTipEmail": "Email search",
+  "discoveryTipEmailDesc": "Search \u201Csubscription\u201D, \u201Creceipt\u201D or \u201Crenewal\u201D in your inbox",
+  "discoveryTipAppStore": "App Store / Play Store",
+  "discoveryTipAppStoreDesc": "Settings \u2192 Subscriptions shows all active app subscriptions",
+  "discoveryTipPaypal": "PayPal & payment apps",
+  "discoveryTipPaypalDesc": "Check automatic payments in PayPal, Revolut or your payment app"
 }

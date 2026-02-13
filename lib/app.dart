@@ -8,8 +8,8 @@ import 'config/theme.dart';
 import 'providers/locale_provider.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
-import 'screens/detail/add_edit_screen.dart';
 import 'screens/scan/scan_screen.dart';
+import 'widgets/quick_add_sheet.dart';
 import 'screens/splash/splash_screen.dart';
 import 'utils/share_handler.dart';
 
@@ -134,12 +134,13 @@ class _AppEntryState extends State<_AppEntry> {
                   );
                 });
               }
-              // If user tapped "Add Manually", open add subscription screen
+              // If user tapped "Add Manually", open quick-add sheet
               if (openManualAdd) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
-                  navigatorKey.currentState?.push(
-                    MaterialPageRoute(builder: (_) => const AddEditScreen()),
-                  );
+                  final ctx = navigatorKey.currentContext;
+                  if (ctx != null) {
+                    showQuickAddSheet(ctx);
+                  }
                 });
               }
             }
