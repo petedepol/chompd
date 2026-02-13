@@ -639,15 +639,15 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     }
 
     final now = DateTime.now();
+    final cycle = _parseCycle(result.billingCycle ?? 'monthly');
     final sub = Subscription()
       ..uid =
           '${result.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}'
       ..name = result.serviceName
       ..price = result.price ?? 0
       ..currency = result.currency
-      ..cycle = _parseCycle(result.billingCycle ?? 'monthly')
-      ..nextRenewal =
-          result.nextRenewal ?? now.add(const Duration(days: 30))
+      ..cycle = cycle
+      ..nextRenewal = _nextFutureRenewal(result.nextRenewal, cycle)
       ..category = result.category ?? 'Other'
       ..isTrial = result.isTrial
       ..trialEndDate = result.trialEndDate
@@ -682,16 +682,17 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     }
 
     final now = DateTime.now();
-    for (final result in results) {
+    for (var i = 0; i < results.length; i++) {
+      final result = results[i];
+      final cycle = _parseCycle(result.billingCycle ?? 'monthly');
       final sub = Subscription()
         ..uid =
-            '${result.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}'
+            '${result.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}-$i'
         ..name = result.serviceName
         ..price = result.price ?? 0
         ..currency = result.currency
-        ..cycle = _parseCycle(result.billingCycle ?? 'monthly')
-        ..nextRenewal =
-            result.nextRenewal ?? now.add(const Duration(days: 30))
+        ..cycle = cycle
+        ..nextRenewal = _nextFutureRenewal(result.nextRenewal, cycle)
         ..category = result.category ?? 'Other'
         ..isTrial = result.isTrial
         ..trialEndDate = result.trialEndDate
@@ -732,6 +733,26 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       default:
         return BillingCycle.monthly;
     }
+  }
+
+  /// Ensures renewal date is in the future by advancing past dates
+  /// by the billing cycle until they're ahead of today.
+  DateTime _nextFutureRenewal(DateTime? extracted, BillingCycle cycle) {
+    final now = DateTime.now();
+    if (extracted == null) {
+      return now.add(Duration(days: cycle.approximateDays));
+    }
+    // If the date is already in the future (or today), use it
+    if (!extracted.isBefore(DateTime(now.year, now.month, now.day))) {
+      return extracted;
+    }
+    // Roll forward by billing cycles until it's in the future
+    var future = extracted;
+    final step = cycle.approximateDays;
+    while (future.isBefore(DateTime(now.year, now.month, now.day))) {
+      future = future.add(Duration(days: step));
+    }
+    return future;
   }
 
   // ─── Bottom Bar ───
@@ -1621,6 +1642,7 @@ class _MultiResultMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = results.fold(0.0, (sum, r) => sum + (r.price ?? 0));
+    final currency = results.isNotEmpty ? results.first.currency : 'GBP';
 
     return _ChatBubble(
       isUser: false,
@@ -1662,7 +1684,7 @@ class _MultiResultMessage extends StatelessWidget {
                 ),
               ),
               Text(
-                '\u00A3${total.toStringAsFixed(2)}/mo',
+                '${Subscription.formatPrice(total, currency)}/mo',
                 style: ChompdTypography.mono(
                   size: 13,
                   weight: FontWeight.w700,

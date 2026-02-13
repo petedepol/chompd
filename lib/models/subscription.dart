@@ -2,6 +2,7 @@ import 'package:isar/isar.dart';
 
 import '../l10n/generated/app_localizations.dart';
 import '../services/exchange_rate_service.dart';
+import '../utils/date_helpers.dart';
 import 'scan_result.dart';
 import 'trap_result.dart';
 
@@ -222,15 +223,23 @@ class Subscription {
     return nextRenewal.difference(DateTime.now()).inDays;
   }
 
-  /// Human-friendly renewal label: "Renews today", "Renews tomorrow",
-  /// "Renews in 5 days", or "Renewed 4 days ago" for past dates.
+  /// Human-friendly renewal label.
+  ///
+  /// Future: "Renews today/tomorrow/in X days"
+  /// Recent past (≤7 days): "Renewed yesterday/X days ago"
+  /// Old past (>7 days): "Renews 14 Mar 2026" — shows the date so
+  /// users can spot incorrect dates and fix them.
   String get renewalLabel {
     final days = daysUntilRenewal;
-    if (days < -1) return 'Renewed ${-days} days ago';
-    if (days == -1) return 'Renewed yesterday';
     if (days == 0) return 'Renews today';
     if (days == 1) return 'Renews tomorrow';
-    return 'Renews in $days days';
+    if (days > 1 && days <= 30) return 'Renews in $days days';
+    if (days > 30) return 'Renews ${DateHelpers.shortDate(nextRenewal)}';
+    // Past dates
+    if (days == -1) return 'Renewed yesterday';
+    if (days >= -7) return 'Renewed ${-days} days ago';
+    // Very old past — show the actual date so user can fix
+    return 'Renews ${DateHelpers.shortDate(nextRenewal)}';
   }
 
   /// Days remaining in trial (null if not a trial).
@@ -361,8 +370,7 @@ class Subscription {
       ..price = scan.price ?? 0
       ..currency = scan.currency
       ..cycle = cycle
-      ..nextRenewal =
-          scan.nextRenewal ?? now.add(Duration(days: cycle.approximateDays))
+      ..nextRenewal = _nextFutureRenewal(scan.nextRenewal, cycle)
       ..category = scan.category ?? 'Other'
       ..isTrial = scan.isTrial || (trap.trialDurationDays != null)
       ..trialEndDate = scan.trialEndDate
@@ -387,5 +395,23 @@ class Subscription {
     }
 
     return sub;
+  }
+
+  /// Ensures a renewal date is in the future.
+  /// If [extracted] is null, defaults to now + one billing cycle.
+  /// If [extracted] is in the past, rolls forward by cycle steps until future.
+  static DateTime _nextFutureRenewal(DateTime? extracted, BillingCycle cycle) {
+    final now = DateTime.now();
+    if (extracted == null) {
+      return now.add(Duration(days: cycle.approximateDays));
+    }
+    final today = DateTime(now.year, now.month, now.day);
+    if (!extracted.isBefore(today)) return extracted;
+    var future = extracted;
+    final step = cycle.approximateDays;
+    while (future.isBefore(today)) {
+      future = future.add(Duration(days: step));
+    }
+    return future;
   }
 }
