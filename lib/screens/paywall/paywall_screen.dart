@@ -8,6 +8,7 @@ import '../../config/theme.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../services/purchase_service.dart';
+import '../../utils/l10n_extension.dart';
 
 /// Paywall screen — "Sell without sleaze."
 ///
@@ -52,18 +53,18 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     super.dispose();
   }
 
-  String get _triggerMessage {
+  String _triggerMessage(BuildContext context) {
     switch (widget.trigger) {
       case PaywallTrigger.subscriptionLimit:
-        return 'You\'ve hit the free limit of ${AppConstants.freeMaxSubscriptions} subscriptions.';
+        return context.l10n.paywallLimitSubs(AppConstants.freeMaxSubscriptions);
       case PaywallTrigger.scanLimit:
-        return 'You\'ve used all ${AppConstants.freeMaxScans} free AI scans.';
+        return context.l10n.paywallLimitScans(AppConstants.freeMaxScans);
       case PaywallTrigger.reminderUpgrade:
-        return 'Advance reminders are a Pro feature.';
+        return context.l10n.paywallLimitReminders;
       case PaywallTrigger.settingsUpgrade:
-        return 'Unlock the full Chompd experience.';
+        return context.l10n.paywallGeneric;
       case PaywallTrigger.manual:
-        return 'Unlock the full Chompd experience.';
+        return context.l10n.paywallGeneric;
     }
   }
 
@@ -167,9 +168,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         const SizedBox(height: 20),
 
                         // ─── Title ───
-                        const Text(
-                          'Chompd Pro',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.chompdPro,
+                          style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
                             color: ChompdColors.text,
@@ -180,9 +181,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         const SizedBox(height: 8),
 
                         // ─── Tagline ───
-                        const Text(
-                          'A subscription tracker that isn\'t a subscription.',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.paywallTagline,
+                          style: const TextStyle(
                             fontSize: 13,
                             fontStyle: FontStyle.italic,
                             color: ChompdColors.textMid,
@@ -193,7 +194,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
 
                         // Trigger-specific message
                         Text(
-                          _triggerMessage,
+                          _triggerMessage(context),
                           style: const TextStyle(
                             fontSize: 12,
                             color: ChompdColors.textDim,
@@ -206,35 +207,35 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 40),
                           child: Column(
-                            children: const [
+                            children: [
                               _FeatureRow(
                                 icon: Icons.savings_outlined,
-                                text: 'Save \u00A3100\u2013\u00A3500/year on hidden waste',
+                                text: context.l10n.paywallFeature1,
                               ),
-                              SizedBox(height: 14),
+                              const SizedBox(height: 14),
                               _FeatureRow(
                                 icon: Icons.timer_off_outlined,
-                                text: 'Never miss a trial expiry again',
+                                text: context.l10n.paywallFeature2,
                               ),
-                              SizedBox(height: 14),
+                              const SizedBox(height: 14),
                               _FeatureRow(
                                 icon: Icons.auto_awesome,
-                                text: 'Unlimited AI trap scanning',
+                                text: context.l10n.paywallFeature3,
                               ),
-                              SizedBox(height: 14),
+                              const SizedBox(height: 14),
                               _FeatureRow(
                                 icon: Icons.all_inclusive_rounded,
-                                text: 'Track every subscription you have',
+                                text: context.l10n.paywallFeature4,
                               ),
-                              SizedBox(height: 14),
+                              const SizedBox(height: 14),
                               _FeatureRow(
                                 icon: Icons.notifications_active_outlined,
-                                text: 'Early warnings: 7d, 3d, 1d before charges',
+                                text: context.l10n.paywallFeature5,
                               ),
-                              SizedBox(height: 14),
+                              const SizedBox(height: 14),
                               _FeatureRow(
                                 icon: Icons.share_outlined,
-                                text: 'Shareable savings cards',
+                                text: context.l10n.paywallFeature6,
                               ),
                             ],
                           ),
@@ -261,10 +262,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                 color: ChompdColors.mint.withValues(alpha: 0.12),
                               ),
                             ),
-                            child: const Text(
-                              'Pays for itself after cancelling just one forgotten subscription.',
+                            child: Text(
+                              context.l10n.paywallContext,
                               textAlign: TextAlign.center,
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontSize: 12,
                                 fontStyle: FontStyle.italic,
                                 color: ChompdColors.mint,
@@ -320,9 +321,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                           ),
                                         ),
                                         const SizedBox(height: 2),
-                                        const Text(
-                                          'One-time payment. Forever.',
-                                          style: TextStyle(
+                                        Text(
+                                          context.l10n.oneTimePayment,
+                                          style: const TextStyle(
                                             fontSize: 12,
                                             color: ChompdColors.textDim,
                                           ),
@@ -339,9 +340,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                             ChompdColors.mint.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
-                                      child: const Text(
-                                        'LIFETIME',
-                                        style: TextStyle(
+                                      child: Text(
+                                        context.l10n.lifetime,
+                                        style: const TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w700,
                                           color: ChompdColors.mint,
@@ -404,9 +405,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                         ),
                                       ),
                                     )
-                                  : const Text(
-                                      'Unlock Chompd Pro',
-                                      style: TextStyle(
+                                  : Text(
+                                      context.l10n.unlockChompdPro,
+                                      style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
                                         color: ChompdColors.bg,
@@ -423,8 +424,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                           onTap: _restoring ? null : _handleRestore,
                           child: Text(
                             _restoring
-                                ? 'Restoring...'
-                                : 'Restore Purchase',
+                                ? context.l10n.restoring
+                                : context.l10n.restorePurchase,
                             style: const TextStyle(
                               fontSize: 12,
                               color: ChompdColors.textDim,
@@ -468,7 +469,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
       setState(() => _purchasing = false);
       if (!success) {
         setState(() =>
-            _errorMessage = 'Purchase could not be completed. Try again.');
+            _errorMessage = context.l10n.purchaseError);
       }
     }
   }
@@ -486,7 +487,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
       setState(() => _restoring = false);
       if (!success) {
         setState(
-            () => _errorMessage = 'No previous purchase found.');
+            () => _errorMessage = context.l10n.noPreviousPurchase);
       }
     }
   }

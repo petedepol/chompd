@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../utils/l10n_extension.dart';
 
 /// Pulsing amber badge for trial subscriptions.
 ///
@@ -63,7 +64,7 @@ class _TrialBadgeState extends State<TrialBadge>
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        '${widget.daysRemaining}d trial',
+        context.l10n.trialBadge(widget.daysRemaining),
         style: ChompdTypography.mono(
           size: 8,
           weight: FontWeight.w700,

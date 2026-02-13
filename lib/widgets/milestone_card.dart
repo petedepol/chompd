@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
 import '../models/subscription.dart';
+import '../utils/l10n_extension.dart';
 
 /// Milestone definition for the savings gamification system.
 class Milestone {
@@ -50,6 +51,34 @@ class Milestone {
       if (trapSaved < m.amount) return m;
     }
     return null;
+  }
+
+  /// Resolve a milestone's English name to a localised string.
+  static String localizedName(BuildContext context, String name) {
+    switch (name) {
+      case 'Coffee Fund':
+        return context.l10n.milestoneCoffeeFund;
+      case 'Game Pass':
+        return context.l10n.milestoneGamePass;
+      case 'Weekend Away':
+        return context.l10n.milestoneWeekendAway;
+      case 'New Gadget':
+        return context.l10n.milestoneNewGadget;
+      case 'Dream Holiday':
+        return context.l10n.milestoneDreamHoliday;
+      case 'First Bite Back':
+        return context.l10n.milestoneFirstBiteBack;
+      case 'Chomp Spotter':
+        return context.l10n.milestoneChompSpotter;
+      case 'Dark Pattern Destroyer':
+        return context.l10n.milestoneDarkPatternDestroyer;
+      case 'Subscription Sentinel':
+        return context.l10n.milestoneSubscriptionSentinel;
+      case 'Unchompable':
+        return context.l10n.milestoneUnchompable;
+      default:
+        return name;
+    }
   }
 
   /// Get the current milestone for a savings amount.
@@ -201,7 +230,7 @@ class _MilestoneChip extends StatelessWidget {
 
           // Name
           Text(
-            milestone.name,
+            Milestone.localizedName(context, milestone.name),
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
@@ -227,8 +256,8 @@ class _MilestoneChip extends StatelessWidget {
           // Status label
           Text(
             isReached
-                ? '\u2713 Reached!'
-                : '${Subscription.formatPrice(remaining, currencyCode, decimals: 0)} to go',
+                ? context.l10n.milestoneReached
+                : context.l10n.milestoneToGo(Subscription.formatPrice(remaining, currencyCode, decimals: 0)),
             style: ChompdTypography.mono(
               size: 8,
               color: isReached ? ChompdColors.mint : ChompdColors.textDim,
@@ -263,7 +292,7 @@ class MilestoneBadge extends StatelessWidget {
           Text(milestone.emoji, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
           Text(
-            milestone.name,
+            Milestone.localizedName(context, milestone.name),
             style: ChompdTypography.mono(
               size: 9,
               weight: FontWeight.w700,

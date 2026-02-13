@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../models/subscription.dart';
 import '../models/trap_result.dart';
+import '../utils/l10n_extension.dart';
 
 /// Visual price comparison card: trial price → arrow → real price.
 ///
@@ -77,9 +78,9 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'TODAY',
-                      style: TextStyle(fontSize: 10, color: ChompdColors.textDim),
+                    Text(
+                      context.l10n.priceToday,
+                      style: const TextStyle(fontSize: 10, color: ChompdColors.textDim),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -93,7 +94,7 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${trap.trialDurationDays ?? "?"}-day trial',
+                      context.l10n.dayTrial((trap.trialDurationDays ?? '?').toString()),
                       style: const TextStyle(
                         fontSize: 11,
                         color: ChompdColors.textDim,
@@ -120,9 +121,9 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    const Text(
-                      'THEN',
-                      style: TextStyle(fontSize: 10, color: ChompdColors.textDim),
+                    Text(
+                      context.l10n.priceThen,
+                      style: const TextStyle(fontSize: 10, color: ChompdColors.textDim),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -161,7 +162,7 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Real cost first year: ${Subscription.formatPrice(trap.realAnnualCost!, 'GBP')}',
+                context.l10n.realCostFirstYear(Subscription.formatPrice(trap.realAnnualCost!, 'GBP')),
                 style: const TextStyle(
                   fontFamily: 'SpaceMono',
                   fontSize: 13,

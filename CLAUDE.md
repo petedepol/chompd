@@ -319,15 +319,19 @@ See `docs/chompd-plan-of-action.md` for full 8-sprint breakdown.
 - `docs/subsnap-calendar-polish.md` — Calendar screen visual refinements
 - `docs/subsnap-quick-fixes.md` — SharedPreferences bug fixes (budget + onboarding)
 - `docs/subsnap-dev-status.md` — Development status & what's already built
-- `docs/subsnap-bottom-nav-spec.md` — Bottom nav bar design spec
+- `docs/subsnap-bottom-nav-spec.md` — Bottom nav bar design spec (legacy — replaced by floating FAB)
 - `docs/subsnap-annual-cost-build.md` — Annual cost projection build spec
+- `docs/subsnap-dev-status.md` — Development status & what's already built (Sprint 13)
 
 ## Code Style
 - Use trailing commas for Flutter widget trees
 - Prefer const constructors where possible
 - Group imports: dart, flutter, packages, local
 - One widget per file for screens, shared widgets can be grouped
-- Use Riverpod `@riverpod` annotation style (code generation)
+- Riverpod: manual `StateNotifier` pattern (NOT `@riverpod` codegen)
+- `withValues(alpha: x)` NOT `withOpacity(x)` — project convention
+- `Subscription.formatPrice(amount, currencyCode)` for all price display — never manual concatenation
+- European decimal: all price fields must accept commas and auto-replace with dots
 
 ## Important Notes
 - Ship dark theme only for v1 (light theme in v1.1)

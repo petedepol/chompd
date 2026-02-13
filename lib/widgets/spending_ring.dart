@@ -10,6 +10,7 @@ import '../providers/currency_provider.dart';
 import '../providers/spend_view_provider.dart';
 import '../providers/subscriptions_provider.dart';
 import '../services/haptic_service.dart';
+import '../utils/l10n_extension.dart';
 
 /// Circular spending ring — the hero element on the home screen.
 ///
@@ -140,7 +141,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: Text(
-                        isYearly ? 'YEARLY' : 'MONTHLY',
+                        isYearly ? context.l10n.ringYearly : context.l10n.ringMonthly,
                         key: ValueKey(isYearly ? 'yearly' : 'monthly'),
                         style: ChompdTypography.mono(
                           size: 11,
@@ -160,8 +161,8 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                       duration: const Duration(milliseconds: 300),
                       child: Text(
                         overBudget
-                            ? '${Subscription.formatPrice(displayAmount - displayBudget, currency, decimals: 0)} over budget'
-                            : 'of ${Subscription.formatPrice(displayBudget, currency, decimals: 0)} budget',
+                            ? context.l10n.overBudget(Subscription.formatPrice(displayAmount - displayBudget, currency, decimals: 0))
+                            : context.l10n.ofBudget(Subscription.formatPrice(displayBudget, currency, decimals: 0)),
                         key: ValueKey('budget_$isYearly'),
                         style: TextStyle(
                           fontSize: 10,
@@ -177,7 +178,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
 
                     // Toggle hint
                     Text(
-                      isYearly ? 'tap for monthly' : 'tap for yearly',
+                      isYearly ? context.l10n.tapForMonthly : context.l10n.tapForYearly,
                       style: ChompdTypography.mono(
                         size: 9,
                         color: ChompdColors.textDim.withValues(alpha: 0.8),
@@ -186,7 +187,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                     const SizedBox(height: 2),
                     // Budget target range
                     Text(
-                      'Budget: ${Subscription.formatPrice(0, currency, decimals: 0)} \u2013 ${Subscription.formatPrice(displayBudget, currency, decimals: 0)}',
+                      context.l10n.budgetRange(Subscription.formatPrice(0, currency, decimals: 0), Subscription.formatPrice(displayBudget, currency, decimals: 0)),
                       style: TextStyle(
                         fontSize: 9,
                         color: ChompdColors.textDim.withValues(alpha: 0.5),

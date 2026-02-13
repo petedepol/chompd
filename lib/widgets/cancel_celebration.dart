@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../models/subscription.dart';
 import '../services/haptic_service.dart';
+import '../utils/l10n_extension.dart';
 import 'confetti_overlay.dart';
 import 'mascot_image.dart';
 
@@ -105,9 +106,9 @@ class _CancelCelebrationState extends State<CancelCelebration>
                     const SizedBox(height: 24),
 
                     // Headline
-                    const Text(
-                      'Nice one! \uD83C\uDF89',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.celebrationTitle,
+                      style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
                         color: ChompdColors.text,
@@ -117,7 +118,7 @@ class _CancelCelebrationState extends State<CancelCelebration>
 
                     // Savings amount
                     Text(
-                      'You\u2019ll save ${Subscription.formatPrice(yearly, currency, decimals: 0)}/year',
+                      context.l10n.celebrationSavePerYear(Subscription.formatPrice(yearly, currency, decimals: 0)),
                       style: ChompdTypography.mono(
                         size: 24,
                         weight: FontWeight.w700,
@@ -127,7 +128,7 @@ class _CancelCelebrationState extends State<CancelCelebration>
                     const SizedBox(height: 4),
 
                     Text(
-                      'by dropping ${widget.subscription.name}',
+                      context.l10n.celebrationByDropping(widget.subscription.name),
                       style: const TextStyle(
                         fontSize: 14,
                         color: ChompdColors.textMid,
@@ -137,7 +138,7 @@ class _CancelCelebrationState extends State<CancelCelebration>
 
                     // Tap to dismiss hint
                     Text(
-                      'tap anywhere to continue',
+                      context.l10n.tapAnywhereToContinue,
                       style: TextStyle(
                         fontSize: 11,
                         color: ChompdColors.textDim.withValues(alpha: 0.5),

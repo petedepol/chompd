@@ -12,6 +12,7 @@ import '../../widgets/mascot_image.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/price_breakdown_card.dart';
+import '../../utils/l10n_extension.dart';
 import '../../widgets/severity_badge.dart';
 
 /// Full-screen trap warning overlay.
@@ -49,10 +50,10 @@ class TrapWarningCard extends ConsumerWidget {
                   children: [
                     Icon(Icons.warning_rounded, size: 28, color: warningColor),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Text(
-                        'TRAP DETECTED',
-                        style: TextStyle(
+                        context.l10n.trapDetected,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: ChompdColors.text,
@@ -78,7 +79,7 @@ class TrapWarningCard extends ConsumerWidget {
 
                 // ─── Service name ───
                 Text(
-                  'This "${trap.serviceName ?? subscription.serviceName}" offer is actually:',
+                  context.l10n.trapOfferActually(trap.serviceName ?? subscription.serviceName),
                   style: const TextStyle(
                     fontSize: 14,
                     color: ChompdColors.textMid,
@@ -134,7 +135,7 @@ class TrapWarningCard extends ConsumerWidget {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      'SKIP IT \u2014 SAVE \u00A3${trap.savingsAmount.toStringAsFixed(2)}',
+                      context.l10n.skipItSave(Subscription.formatPrice(trap.savingsAmount, subscription.currency)),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -187,27 +188,27 @@ class TrapWarningCard extends ConsumerWidget {
                       border: Border.all(color: ChompdColors.border),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Column(
+                    child: Column(
                       children: [
                         Text(
-                          'Track Trial Anyway',
-                          style: TextStyle(
+                          context.l10n.trackTrialAnyway,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: ChompdColors.textDim,
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.notifications_active,
+                            const Icon(Icons.notifications_active,
                                 size: 12, color: ChompdColors.textDim,),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text(
-                              'We\'ll remind you before it charges',
-                              style: TextStyle(
+                              context.l10n.trapReminder,
+                              style: const TextStyle(
                                 fontSize: 11,
                                 color: ChompdColors.textDim,
                               ),

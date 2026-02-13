@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
 import '../models/trap_result.dart';
+import '../utils/l10n_extension.dart';
 
 /// Small pill badge indicating trap severity level.
 ///
@@ -23,10 +24,10 @@ class SeverityBadge extends StatelessWidget {
         TrapSeverity.low => ChompdColors.blue,
       };
 
-  String get _label => switch (severity) {
-        TrapSeverity.high => 'HIGH RISK',
-        TrapSeverity.medium => 'CAUTION',
-        TrapSeverity.low => 'INFO',
+  String _label(BuildContext context) => switch (severity) {
+        TrapSeverity.high => context.l10n.severityHigh,
+        TrapSeverity.medium => context.l10n.severityCaution,
+        TrapSeverity.low => context.l10n.severityInfo,
       };
 
   @override
@@ -39,7 +40,7 @@ class SeverityBadge extends StatelessWidget {
         border: Border.all(color: _textColor.withValues(alpha: 0.3)),
       ),
       child: Text(
-        _label,
+        _label(context),
         style: TextStyle(
           fontFamily: 'SpaceMono',
           fontSize: 10,

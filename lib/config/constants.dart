@@ -1,3 +1,5 @@
+import '../l10n/generated/app_localizations.dart';
+
 /// Chompd app-wide constants.
 class AppConstants {
   AppConstants._();
@@ -51,4 +53,38 @@ class AppConstants {
     'quarterly': 90,
     'yearly': 365,
   };
+
+  /// Returns localised category names in the same order as [categories].
+  static List<String> localisedCategories(S l) => [
+    l.categoryEntertainment,
+    l.categoryMusic,
+    l.categoryDesign,
+    l.categoryFitness,
+    l.categoryProductivity,
+    l.categoryStorage,
+    l.categoryNews,
+    l.categoryGaming,
+    l.categoryFinance,
+    l.categoryEducation,
+    l.categoryHealth,
+    l.categoryOther,
+  ];
+
+  /// Maps English category keys to localised labels.
+  static String localisedCategory(String key, S l) {
+    switch (key) {
+      case 'Entertainment': return l.categoryEntertainment;
+      case 'Music': return l.categoryMusic;
+      case 'Design': return l.categoryDesign;
+      case 'Fitness': return l.categoryFitness;
+      case 'Productivity': return l.categoryProductivity;
+      case 'Storage': return l.categoryStorage;
+      case 'News': return l.categoryNews;
+      case 'Gaming': return l.categoryGaming;
+      case 'Finance': return l.categoryFinance;
+      case 'Education': return l.categoryEducation;
+      case 'Health': return l.categoryHealth;
+      default: return l.categoryOther;
+    }
+  }
 }

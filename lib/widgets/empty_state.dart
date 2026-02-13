@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../utils/l10n_extension.dart';
 import 'mascot_image.dart';
+
+enum _EmptyStateType { custom, noSubscriptions, noTrials, noSavings }
 
 /// Empty state widget for screens with no data.
 ///
@@ -11,46 +14,83 @@ import 'mascot_image.dart';
 class EmptyState extends StatelessWidget {
   final String icon;
   final String? imagePath;
-  final String title;
-  final String subtitle;
+  final String? _title;
+  final String? _subtitle;
   final Color accentColor;
+  final _EmptyStateType _type;
 
   const EmptyState({
     super.key,
     required this.icon,
-    required this.title,
-    required this.subtitle,
+    required String title,
+    required String subtitle,
     this.accentColor = ChompdColors.mint,
     this.imagePath,
-  });
+  })  : _title = title,
+        _subtitle = subtitle,
+        _type = _EmptyStateType.custom;
 
   /// Empty state for no subscriptions tracked yet.
   /// Shows piranha_sleeping mascot.
   const EmptyState.noSubscriptions({super.key})
       : icon = '',
         imagePath = 'piranha_sleeping.png',
-        title = 'No subscriptions yet',
-        subtitle = 'Scan a screenshot or tap + to get started.',
-        accentColor = ChompdColors.mint;
+        _title = null,
+        _subtitle = null,
+        accentColor = ChompdColors.mint,
+        _type = _EmptyStateType.noSubscriptions;
 
   /// Empty state for no active trials.
   const EmptyState.noTrials({super.key})
       : icon = '\u23F0',
         imagePath = null,
-        title = 'No active trials',
-        subtitle = 'When you add trial subscriptions,\nthey\u2019ll appear here with countdown alerts.',
-        accentColor = ChompdColors.amber;
+        _title = null,
+        _subtitle = null,
+        accentColor = ChompdColors.amber,
+        _type = _EmptyStateType.noTrials;
 
   /// Empty state for no cancelled subs (savings).
   const EmptyState.noSavings({super.key})
       : icon = '\uD83D\uDCB0',
         imagePath = null,
-        title = 'No savings yet',
-        subtitle = 'Cancel subscriptions you don\u2019t use\nand watch your savings grow here.',
-        accentColor = ChompdColors.mint;
+        _title = null,
+        _subtitle = null,
+        accentColor = ChompdColors.mint,
+        _type = _EmptyStateType.noSavings;
+
+  String _resolveTitle(BuildContext context) {
+    if (_title != null) return _title;
+    switch (_type) {
+      case _EmptyStateType.noSubscriptions:
+        return context.l10n.emptyNoSubscriptions;
+      case _EmptyStateType.noTrials:
+        return context.l10n.emptyNoTrials;
+      case _EmptyStateType.noSavings:
+        return context.l10n.emptyNoSavings;
+      case _EmptyStateType.custom:
+        return '';
+    }
+  }
+
+  String _resolveSubtitle(BuildContext context) {
+    if (_subtitle != null) return _subtitle;
+    switch (_type) {
+      case _EmptyStateType.noSubscriptions:
+        return context.l10n.emptyNoSubscriptionsHint;
+      case _EmptyStateType.noTrials:
+        return context.l10n.emptyNoTrialsHint;
+      case _EmptyStateType.noSavings:
+        return context.l10n.emptyNoSavingsHint;
+      case _EmptyStateType.custom:
+        return '';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final title = _resolveTitle(context);
+    final subtitle = _resolveSubtitle(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 40),

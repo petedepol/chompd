@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../config/theme.dart';
+import '../../utils/l10n_extension.dart';
+import '../../models/subscription.dart';
+import '../../providers/currency_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/mascot_image.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   /// Called when the user finishes or skips onboarding.
-  /// Can be async (e.g. to persist the "seen" flag).
-  final Future<void> Function() onComplete;
+  /// [openScan] is true when the user tapped "Scan a Screenshot".
+  /// [openManualAdd] is true when the user tapped "Add Manually".
+  final Future<void> Function({bool openScan, bool openManualAdd}) onComplete;
 
   const OnboardingScreen({
     super.key,
@@ -14,10 +20,10 @@ class OnboardingScreen extends StatefulWidget {
   });
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen>
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     with TickerProviderStateMixin {
   late PageController _pageController;
   int _currentPage = 0;
@@ -58,8 +64,8 @@ class _OnboardingScreenState extends State<OnboardingScreen>
     );
   }
 
-  Future<void> _completeOnboarding() async {
-    await widget.onComplete();
+  Future<void> _completeOnboarding({bool openScan = false, bool openManualAdd = false}) async {
+    await widget.onComplete(openScan: openScan, openManualAdd: openManualAdd);
   }
 
   @override
@@ -136,7 +142,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 const SizedBox(height: 28),
                 // Title
                 Text(
-                  'Bite Back at Subscriptions',
+                  context.l10n.onboardingTitle1,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -146,9 +152,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 ),
                 const SizedBox(height: 12),
                 // Subtitle
-                const Text(
-                  'Chompd tracks every subscription, catches hidden traps, and helps you cancel what you don\'t need.',
-                  style: TextStyle(
+                Text(
+                  context.l10n.onboardingSubtitle1,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     color: ChompdColors.textMid,
@@ -170,13 +176,13 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: const [
-                      Text('💸', style: TextStyle(fontSize: 18)),
-                      SizedBox(width: 10),
+                    children: [
+                      const Text('💸', style: TextStyle(fontSize: 18)),
+                      const SizedBox(width: 10),
                       Flexible(
                         child: Text(
-                          'The average person wastes £240/year on forgotten subscriptions',
-                          style: TextStyle(
+                          context.l10n.onboardingStatWaste(Subscription.formatPrice(240, ref.watch(currencyProvider), decimals: 0)),
+                          style: const TextStyle(
                             fontSize: 12,
                             color: ChompdColors.textMid,
                             height: 1.4,
@@ -216,24 +222,24 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                   number: 1,
                   icon: Icons.camera_alt,
                   iconColor: ChompdColors.mint,
-                  title: 'Snap a screenshot',
-                  subtitle: 'Receipt, email, or bank statement',
+                  title: context.l10n.onboardingStep1Title,
+                  subtitle: context.l10n.onboardingStep1Subtitle,
                   isLast: false,
                 ),
                 _buildStep(
                   number: 2,
                   icon: Icons.auto_awesome,
                   iconColor: ChompdColors.purple,
-                  title: 'AI reads it instantly',
-                  subtitle: 'Price, renewal date, and hidden traps',
+                  title: context.l10n.onboardingStep2Title,
+                  subtitle: context.l10n.onboardingStep2Subtitle,
                   isLast: false,
                 ),
                 _buildStep(
                   number: 3,
                   icon: Icons.check_circle,
                   iconColor: ChompdColors.mint,
-                  title: 'Done. Tracked forever.',
-                  subtitle: 'Get reminders before you\'re charged',
+                  title: context.l10n.onboardingStep3Title,
+                  subtitle: context.l10n.onboardingStep3Subtitle,
                   isLast: true,
                 ),
               ],
@@ -353,7 +359,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       const SizedBox(height: 28),
                       // Title
                       Text(
-                        'Stay Ahead of Renewals',
+                        context.l10n.onboardingTitle3,
                         style:
                             Theme.of(context).textTheme.titleLarge?.copyWith(
                                   fontSize: 22,
@@ -364,9 +370,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       ),
                       const SizedBox(height: 12),
                       // Subtitle
-                      const Text(
-                        'We\'ll remind you before you\'re charged — no surprises.',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.onboardingSubtitle3,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                           color: ChompdColors.textMid,
@@ -381,9 +387,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         runSpacing: 8,
                         alignment: WrapAlignment.center,
                         children: [
-                          _notifFeature('Morning of renewal'),
-                          _notifFeature('7 days before'),
-                          _notifFeature('Trial expiry alerts'),
+                          _notifFeature(context.l10n.onboardingNotifMorning),
+                          _notifFeature(context.l10n.onboardingNotif7days),
+                          _notifFeature(context.l10n.onboardingNotifTrial),
                         ],
                       ),
                     ],
@@ -409,9 +415,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      'Allow Notifications',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.allowNotifications,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                       ),
@@ -421,9 +427,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: _nextPage,
-                  child: const Text(
-                    'Maybe Later',
-                    style: TextStyle(
+                  child: Text(
+                    context.l10n.maybeLater,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: ChompdColors.textDim,
@@ -462,7 +468,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       const SizedBox(height: 28),
                       // Title
                       Text(
-                        'Add Your First Subscription',
+                        context.l10n.onboardingTitle4,
                         style:
                             Theme.of(context).textTheme.titleLarge?.copyWith(
                                   fontSize: 22,
@@ -473,9 +479,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       ),
                       const SizedBox(height: 12),
                       // Subtitle — more urgency
-                      const Text(
-                        'Most people find forgotten subscriptions in their first scan. Let\'s see what you\'re paying for.',
-                        style: TextStyle(
+                      Text(
+                        context.l10n.onboardingSubtitle4,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
                           color: ChompdColors.textMid,
@@ -506,7 +512,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: ElevatedButton(
-                      onPressed: _completeOnboarding,
+                      onPressed: () => _completeOnboarding(openScan: true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         foregroundColor: ChompdColors.bg,
@@ -519,12 +525,12 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: const [
-                          Icon(Icons.camera_alt, size: 18),
-                          SizedBox(width: 8),
+                        children: [
+                          const Icon(Icons.camera_alt, size: 18),
+                          const SizedBox(width: 8),
                           Text(
-                            'Scan a Screenshot',
-                            style: TextStyle(
+                            context.l10n.scanAScreenshot,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                             ),
@@ -538,7 +544,7 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: _completeOnboarding,
+                    onPressed: () => _completeOnboarding(openManualAdd: true),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: ChompdColors.textMid,
                       side: const BorderSide(
@@ -550,9 +556,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: const Text(
-                      'Add Manually',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.addManually,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -562,9 +568,9 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: _completeOnboarding,
-                  child: const Text(
-                    'Skip for now',
-                    style: TextStyle(
+                  child: Text(
+                    context.l10n.skipForNow,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                       color: ChompdColors.textDim,
@@ -640,17 +646,17 @@ class _OnboardingScreenState extends State<OnboardingScreen>
                 onTap: _nextPage,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
-                  children: const [
+                  children: [
                     Text(
-                      'Next',
-                      style: TextStyle(
+                      context.l10n.next,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.mint,
                       ),
                     ),
-                    SizedBox(width: 8),
-                    Icon(
+                    const SizedBox(width: 8),
+                    const Icon(
                       Icons.arrow_forward,
                       size: 18,
                       color: ChompdColors.mint,

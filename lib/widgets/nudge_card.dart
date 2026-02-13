@@ -6,6 +6,7 @@ import '../models/nudge_candidate.dart';
 import '../providers/subscriptions_provider.dart';
 import '../screens/detail/detail_screen.dart';
 import '../services/haptic_service.dart';
+import '../utils/l10n_extension.dart';
 import 'mascot_image.dart';
 
 /// Dismissible inline card shown on the home screen when the
@@ -106,9 +107,9 @@ class NudgeCard extends ConsumerWidget {
                         ),
                       ),
                       alignment: Alignment.center,
-                      child: const Text(
-                        'Review',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.nudgeReview,
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: ChompdColors.mint,
@@ -130,9 +131,9 @@ class NudgeCard extends ConsumerWidget {
                         ),
                       ),
                       alignment: Alignment.center,
-                      child: const Text(
-                        'Keep it',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.nudgeKeepIt,
+                        style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: ChompdColors.textDim,

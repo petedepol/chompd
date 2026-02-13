@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
+import '../../utils/l10n_extension.dart';
 
 class SplashScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -114,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
               Opacity(
                 opacity: _textOpacity.value,
                 child: Text(
-                  'Chompd',
+                  context.l10n.appName,
                   style: ChompdTypography.mono(
                     size: 28,
                     weight: FontWeight.w700,
@@ -129,7 +130,7 @@ class _SplashScreenState extends State<SplashScreen>
               Opacity(
                 opacity: _taglineOpacity.value,
                 child: Text(
-                  'Scan. Track. Bite back.',
+                  context.l10n.tagline,
                   style: ChompdTypography.mono(
                     size: 12,
                     color: ChompdColors.textDim,

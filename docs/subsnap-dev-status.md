@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 9 Feb 2026 (Sprint 12 — Chompd Rebrand & Polish)
+> Last updated: 13 Feb 2026 (Sprint 13 — iPhone Testing & Quick Add Editable Prices)
 
 ---
 
@@ -193,6 +193,40 @@
   - trackTrapTrial() wired up with aggressive trial alerts
 - **withOpacity → withValues(alpha:)** migration across codebase
 
+### Sprint 13 — iPhone Testing & Quick Add Editable Prices ✅
+- **Editable Quick Add Prices** — templates no longer instantly add with hardcoded GBP prices
+  - Tapping a template opens an inline edit panel with price, currency, and cycle fields
+  - Selected template highlights with brand colour border + tint
+  - AnimatedSize panel slides up with smooth 250ms animation
+  - Search deselects template if no longer in filtered results
+  - Brand-styled "Add [ServiceName]" button, disabled when price invalid
+- **European Decimal Input Fix** — comma separator support across all price fields
+  - `add_edit_screen.dart` + `quick_add_sheet.dart` both accept commas and auto-replace with dots
+  - `FilteringTextInputFormatter.allow(RegExp(r'[\d.,]'))` + `TextInputFormatter.withFunction` for comma→dot
+- **Price Confirm Tick** — checkmark suffix icon appears in quick add price field when focused
+  - Tapping tick dismisses keyboard with light haptic
+  - Green mint colour when price is valid, dim when invalid
+- **Paywall Screen Overflow Fix** — two overflow issues on iPhone 16e
+  - Right overflow (12px): wrapped feature row text in `Expanded`
+  - Bottom overflow (48px): replaced Column+Spacer layout with fixed close button + `SingleChildScrollView`
+- **Onboarding Visual Polish** — all 4 pages upgraded
+  - Page 1: Bigger mascot (220px) with mint glow, "Bite Back" headline, £240/yr stat card
+  - Page 2: Step subtitles added for context
+  - Page 3: Bigger piranha_alert (160px), amber notification feature pills
+  - Page 4: Bigger piranha_celebrate (160px), urgency copy, "Scan a Screenshot" button now opens scan screen
+- **Real Notification Permissions** — replaced stub with flutter_local_notifications v20.1.0
+  - iOS: `IOSFlutterLocalNotificationsPlugin.requestPermissions(alert, badge, sound)`
+  - Android: `AndroidFlutterLocalNotificationsPlugin.requestNotificationsPermission()`
+  - AppDelegate.swift: added UNUserNotificationCenter delegate
+- **Camera & Photo Permissions** — added `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription` to Info.plist
+- **App Display Name** — changed `CFBundleDisplayName` from "Subsnap" to "Chompd" in Info.plist
+- **Quick Add Sheet Overflow Fix** — wrapped edit panel in `Flexible(flex: 0, child: SingleChildScrollView)` to prevent bottom overflow when keyboard opens
+- **AI Scan Improvements** (from previous session)
+  - Haiku→Sonnet escalation: if Haiku returns low confidence (<80%), auto-retry with claude-sonnet-4-20250514
+  - Enhanced extraction prompt for bank statements (handles AMZN DIGITAL, DD patterns)
+  - `isNotFound` handling: treats "not found"/"N/A" AI responses as null
+  - Expanded `_suggestPrices()` with ~20 popular service prices
+
 ---
 
 ## Current File Structure
@@ -229,7 +263,8 @@ lib/
 │   ├── spend_view_provider.dart      (monthly/yearly toggle)
 │   ├── trap_stats_provider.dart      (dodged trap statistics)
 │   ├── calendar_provider.dart        (renewal date projections)
-│   └── nudge_provider.dart           (highest-priority nudge candidate)
+│   ├── nudge_provider.dart           (highest-priority nudge candidate)
+│   └── currency_provider.dart        (supported currencies list + helpers)
 ├── screens/
 │   ├── home/home_screen.dart         (main list + spending ring + calendar/settings icons)
 │   ├── detail/detail_screen.dart     (sub details + cancel guide + refund rescue)
@@ -241,15 +276,16 @@ lib/
 │   ├── refund/refund_rescue_screen.dart (refund path selector + steps)
 │   ├── settings/settings_screen.dart (preferences, budget, export)
 │   ├── paywall/paywall_screen.dart   (Pro upgrade)
-│   ├── onboarding/onboarding_screen.dart  (4-page intro, PARKED)
-│   └── splash/splash_screen.dart     (animated splash, PARKED)
+│   ├── onboarding/onboarding_screen.dart  (4-page intro, polished with mascot + glow effects)
+│   └── splash/splash_screen.dart     (animated splash)
 ├── services/
 │   ├── ai_scan_service.dart          (Claude Haiku 3-tier scan + trap detection)
 │   ├── merchant_db.dart              (local brand DB)
 │   ├── notification_service.dart     (reminders + aggressive trial alerts)
 │   ├── purchase_service.dart         (IAP / Pro unlock)
 │   ├── haptic_service.dart           (tactile feedback)
-│   └── nudge_engine.dart             (5 heuristic nudge rules)
+│   ├── nudge_engine.dart             (5 heuristic nudge rules)
+│   └── storage_service.dart          (Isar local DB operations)
 ├── utils/
 │   ├── csv_export.dart               (RFC 4180 export)
 │   ├── currency.dart
@@ -321,5 +357,9 @@ lib/
 
 - `dodged_trap.g.dart` doesn't exist — DodgedTrap is intentionally a plain class for now. Isar annotations deferred to when persistence is wired up.
 - `widget_test.dart` references old `MyApp` class — stale test file
-- Various `prefer_const_constructors` lint suggestions throughout (72 info hints, 0 errors, 0 warnings)
+- Various `prefer_const_constructors` lint suggestions throughout (62 info hints, 0 errors, 0 warnings)
 - `withOpacity` → `withValues(alpha:)` migration mostly complete
+- **Pro override active** in `purchase_provider.dart` (returns true) — **MUST revert before release**
+- Anthropic API key baked into app via `--dart-define` — move to proxy server at scale
+- Quick add templates use hardcoded GBP prices (v1.1: community-driven template database planned)
+- `flutter_local_notifications` v20.1.0 — notifications are scheduled in-memory only (not yet using OS-level `zonedSchedule`)

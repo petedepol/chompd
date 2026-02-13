@@ -1,6 +1,11 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/constants.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/subscription.dart';
 
 /// Notification channel identifiers.
@@ -59,6 +64,10 @@ class NotificationService {
   NotificationService._();
   static final instance = NotificationService._();
 
+  /// The flutter_local_notifications plugin instance.
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
+
   /// Whether the notification service has been initialised.
   bool _initialised = false;
 
@@ -67,6 +76,9 @@ class NotificationService {
 
   /// Notification ID counter.
   int _nextId = 1000;
+
+  /// Cached l10n instance — refreshed on each scheduling call.
+  S? _l10n;
 
   /// Whether the user has granted notification permissions.
   bool _permissionGranted = false;
@@ -78,17 +90,31 @@ class NotificationService {
 
   /// Initialise the notification service.
   ///
-  /// In production, this would:
-  /// 1. Request notification permissions
-  /// 2. Create notification channels (Android)
-  /// 3. Restore scheduled notifications
+  /// Sets up flutter_local_notifications with platform-specific config.
   Future<void> init() async {
     if (_initialised) return;
 
-    // For prototype, auto-grant permissions
-    _permissionGranted = true;
-    _initialised = true;
+    // iOS settings — don't request permissions at init, do it later
+    // via requestPermission() so we control when the dialog shows.
+    const iosSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
 
+    // Android settings
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
+
+    const initSettings = InitializationSettings(
+      iOS: iosSettings,
+      android: androidSettings,
+    );
+
+    await _plugin.initialize(settings: initSettings);
+
+    _initialised = true;
     debugPrint('[NotificationService] Initialised');
   }
 
@@ -98,15 +124,58 @@ class NotificationService {
     debugPrint('[NotificationService] Pro status: $_isPro');
   }
 
+  /// Get the localised strings instance based on stored locale.
+  Future<S> _getL10n() async {
+    if (_l10n != null) return _l10n!;
+    final prefs = await SharedPreferences.getInstance();
+    final langCode = prefs.getString('user_locale') ?? 'en';
+    _l10n = lookupS(Locale(langCode));
+    return _l10n!;
+  }
+
+  /// Refresh cached l10n (call when locale changes).
+  void refreshLocale() {
+    _l10n = null;
+  }
+
   // ─── Permission ───
 
   /// Request notification permission from the user.
   ///
+  /// Shows the OS permission dialog on iOS. On Android 13+, requests
+  /// the POST_NOTIFICATIONS permission.
+  ///
   /// Returns true if permission was granted.
   Future<bool> requestPermission() async {
-    // In production: platform-specific permission request
-    _permissionGranted = true;
-    return true;
+    bool granted = false;
+
+    if (Platform.isIOS) {
+      final iosPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>();
+      if (iosPlugin != null) {
+        granted = await iosPlugin.requestPermissions(
+              alert: true,
+              badge: true,
+              sound: true,
+            ) ??
+            false;
+      }
+    } else if (Platform.isAndroid) {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>();
+      if (androidPlugin != null) {
+        granted =
+            await androidPlugin.requestNotificationsPermission() ?? false;
+      }
+    }
+
+    _permissionGranted = granted;
+    debugPrint(
+      '[NotificationService] Permission ${granted ? "granted" : "denied"}',
+    );
+    return granted;
   }
 
   bool get hasPermission => _permissionGranted;
@@ -123,6 +192,8 @@ class NotificationService {
 
     // Clear existing reminders for this subscription
     cancelReminders(sub.uid);
+
+    final l = await _getL10n();
 
     // Determine which reminder days are available
     final reminderDays =
@@ -151,8 +222,8 @@ class NotificationService {
         final notification = ScheduledNotification(
           id: _nextId++,
           channelId: NotificationChannels.renewalReminder,
-          title: _renewalTitle(sub, daysBefore),
-          body: _renewalBody(sub, daysBefore),
+          title: _renewalTitle(sub, daysBefore, l),
+          body: _renewalBody(sub, daysBefore, l),
           scheduledAt: scheduledAt,
           priority: daysBefore <= 1
               ? NotificationPriority.high
@@ -167,12 +238,12 @@ class NotificationService {
 
     // Schedule trial expiry alerts (always available, even on free)
     if (sub.isTrial && sub.trialEndDate != null) {
-      _scheduleTrialAlerts(sub);
+      await _scheduleTrialAlerts(sub, l);
     }
   }
 
   /// Schedule trial expiry alerts at 3 days, 1 day, and day-of.
-  void _scheduleTrialAlerts(Subscription sub) {
+  Future<void> _scheduleTrialAlerts(Subscription sub, S l) async {
     final trialEnd = sub.trialEndDate!;
     final alertDays = [3, 1, 0];
 
@@ -194,8 +265,8 @@ class NotificationService {
         final notification = ScheduledNotification(
           id: _nextId++,
           channelId: NotificationChannels.trialExpiry,
-          title: _trialTitle(sub, daysBefore),
-          body: _trialBody(sub, daysBefore),
+          title: _trialTitle(sub, daysBefore, l),
+          body: _trialBody(sub, daysBefore, l),
           scheduledAt: scheduledAt,
           priority: NotificationPriority.high,
           subscriptionUid: sub.uid,
@@ -211,13 +282,14 @@ class NotificationService {
   ///
   /// Fires at 72h, 24h, and 2h before trial expiry, plus a
   /// post-conversion check-in 2h after expiry.
-  void scheduleAggressiveTrialAlerts({
+  Future<void> scheduleAggressiveTrialAlerts({
     required String subscriptionUid,
     required String serviceName,
     required double realPrice,
     required String currency,
     required DateTime trialExpiresAt,
-  }) {
+  }) async {
+    final l = await _getL10n();
     final priceStr = Subscription.formatPrice(realPrice, currency);
 
     // 72 hours before
@@ -226,8 +298,8 @@ class NotificationService {
       final notification = ScheduledNotification(
         id: _nextId++,
         channelId: NotificationChannels.trialExpiry,
-        title: '$serviceName trial ends in 3 days',
-        body: 'It\'ll auto-charge $priceStr. Cancel now if you don\'t want it.',
+        title: l.notifTrapTrialTitle3d(serviceName),
+        body: l.notifTrapTrialBody3d(priceStr),
         scheduledAt: alert72h,
         priority: NotificationPriority.normal,
         subscriptionUid: subscriptionUid,
@@ -242,8 +314,8 @@ class NotificationService {
       final notification = ScheduledNotification(
         id: _nextId++,
         channelId: NotificationChannels.trialExpiry,
-        title: '\u26A0\uFE0F TOMORROW: $serviceName will charge $priceStr',
-        body: 'Cancel now if you don\'t want to keep it.',
+        title: l.notifTrapTrialTitleTomorrow(serviceName, priceStr),
+        body: l.notifTrapTrialBodyTomorrow,
         scheduledAt: alert24h,
         priority: NotificationPriority.high,
         subscriptionUid: subscriptionUid,
@@ -258,8 +330,8 @@ class NotificationService {
       final notification = ScheduledNotification(
         id: _nextId++,
         channelId: NotificationChannels.trialExpiry,
-        title: '\uD83D\uDEA8 $serviceName charges $priceStr in 2 HOURS',
-        body: 'This is your last chance to cancel.',
+        title: l.notifTrapTrialTitle2h(serviceName, priceStr),
+        body: l.notifTrapTrialBody2h,
         scheduledAt: alert2h,
         priority: NotificationPriority.high,
         subscriptionUid: subscriptionUid,
@@ -273,8 +345,8 @@ class NotificationService {
     final afterNotif = ScheduledNotification(
       id: _nextId++,
       channelId: NotificationChannels.trialExpiry,
-      title: 'Did you mean to keep $serviceName?',
-      body: 'You were charged $priceStr. Tap if you need help getting a refund.',
+      title: l.notifTrapPostCharge(serviceName),
+      body: l.notifTrapPostChargeBody(priceStr),
       scheduledAt: afterConvert,
       priority: NotificationPriority.normal,
       subscriptionUid: subscriptionUid,
@@ -301,6 +373,7 @@ class NotificationService {
 
     if (todayRenewals.isEmpty && expiringTrials.isEmpty) return;
 
+    final l = await _getL10n();
     final now = DateTime.now();
     var scheduledAt = DateTime(now.year, now.month, now.day, 8, 30);
 
@@ -313,17 +386,20 @@ class NotificationService {
     String body;
 
     if (todayRenewals.isNotEmpty && expiringTrials.isNotEmpty) {
-      title = '${todayRenewals.length} renewal(s) + ${expiringTrials.length} trial(s) today';
-      body = _digestBody(todayRenewals, expiringTrials, displayCurrency);
+      title = l.notifDigestBoth(todayRenewals.length, expiringTrials.length);
+      body = _digestBody(todayRenewals, expiringTrials, displayCurrency, l);
     } else if (todayRenewals.isNotEmpty) {
       final total = todayRenewals.fold(0.0, (sum, s) => sum + s.priceIn(displayCurrency));
-      title = '${todayRenewals.length} subscription(s) renewing today';
-      body =
-          '${todayRenewals.map((s) => s.name).join(", ")} \u2014 ${Subscription.formatPrice(total, displayCurrency)} total';
+      title = l.notifDigestRenewals(todayRenewals.length);
+      body = l.notifDigestRenewalBody(
+        todayRenewals.map((s) => s.name).join(', '),
+        Subscription.formatPrice(total, displayCurrency),
+      );
     } else {
-      title = '${expiringTrials.length} trial(s) expiring today';
-      body =
-          '${expiringTrials.map((s) => s.name).join(", ")} \u2014 cancel now to avoid charges';
+      title = l.notifDigestTrials(expiringTrials.length);
+      body = l.notifDigestTrialBody(
+        expiringTrials.map((s) => s.name).join(', '),
+      );
     }
 
     final notification = ScheduledNotification(
@@ -385,49 +461,49 @@ class NotificationService {
 
   // ─── Message Templates ───
 
-  String _renewalTitle(Subscription sub, int daysBefore) {
+  String _renewalTitle(Subscription sub, int daysBefore, S l) {
     if (daysBefore == 0) {
-      return '${sub.name} renews today';
+      return l.notifRenewsToday(sub.name);
     } else if (daysBefore == 1) {
-      return '${sub.name} renews tomorrow';
+      return l.notifRenewsTomorrow(sub.name);
     } else {
-      return '${sub.name} renews in $daysBefore days';
+      return l.notifRenewsInDays(sub.name, daysBefore);
     }
   }
 
-  String _renewalBody(Subscription sub, int daysBefore) {
+  String _renewalBody(Subscription sub, int daysBefore, S l) {
     final price = '${Subscription.formatPrice(sub.price, sub.currency)}/${sub.cycle.shortLabel}';
 
     if (daysBefore == 0) {
-      return 'You\'ll be charged $price today. Tap to review or cancel.';
+      return l.notifChargesToday(price);
     } else if (daysBefore == 1) {
-      return '$price will be charged tomorrow. Still want to keep it?';
+      return l.notifChargesTomorrow(price);
     } else if (daysBefore == 3) {
-      return '$price renewal coming up in 3 days.';
+      return l.notifCharges3Days(price);
     } else {
-      return '$price renewal in $daysBefore days. Time to review?';
+      return l.notifChargesInDays(price, daysBefore);
     }
   }
 
-  String _trialTitle(Subscription sub, int daysBefore) {
+  String _trialTitle(Subscription sub, int daysBefore, S l) {
     if (daysBefore == 0) {
-      return '\u26A0 ${sub.name} trial ends today!';
+      return l.notifTrialEndsToday(sub.name);
     } else if (daysBefore == 1) {
-      return '${sub.name} trial ends tomorrow';
+      return l.notifTrialEndsTomorrow(sub.name);
     } else {
-      return '${sub.name} trial ends in $daysBefore days';
+      return l.notifTrialEndsInDays(sub.name, daysBefore);
     }
   }
 
-  String _trialBody(Subscription sub, int daysBefore) {
+  String _trialBody(Subscription sub, int daysBefore, S l) {
     final price = '${Subscription.formatPrice(sub.price, sub.currency)}/${sub.cycle.shortLabel}';
 
     if (daysBefore == 0) {
-      return 'Your free trial ends today! You\'ll be charged $price. Cancel now if you don\'t want to continue.';
+      return l.notifTrialBodyToday(price);
     } else if (daysBefore == 1) {
-      return 'One day left on your trial. After that it\'s $price. Cancel now to avoid charges.';
+      return l.notifTrialBodyTomorrow(price);
     } else {
-      return '$daysBefore days left on your free trial. Full price is $price after that.';
+      return l.notifTrialBodyDays(daysBefore, price);
     }
   }
 
@@ -435,20 +511,22 @@ class NotificationService {
     List<Subscription> renewals,
     List<Subscription> trials,
     String displayCurrency,
+    S l,
   ) {
     final parts = <String>[];
 
     if (renewals.isNotEmpty) {
       final total = renewals.fold(0.0, (sum, s) => sum + s.priceIn(displayCurrency));
-      parts.add(
-        'Renewals: ${renewals.map((s) => s.name).join(", ")} (${Subscription.formatPrice(total, displayCurrency)})',
-      );
+      parts.add(l.notifDigestRenewalBody(
+        renewals.map((s) => s.name).join(', '),
+        Subscription.formatPrice(total, displayCurrency),
+      ));
     }
 
     if (trials.isNotEmpty) {
-      parts.add(
-        'Trials ending: ${trials.map((s) => s.name).join(", ")} \u2014 cancel to avoid charges',
-      );
+      parts.add(l.notifDigestTrialBody(
+        trials.map((s) => s.name).join(', '),
+      ));
     }
 
     return parts.join('\n');

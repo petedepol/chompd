@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../config/theme.dart';
 import '../models/subscription.dart';
 import '../services/haptic_service.dart';
+import '../utils/l10n_extension.dart';
 import 'trial_badge.dart';
 
 /// A single subscription card for the home screen list.
@@ -261,13 +262,13 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
           alignment: Alignment.centerLeft,
           color: ChompdColors.blue,
           icon: Icons.edit_outlined,
-          label: 'Edit',
+          label: context.l10n.edit,
         ),
         secondaryBackground: _buildSwipeBackground(
           alignment: Alignment.centerRight,
           color: ChompdColors.red,
           icon: Icons.delete_outline_rounded,
-          label: 'Delete',
+          label: context.l10n.delete,
         ),
         confirmDismiss: (direction) async {
           HapticService.instance.selection();
@@ -354,8 +355,8 @@ class _TrapBadge extends StatelessWidget {
           const SizedBox(width: 3),
           Text(
             subscription.trialDurationDays != null
-                ? '${subscription.trialDurationDays}d trap'
-                : 'TRAP',
+                ? context.l10n.trapDays(subscription.trialDurationDays!)
+                : context.l10n.trapBadge,
             style: GoogleFonts.spaceMono(
               fontSize: 8,
               fontWeight: FontWeight.w700,

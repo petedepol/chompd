@@ -9,6 +9,7 @@ import '../../providers/subscriptions_provider.dart';
 import '../../data/cancel_guides_data.dart';
 import '../../services/notification_service.dart';
 import '../../utils/date_helpers.dart';
+import '../../utils/l10n_extension.dart';
 import '../../widgets/mascot_image.dart';
 import '../cancel/cancel_guide_screen.dart';
 import '../paywall/paywall_screen.dart';
@@ -60,10 +61,10 @@ class DetailScreen extends ConsumerWidget {
                 children: [
                   _BackButton(onTap: () => Navigator.of(context).pop()),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Subscription Detail',
-                      style: TextStyle(
+                      context.l10n.subscriptionDetail,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.text,
@@ -180,7 +181,7 @@ class DetailScreen extends ConsumerWidget {
                           ),
                         ),
                         child: Text(
-                          'That\u2019s ${Subscription.formatPrice(sub.yearlyEquivalent, sub.currency, decimals: 0)} per year',
+                          context.l10n.thatsPerYear(Subscription.formatPrice(sub.yearlyEquivalent, sub.currency, decimals: 0)),
                           style: ChompdTypography.mono(
                             size: 12,
                             weight: FontWeight.w600,
@@ -193,7 +194,7 @@ class DetailScreen extends ConsumerWidget {
                       // Lifetime projection
                       const SizedBox(height: 4),
                       Text(
-                        '${Subscription.formatPrice(sub.yearlyEquivalent * 3, sub.currency, decimals: 0)} over 3 years',
+                        context.l10n.overThreeYears(Subscription.formatPrice(sub.yearlyEquivalent * 3, sub.currency, decimals: 0)),
                         style: const TextStyle(
                           fontSize: 10,
                           fontStyle: FontStyle.italic,
@@ -216,7 +217,7 @@ class DetailScreen extends ConsumerWidget {
                           ),
                         ),
                         child: Text(
-                          '\u26A0\uFE0F Trial \u2014 ${sub.trialDaysRemaining} days remaining',
+                          context.l10n.trialDaysRemaining(sub.trialDaysRemaining!),
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -251,7 +252,7 @@ class DetailScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _InfoCard(
-                label: 'NEXT RENEWAL',
+                label: context.l10n.nextRenewal,
                 child: Column(
                   children: [
                     Row(
@@ -267,12 +268,12 @@ class DetailScreen extends ConsumerWidget {
                         ),
                         Text(
                           daysLeft == 0
-                              ? '${Subscription.formatPrice(sub.price, sub.currency)} charges today'
+                              ? context.l10n.chargesToday(Subscription.formatPrice(sub.price, sub.currency))
                               : daysLeft == 1
-                                  ? '${Subscription.formatPrice(sub.price, sub.currency)} charges tomorrow'
+                                  ? context.l10n.chargesTomorrow(Subscription.formatPrice(sub.price, sub.currency))
                                   : daysLeft <= 3
-                                      ? '$daysLeft days \u2014 ${Subscription.formatPrice(sub.price, sub.currency)} soon'
-                                      : '$daysLeft days',
+                                      ? context.l10n.chargesSoon(daysLeft, Subscription.formatPrice(sub.price, sub.currency))
+                                      : context.l10n.daysCount(daysLeft),
                           style: ChompdTypography.mono(
                             size: 12,
                             weight: FontWeight.w700,
@@ -324,7 +325,7 @@ class DetailScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _InfoCard(
-                label: 'PAYMENT HISTORY',
+                label: context.l10n.sectionPaymentHistory,
                 child: Column(
                   children: [
                     ..._buildPaymentHistory(sub),
@@ -333,9 +334,9 @@ class DetailScreen extends ConsumerWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Total paid',
-                            style: TextStyle(
+                          Text(
+                            context.l10n.totalPaid,
+                            style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                               color: ChompdColors.textMid,
@@ -365,18 +366,25 @@ class DetailScreen extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _InfoCard(
-                label: 'DETAILS',
+                label: context.l10n.sectionDetails,
                 child: Column(
                   children: [
-                    _DetailRow(label: 'Category', value: sub.category),
+                    _DetailRow(label: context.l10n.detailCategory, value: sub.category),
                     _divider(),
-                    _DetailRow(label: 'Currency', value: sub.currency),
+                    _DetailRow(label: context.l10n.detailCurrency, value: sub.currency),
                     _divider(),
-                    _DetailRow(label: 'Billing cycle', value: sub.cycle.label),
+                    _DetailRow(label: context.l10n.detailBillingCycle, value: sub.cycle.label),
                     _divider(),
                     _DetailRow(
-                      label: 'Added',
-                      value: '${DateHelpers.shortDate(sub.createdAt)} via ${sub.source == SubscriptionSource.aiScan ? 'AI Scan' : sub.source == SubscriptionSource.quickAdd ? 'Quick Add' : 'Manual'}',
+                      label: context.l10n.detailAdded,
+                      value: context.l10n.addedVia(
+                        DateHelpers.shortDate(sub.createdAt),
+                        sub.source == SubscriptionSource.aiScan
+                            ? context.l10n.sourceAiScan
+                            : sub.source == SubscriptionSource.quickAdd
+                                ? context.l10n.sourceQuickAdd
+                                : context.l10n.sourceManual,
+                      ),
                     ),
                   ],
                 ),
@@ -404,9 +412,9 @@ class DetailScreen extends ConsumerWidget {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'Cancel Subscription',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.cancelSubscription,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.red,
@@ -439,9 +447,9 @@ class DetailScreen extends ConsumerWidget {
                       ),
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'Request Refund',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.requestRefund,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.purple,
@@ -468,8 +476,8 @@ class DetailScreen extends ConsumerWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    'Delete',
-                    style: TextStyle(
+                    context.l10n.delete,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: ChompdColors.textDim,
@@ -512,16 +520,18 @@ class DetailScreen extends ConsumerWidget {
     // If no payments yet (e.g. new trial), show a hint.
     if (payments.isEmpty) {
       return [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(
-            'No payments yet — started ${DateHelpers.shortDate(start)}',
-            style: const TextStyle(
-              fontSize: 12,
-              color: ChompdColors.textDim,
+        Builder(builder: (context) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              context.l10n.noPaymentsYet(DateHelpers.shortDate(start)),
+              style: const TextStyle(
+                fontSize: 12,
+                color: ChompdColors.textDim,
+              ),
             ),
-          ),
-        ),
+          );
+        }),
       ];
     }
 
@@ -596,7 +606,7 @@ class DetailScreen extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'No specific guide for ${sub.name} yet. Try searching "${sub.name} cancel subscription" online.',
+            context.l10n.noGuideYet(sub.name),
             style: const TextStyle(fontSize: 12),
           ),
           backgroundColor: ChompdColors.bgElevated,
@@ -611,10 +621,9 @@ class DetailScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => _ConfirmDialog(
-        title: 'Delete ${sub.name}?',
-        message:
-            'This will permanently remove this subscription. This cannot be undone.',
-        confirmLabel: 'Delete',
+        title: context.l10n.deleteNameTitle(sub.name),
+        message: context.l10n.deleteNameMessage,
+        confirmLabel: context.l10n.delete,
         confirmColor: ChompdColors.red,
         onConfirm: () {
           ref.read(subscriptionsProvider.notifier).remove(sub.uid);
@@ -729,7 +738,7 @@ class _RemindersCard extends StatelessWidget {
     final isPro = prefs.isPro;
 
     return _InfoCard(
-      label: 'REMINDERS',
+      label: context.l10n.sectionReminders,
       child: Column(
         children: [
           // Scheduled count
@@ -745,7 +754,7 @@ class _RemindersCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${scheduled.length} reminder(s) scheduled',
+                    context.l10n.remindersScheduled(scheduled.length),
                     style: const TextStyle(
                       fontSize: 10.5,
                       color: ChompdColors.mint,
@@ -756,7 +765,7 @@ class _RemindersCard extends StatelessWidget {
             ),
 
           _ReminderRow(
-            label: '7 days before',
+            label: context.l10n.reminderDaysBefore7,
             enabled: prefs.renewalRemindersEnabled &&
                 prefs.activeReminderDays.contains(7),
             isPro: true,
@@ -764,7 +773,7 @@ class _RemindersCard extends StatelessWidget {
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
-            label: '3 days before',
+            label: context.l10n.reminderDaysBefore3,
             enabled: prefs.renewalRemindersEnabled &&
                 prefs.activeReminderDays.contains(3),
             isPro: true,
@@ -772,7 +781,7 @@ class _RemindersCard extends StatelessWidget {
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
-            label: '1 day before',
+            label: context.l10n.reminderDaysBefore1,
             enabled: prefs.renewalRemindersEnabled &&
                 prefs.activeReminderDays.contains(1),
             isPro: true,
@@ -780,7 +789,7 @@ class _RemindersCard extends StatelessWidget {
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
-            label: 'Morning of',
+            label: context.l10n.reminderMorningOf,
             enabled: prefs.renewalRemindersEnabled &&
                 prefs.activeReminderDays.contains(0),
             isPro: false,
@@ -803,24 +812,24 @@ class _RemindersCard extends StatelessWidget {
                   color: ChompdColors.purple.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.lock_outline_rounded,
                       size: 12,
                       color: ChompdColors.purple,
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        'Upgrade to Pro for advance reminders',
-                        style: TextStyle(
+                        context.l10n.upgradeForReminders,
+                        style: const TextStyle(
                           fontSize: 10,
                           color: ChompdColors.purple,
                         ),
                       ),
                     ),
-                    Icon(
+                    const Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 10,
                       color: ChompdColors.purple,
@@ -1011,9 +1020,9 @@ class _ConfirmDialog extends StatelessWidget {
                         border: Border.all(color: ChompdColors.border),
                       ),
                       alignment: Alignment.center,
-                      child: const Text(
-                        'Keep',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.keep,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: ChompdColors.textMid,
@@ -1087,7 +1096,7 @@ class _TrapInfoCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'TRAP DETECTED',
+                context.l10n.trapDetected,
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -1146,7 +1155,7 @@ class _TrapInfoCard extends StatelessWidget {
           if (subscription.trialExpiresAt != null) ...[
             const SizedBox(height: 8),
             Text(
-              'Trial expires ${DateHelpers.shortDate(subscription.trialExpiresAt!)}',
+              context.l10n.trialExpires(DateHelpers.shortDate(subscription.trialExpiresAt!)),
               style: TextStyle(fontSize: 12, color: warningColor),
             ),
           ],
@@ -1155,7 +1164,7 @@ class _TrapInfoCard extends StatelessWidget {
           if (subscription.realAnnualCost != null) ...[
             const SizedBox(height: 4),
             Text(
-              'Real annual cost: ${Subscription.formatPrice(subscription.realAnnualCost!, subscription.currency)}/yr',
+              context.l10n.realAnnualCost(Subscription.formatPrice(subscription.realAnnualCost!, subscription.currency)),
               style: const TextStyle(
                 fontSize: 11,
                 color: ChompdColors.textDim,

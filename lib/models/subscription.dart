@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../services/exchange_rate_service.dart';
 import 'scan_result.dart';
 import 'trap_result.dart';
@@ -61,6 +62,37 @@ enum BillingCycle {
       'yearly' => BillingCycle.yearly,
       _ => BillingCycle.monthly,
     };
+  }
+}
+
+/// Extension providing localised billing cycle labels.
+extension BillingCycleL10n on BillingCycle {
+  /// Localised full label (e.g. "Weekly", "Monthly").
+  String localLabel(S l) {
+    switch (this) {
+      case BillingCycle.weekly:
+        return l.cycleWeekly;
+      case BillingCycle.monthly:
+        return l.cycleMonthly;
+      case BillingCycle.quarterly:
+        return l.cycleQuarterly;
+      case BillingCycle.yearly:
+        return l.cycleYearly;
+    }
+  }
+
+  /// Localised short label (e.g. "wk", "mo").
+  String localShortLabel(S l) {
+    switch (this) {
+      case BillingCycle.weekly:
+        return l.cycleWeeklyShort;
+      case BillingCycle.monthly:
+        return l.cycleMonthlyShort;
+      case BillingCycle.quarterly:
+        return l.cycleQuarterlyShort;
+      case BillingCycle.yearly:
+        return l.cycleYearlyShort;
+    }
   }
 }
 

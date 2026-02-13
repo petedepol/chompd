@@ -5,6 +5,7 @@ import '../config/theme.dart';
 import '../models/subscription.dart';
 import '../providers/currency_provider.dart';
 import '../providers/trap_stats_provider.dart';
+import '../utils/l10n_extension.dart';
 import 'mascot_image.dart';
 
 class TrapStatsCard extends ConsumerWidget {
@@ -21,13 +22,13 @@ class TrapStatsCard extends ConsumerWidget {
 
     final breakdownItems = <String>[];
     if (trapStats.trapsSkipped > 0) {
-      breakdownItems.add('${trapStats.trapsSkipped} dodged');
+      breakdownItems.add(context.l10n.trapsDodged(trapStats.trapsSkipped));
     }
     if (trapStats.trialsCancelled > 0) {
-      breakdownItems.add('${trapStats.trialsCancelled} cancelled');
+      breakdownItems.add(context.l10n.trialsCancelled(trapStats.trialsCancelled));
     }
     if (trapStats.refundsRecovered > 0) {
-      breakdownItems.add('${trapStats.refundsRecovered} refunded');
+      breakdownItems.add(context.l10n.refundsRecovered(trapStats.refundsRecovered));
     }
 
     final breakdownText = breakdownItems.join(' · ');
@@ -55,7 +56,7 @@ class TrapStatsCard extends ConsumerWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Unchompd',
+                context.l10n.unchompd,
                 style: TextStyle(
                   color: ChompdColors.textMid,
                   fontSize: 13,
@@ -75,7 +76,7 @@ class TrapStatsCard extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'from subscription traps',
+            context.l10n.fromSubscriptionTraps,
             style: TextStyle(
               color: ChompdColors.textDim,
               fontSize: 12,

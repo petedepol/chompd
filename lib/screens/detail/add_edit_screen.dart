@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../models/subscription.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/subscriptions_provider.dart';
+import '../../utils/l10n_extension.dart';
 
 /// Add or edit a subscription.
 ///
@@ -45,7 +46,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     _priceCtrl = TextEditingController(
       text: sub != null ? sub.price.toStringAsFixed(2) : '',
     );
-    _currency = sub?.currency ?? 'GBP';
+    _currency = sub?.currency ?? ref.read(currencyProvider);
     _cycle = sub?.cycle ?? BillingCycle.monthly;
     _category = sub?.category ?? 'Entertainment';
     _nextRenewal = sub?.nextRenewal ?? DateTime.now().add(const Duration(days: 30));
@@ -99,7 +100,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      _isEditing ? 'Edit Subscription' : 'Add Subscription',
+                      _isEditing ? context.l10n.editSubscription : context.l10n.addSubscription,
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -124,13 +125,13 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Name
-                    _label('SERVICE NAME'),
+                    _label(context.l10n.fieldServiceName),
                     const SizedBox(height: 6),
                     _buildTextField(
                       controller: _nameCtrl,
-                      hint: 'e.g. Netflix, Spotify',
+                      hint: context.l10n.hintServiceName,
                       validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Name required' : null,
+                          (v == null || v.trim().isEmpty) ? context.l10n.errorNameRequired : null,
                     ),
 
                     const SizedBox(height: 20),
@@ -144,19 +145,26 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _label('PRICE'),
+                              _label(context.l10n.fieldPrice),
                               const SizedBox(height: 6),
                               _buildTextField(
                                 controller: _priceCtrl,
-                                hint: '9.99',
+                                hint: context.l10n.hintPrice,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
                                 inputFormatters: [
-                                  FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                                  // Allow digits, dots, and commas (European decimal)
+                                  FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
+                                  // Replace commas with dots so parsing works
+                                  TextInputFormatter.withFunction((oldValue, newValue) {
+                                    return newValue.copyWith(
+                                      text: newValue.text.replaceAll(',', '.'),
+                                    );
+                                  }),
                                 ],
                                 validator: (v) {
-                                  if (v == null || v.isEmpty) return 'Price required';
+                                  if (v == null || v.isEmpty) return context.l10n.errorPriceRequired;
                                   final parsed = double.tryParse(v);
-                                  if (parsed == null || parsed <= 0) return 'Invalid price';
+                                  if (parsed == null || parsed <= 0) return context.l10n.errorInvalidPrice;
                                   return null;
                                 },
                               ),
@@ -168,7 +176,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              _label('CURRENCY'),
+                              _label(context.l10n.fieldCurrency),
                               const SizedBox(height: 6),
                               _buildDropdown<String>(
                                 value: _currency,
@@ -185,7 +193,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                     const SizedBox(height: 20),
 
                     // Billing Cycle
-                    _label('BILLING CYCLE'),
+                    _label(context.l10n.fieldBillingCycle),
                     const SizedBox(height: 6),
                     Row(
                       children: BillingCycle.values.map((cycle) {
@@ -227,7 +235,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                     const SizedBox(height: 20),
 
                     // Category
-                    _label('CATEGORY'),
+                    _label(context.l10n.fieldCategory),
                     const SizedBox(height: 6),
                     Wrap(
                       spacing: 6,
@@ -285,7 +293,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                     const SizedBox(height: 20),
 
                     // Next Renewal Date
-                    _label('NEXT RENEWAL'),
+                    _label(context.l10n.fieldNextRenewal),
                     const SizedBox(height: 6),
                     GestureDetector(
                       onTap: _pickRenewalDate,
@@ -361,7 +369,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'This is a free trial',
+                                context.l10n.freeTrialToggle,
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
@@ -403,7 +411,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
 
                     if (_isTrial) ...[
                       const SizedBox(height: 12),
-                      _label('TRIAL ENDS'),
+                      _label(context.l10n.fieldTrialEnds),
                       const SizedBox(height: 6),
                       GestureDetector(
                         onTap: _pickTrialEndDate,
@@ -431,7 +439,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                               Text(
                                 _trialEndDate != null
                                     ? '${_trialEndDate!.day}/${_trialEndDate!.month}/${_trialEndDate!.year}'
-                                    : 'Select date',
+                                    : context.l10n.selectDate,
                                 style: const TextStyle(
                                   fontSize: 14,
                                   color: ChompdColors.text,
@@ -466,7 +474,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                         ),
                         alignment: Alignment.center,
                         child: Text(
-                          _isEditing ? 'Save Changes' : 'Add Subscription',
+                          _isEditing ? context.l10n.saveChanges : context.l10n.addSubscription,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,

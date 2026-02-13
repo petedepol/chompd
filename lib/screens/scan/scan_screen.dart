@@ -11,6 +11,7 @@ import '../../providers/purchase_provider.dart';
 import '../../providers/scan_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/merchant_db.dart';
+import '../../utils/l10n_extension.dart';
 import '../../widgets/mascot_image.dart';
 import '../../widgets/scan_shimmer.dart';
 import '../../widgets/toast_overlay.dart';
@@ -166,9 +167,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                       color: ChompdColors.purple,
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'AI Scan',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.scanTitle,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.text,
@@ -177,9 +178,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                   ],
                 ),
                 if (scanState.phase == ScanPhase.scanning)
-                  const Text(
-                    'Analysing your screenshot...',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.scanAnalysing,
+                    style: const TextStyle(
                       fontSize: 10,
                       color: ChompdColors.purple,
                     ),
@@ -200,7 +201,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              isPro ? 'PRO \u221E' : '$remaining scan${remaining == 1 ? '' : 's'} left',
+              isPro ? context.l10n.proInfinity : context.l10n.scansLeftCount(remaining),
               style: ChompdTypography.mono(
                 size: 9,
                 weight: FontWeight.w700,
@@ -243,19 +244,19 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
           ),
           const SizedBox(height: 20),
 
-          const Text(
-            'Scan a Screenshot',
-            style: TextStyle(
+          Text(
+            context.l10n.scanIdleTitle,
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: ChompdColors.text,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Share a screenshot of a confirmation email,\nbank statement, or app store receipt.',
+          Text(
+            context.l10n.scanIdleSubtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
               color: ChompdColors.textDim,
               height: 1.5,
@@ -284,14 +285,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 ],
               ),
               alignment: Alignment.center,
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.camera_alt_rounded, size: 18, color: Colors.white),
-                  SizedBox(width: 8),
+                  const Icon(Icons.camera_alt_rounded, size: 18, color: Colors.white),
+                  const SizedBox(width: 8),
                   Text(
-                    'Take Photo',
-                    style: TextStyle(
+                    context.l10n.takePhoto,
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -315,14 +316,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 border: Border.all(color: ChompdColors.border),
               ),
               alignment: Alignment.center,
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.photo_library_outlined, size: 18, color: ChompdColors.textMid),
-                  SizedBox(width: 8),
+                  const Icon(Icons.photo_library_outlined, size: 18, color: ChompdColors.textMid),
+                  const SizedBox(width: 8),
                   Text(
-                    'Choose from Gallery',
-                    style: TextStyle(
+                    context.l10n.chooseFromGallery,
+                    style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                       color: ChompdColors.textMid,
@@ -375,8 +376,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         SnackBar(
           content: Text(
             source == ImageSource.camera
-                ? 'Could not access camera. Check permissions.'
-                : 'Could not access photo library. Check permissions.',
+                ? context.l10n.cameraPermError
+                : context.l10n.galleryPermError,
           ),
           backgroundColor: ChompdColors.bgElevated,
         ),
@@ -406,9 +407,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             const SizedBox(height: 24),
 
             // Smart move text
-            const Text(
-              'Smart move!',
-              style: TextStyle(
+            Text(
+              context.l10n.smartMove,
+              style: const TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
                 color: ChompdColors.text,
@@ -418,7 +419,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
             // Service name
             Text(
-              'You skipped $serviceName',
+              context.l10n.youSkipped(serviceName),
               style: const TextStyle(
                 fontSize: 14,
                 color: ChompdColors.textMid,
@@ -447,9 +448,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               ),
               child: Column(
                 children: [
-                  const Text(
-                    'SAVED',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.saved,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
                       color: ChompdColors.bg,
@@ -471,9 +472,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             const SizedBox(height: 24),
 
             // Added to Unchompd note
-            const Text(
-              'Added to your Unchompd total',
-              style: TextStyle(
+            Text(
+              context.l10n.addedToUnchompd,
+              style: const TextStyle(
                 fontSize: 12,
                 color: ChompdColors.textDim,
               ),
@@ -494,9 +495,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 alignment: Alignment.center,
-                child: const Text(
-                  'Done',
-                  style: TextStyle(
+                child: Text(
+                  context.l10n.done,
+                  style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: ChompdColors.textMid,
@@ -543,7 +544,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                       const TypingDots(),
                       const SizedBox(width: 8),
                       Text(
-                        'Analysing...',
+                        context.l10n.analysing,
                         style: TextStyle(
                           fontSize: 12,
                           color: ChompdColors.purple.withValues(alpha: 0.7),
@@ -585,6 +586,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
           isAnswered: msg.isAnswered,
           selectedAnswer: msg.selectedAnswer,
           onAnswer: (answer) => _onAnswer(index, answer, scanState),
+          defaultCurrency: ref.read(currencyProvider),
         );
 
       case ChatMessageType.answer:
@@ -916,8 +918,8 @@ class _PartialResultMessage extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'confidence',
-                    style: TextStyle(
+                    context.l10n.confidence,
+                    style: const TextStyle(
                       fontSize: 10,
                       color: ChompdColors.textDim,
                     ),
@@ -940,6 +942,7 @@ class _QuestionMessage extends StatefulWidget {
   final bool isAnswered;
   final String? selectedAnswer;
   final void Function(String) onAnswer;
+  final String defaultCurrency;
 
   const _QuestionMessage({
     required this.text,
@@ -948,6 +951,7 @@ class _QuestionMessage extends StatefulWidget {
     required this.isAnswered,
     this.selectedAnswer,
     required this.onAnswer,
+    this.defaultCurrency = 'USD',
   });
 
   @override
@@ -958,8 +962,14 @@ class _QuestionMessageState extends State<_QuestionMessage> {
   bool _showOtherInput = false;
   final TextEditingController _otherCtrl = TextEditingController();
   final TextEditingController _priceCtrl = TextEditingController();
-  String _priceCurrency = 'GBP';
+  late String _priceCurrency;
   String _priceCycle = 'mo';
+
+  @override
+  void initState() {
+    super.initState();
+    _priceCurrency = widget.defaultCurrency;
+  }
 
   /// Whether this question is asking for a price (options contain "/mo" or "/yr").
   bool get _isPriceQuestion =>
@@ -1047,7 +1057,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                       color: ChompdColors.text,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Type your answer...',
+                      hintText: context.l10n.typeYourAnswer,
                       hintStyle: const TextStyle(
                         color: ChompdColors.textDim,
                       ),
@@ -1231,12 +1241,12 @@ class _QuestionMessageState extends State<_QuestionMessage> {
             ...['mo', 'yr', 'wk', 'qtr'].map((c) {
               final isSelected = c == _priceCycle;
               final label = c == 'mo'
-                  ? 'Monthly'
+                  ? context.l10n.cycleMonthly
                   : c == 'yr'
-                      ? 'Yearly'
+                      ? context.l10n.cycleYearly
                       : c == 'wk'
-                          ? 'Weekly'
-                          : 'Quarterly';
+                          ? context.l10n.cycleWeekly
+                          : context.l10n.cycleQuarterly;
               return Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: GestureDetector(
@@ -1315,7 +1325,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
               ),
               alignment: Alignment.center,
               child: Text(
-                'Yes, it\'s ${widget.options.first}',
+                context.l10n.yesIts(widget.options.first),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -1525,9 +1535,9 @@ class _ResultMessageState extends State<_ResultMessage>
                                 color: ChompdColors.amberGlow,
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              child: const Text(
-                                'TRIAL',
-                                style: TextStyle(
+                              child: Text(
+                                context.l10n.trialLabel,
+                                style: const TextStyle(
                                   fontSize: 8,
                                   fontWeight: FontWeight.w700,
                                   color: ChompdColors.amber,
@@ -1571,14 +1581,14 @@ class _ResultMessageState extends State<_ResultMessage>
                     ],
                   ),
                   alignment: Alignment.center,
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.add_rounded, size: 16, color: ChompdColors.bg),
-                      SizedBox(width: 6),
+                      const Icon(Icons.add_rounded, size: 16, color: ChompdColors.bg),
+                      const SizedBox(width: 6),
                       Text(
-                        'Add to Chompd',
-                        style: TextStyle(
+                        context.l10n.addToChompd,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: ChompdColors.bg,
@@ -1644,9 +1654,9 @@ class _MultiResultMessage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Monthly total',
-                style: TextStyle(
+              Text(
+                context.l10n.monthlyTotal,
+                style: const TextStyle(
                   fontSize: 11,
                   color: ChompdColors.textDim,
                 ),
@@ -1678,7 +1688,7 @@ class _MultiResultMessage extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Text(
-                'Add all ${results.length} to Chompd',
+                context.l10n.addAllToChompd(results.length),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -1745,9 +1755,9 @@ class _MiniResultRow extends StatelessWidget {
                 color: ChompdColors.mint.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text(
-                'AUTO',
-                style: TextStyle(
+              child: Text(
+                context.l10n.autoTier,
+                style: const TextStyle(
                   fontSize: 7,
                   fontWeight: FontWeight.w700,
                   color: ChompdColors.mint,

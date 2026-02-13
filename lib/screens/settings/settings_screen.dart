@@ -10,9 +10,11 @@ import '../../providers/currency_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/subscriptions_provider.dart';
+import '../../providers/locale_provider.dart';
 import '../../services/haptic_service.dart';
 import '../../services/notification_service.dart';
 import '../../utils/csv_export.dart';
+import '../../utils/l10n_extension.dart';
 import '../paywall/paywall_screen.dart';
 
 final _versionProvider = FutureProvider<String>((ref) async {
@@ -72,10 +74,10 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Settings',
-                      style: TextStyle(
+                      context.l10n.settingsTitle,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.text,
@@ -106,7 +108,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'NOTIFICATIONS',
+                        context.l10n.sectionNotifications,
                         style: ChompdTypography.sectionLabel.copyWith(
                           color: ChompdColors.mint,
                         ),
@@ -126,8 +128,8 @@ class SettingsScreen extends ConsumerWidget {
                   // Global toggle
                   _SettingsToggle(
                     icon: Icons.notifications_active_outlined,
-                    title: 'Push Notifications',
-                    subtitle: 'Get reminded about renewals and trials',
+                    title: context.l10n.pushNotifications,
+                    subtitle: context.l10n.pushNotificationsSubtitle,
                     value: prefs.enabled,
                     onChanged: prefsNotifier.toggleEnabled,
                   ),
@@ -146,8 +148,8 @@ class SettingsScreen extends ConsumerWidget {
                           // Morning digest
                           _SettingsToggle(
                             icon: Icons.wb_sunny_outlined,
-                            title: 'Morning Digest',
-                            subtitle: 'Daily summary at ${_formatTime(prefs.digestTime)}',
+                            title: context.l10n.morningDigest,
+                            subtitle: context.l10n.morningDigestSubtitle(_formatTime(prefs.digestTime)),
                             value: prefs.morningDigestEnabled,
                             onChanged:
                                 prefsNotifier.toggleMorningDigest,
@@ -185,8 +187,8 @@ class SettingsScreen extends ConsumerWidget {
                           // Renewal reminders
                           _SettingsToggle(
                             icon: Icons.event_repeat_outlined,
-                            title: 'Renewal Reminders',
-                            subtitle: _reminderSubtitle(prefs),
+                            title: context.l10n.renewalReminders,
+                            subtitle: _reminderSubtitle(context, prefs),
                             value: prefs.renewalRemindersEnabled,
                             onChanged:
                                 prefsNotifier.toggleRenewalReminders,
@@ -197,9 +199,9 @@ class SettingsScreen extends ConsumerWidget {
                           // Trial alerts
                           _SettingsToggle(
                             icon: Icons.timer_outlined,
-                            title: 'Trial Expiry Alerts',
+                            title: context.l10n.trialExpiryAlerts,
                             subtitle:
-                                'Warns at 3 days, 1 day, and day-of',
+                                context.l10n.trialExpirySubtitle,
                             value: prefs.trialAlertsEnabled,
                             onChanged:
                                 prefsNotifier.toggleTrialAlerts,
@@ -222,7 +224,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'REMINDER SCHEDULE',
+                        context.l10n.sectionReminderSchedule,
                         style: ChompdTypography.sectionLabel.copyWith(
                           color: ChompdColors.purple,
                         ),
@@ -248,7 +250,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'UPCOMING',
+                        context.l10n.sectionUpcoming,
                         style: ChompdTypography.sectionLabel.copyWith(
                           color: ChompdColors.blue,
                         ),
@@ -272,7 +274,7 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'CHOMPD PRO',
+                          context.l10n.sectionChompdPro,
                           style: ChompdTypography.sectionLabel.copyWith(
                             color: ChompdColors.mint,
                           ),
@@ -329,9 +331,9 @@ class SettingsScreen extends ConsumerWidget {
                                 crossAxisAlignment:
                                     CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Unlock Chompd Pro',
-                                    style: TextStyle(
+                                  Text(
+                                    context.l10n.unlockChompdPro,
+                                    style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
                                       color: ChompdColors.text,
@@ -371,7 +373,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'CURRENCY',
+                        context.l10n.sectionCurrency,
                         style: ChompdTypography.sectionLabel.copyWith(
                           color: ChompdColors.mint,
                         ),
@@ -384,6 +386,27 @@ class SettingsScreen extends ConsumerWidget {
 
                   const SizedBox(height: 28),
 
+                  // ─── Language ───
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.language_outlined,
+                        size: 16,
+                        color: ChompdColors.mint,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        context.l10n.sectionLanguage,
+                        style: ChompdTypography.sectionLabel.copyWith(
+                          color: ChompdColors.mint,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _LanguageSetting(ref: ref),
+                  const SizedBox(height: 28),
+
                   // ─── Monthly Budget ───
                   Row(
                     children: [
@@ -394,7 +417,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'MONTHLY BUDGET',
+                        context.l10n.sectionMonthlyBudget,
                         style: ChompdTypography.sectionLabel.copyWith(
                           color: ChompdColors.mint,
                         ),
@@ -417,7 +440,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'HAPTIC FEEDBACK',
+                        context.l10n.sectionHapticFeedback,
                         style: ChompdTypography.sectionLabel.copyWith(
                           color: ChompdColors.blue,
                         ),
@@ -428,8 +451,8 @@ class SettingsScreen extends ConsumerWidget {
 
                   _SettingsToggle(
                     icon: Icons.vibration_outlined,
-                    title: 'Haptic Feedback',
-                    subtitle: 'Vibrations on taps, toggles, and celebrations',
+                    title: context.l10n.hapticFeedback,
+                    subtitle: context.l10n.hapticSubtitle,
                     value: HapticService.instance.enabled,
                     onChanged: (val) {
                       HapticService.instance.setEnabled(val);
@@ -452,7 +475,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'DATA EXPORT',
+                        context.l10n.sectionDataExport,
                         style: ChompdTypography.sectionLabel.copyWith(
                           color: ChompdColors.purple,
                         ),
@@ -475,7 +498,7 @@ class SettingsScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'ABOUT',
+                        context.l10n.sectionAbout,
                         style: ChompdTypography.sectionLabel,
                       ),
                     ],
@@ -483,7 +506,7 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   _InfoRow(
-                    label: 'Version',
+                    label: context.l10n.version,
                     value: ref.watch(_versionProvider).when(
                       data: (v) => v,
                       loading: () => '...',
@@ -492,16 +515,16 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                   _InfoRow(
-                    label: 'Tier',
-                    value: prefs.isPro ? 'Pro' : 'Free',
+                    label: context.l10n.tier,
+                    value: prefs.isPro ? context.l10n.pro : context.l10n.free,
                     valueColor: prefs.isPro
                         ? ChompdColors.mint
                         : ChompdColors.textDim,
                   ),
                   const SizedBox(height: 6),
                   _InfoRow(
-                    label: 'AI Model',
-                    value: 'Claude Haiku 4.5',
+                    label: context.l10n.aiModel,
+                    value: context.l10n.aiModelValue,
                   ),
 
                   SizedBox(
@@ -524,17 +547,17 @@ class SettingsScreen extends ConsumerWidget {
     return '$hour:$minute $period';
   }
 
-  String _reminderSubtitle(NotificationPreferences prefs) {
+  String _reminderSubtitle(BuildContext context, NotificationPreferences prefs) {
     final days = prefs.activeReminderDays;
     if (days.length == 1 && days.first == 0) {
-      return 'Morning-of only (upgrade for more)';
+      return context.l10n.reminderSubtitleMorningOnly;
     }
     final labels = days.map((d) {
-      if (d == 0) return 'day-of';
-      if (d == 1) return '1 day';
-      return '$d days';
+      if (d == 0) return context.l10n.dayOf;
+      if (d == 1) return context.l10n.oneDay;
+      return context.l10n.nDays(d);
     }).toList();
-    return labels.join(', ') + ' before renewal';
+    return context.l10n.reminderSubtitleDays(labels.join(', '));
   }
 
   Future<void> _pickDigestTime(
@@ -712,7 +735,7 @@ class _ReminderScheduleCard extends StatelessWidget {
             children: [
               _TimelineDot(
                 day: 7,
-                label: '7d',
+                label: context.l10n.timelineLabel7d,
                 isActive: activeReminderDays.contains(7),
                 isPro: true,
               ),
@@ -721,7 +744,7 @@ class _ReminderScheduleCard extends StatelessWidget {
               ),
               _TimelineDot(
                 day: 3,
-                label: '3d',
+                label: context.l10n.timelineLabel3d,
                 isActive: activeReminderDays.contains(3),
                 isPro: true,
               ),
@@ -730,7 +753,7 @@ class _ReminderScheduleCard extends StatelessWidget {
               ),
               _TimelineDot(
                 day: 1,
-                label: '1d',
+                label: context.l10n.timelineLabel1d,
                 isActive: activeReminderDays.contains(1),
                 isPro: true,
               ),
@@ -739,7 +762,7 @@ class _ReminderScheduleCard extends StatelessWidget {
               ),
               _TimelineDot(
                 day: 0,
-                label: 'Day of',
+                label: context.l10n.timelineLabelDayOf,
                 isActive: activeReminderDays.contains(0),
                 isPro: false,
               ),
@@ -765,24 +788,24 @@ class _ReminderScheduleCard extends StatelessWidget {
                     color: ChompdColors.purple.withValues(alpha: 0.2),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.lock_outline_rounded,
                       size: 14,
                       color: ChompdColors.purple,
                     ),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'Upgrade to Pro for 7d, 3d, and 1d reminders',
-                        style: TextStyle(
+                        context.l10n.upgradeProReminders,
+                        style: const TextStyle(
                           fontSize: 11,
                           color: ChompdColors.purple,
                         ),
                       ),
                     ),
-                    Icon(
+                    const Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 10,
                       color: ChompdColors.purple,
@@ -899,10 +922,10 @@ class _UpcomingNotificationsCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: ChompdColors.border),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
-            'No upcoming notifications',
-            style: TextStyle(
+            context.l10n.noUpcomingNotifications,
+            style: const TextStyle(
               fontSize: 12,
               color: ChompdColors.textDim,
             ),
@@ -1069,9 +1092,9 @@ class _ExportButtonState extends State<_ExportButton> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Export to CSV',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.exportToCsv,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: ChompdColors.text,
@@ -1081,7 +1104,7 @@ class _ExportButtonState extends State<_ExportButton> {
                   Text(
                     _lastPath != null
                         ? 'Saved successfully'
-                        : 'Download all your subscriptions as a spreadsheet',
+                        : context.l10n.exportHint,
                     style: TextStyle(
                       fontSize: 10.5,
                       color: _lastPath != null
@@ -1122,7 +1145,7 @@ class _ExportButtonState extends State<_ExportButton> {
           SnackBar(
             backgroundColor: ChompdColors.bgElevated,
             content: Text(
-              'Exported ${allSubs.length} subscriptions to CSV',
+              context.l10n.exportSuccess(allSubs.length),
               style: const TextStyle(
                 color: ChompdColors.text,
                 fontSize: 12,
@@ -1142,7 +1165,7 @@ class _ExportButtonState extends State<_ExportButton> {
           SnackBar(
             backgroundColor: ChompdColors.red.withValues(alpha: 0.9),
             content: Text(
-              'Export failed: $e',
+              context.l10n.exportFailed(e.toString()),
               style: const TextStyle(color: Colors.white, fontSize: 12),
             ),
             behavior: SnackBarBehavior.floating,
@@ -1190,18 +1213,18 @@ class _BudgetSetting extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Monthly Spending Target',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.monthlySpendingTarget,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.text,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    const Text(
-                      'Used for the spending ring on your dashboard',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.budgetHint,
+                      style: const TextStyle(
                         fontSize: 10.5,
                         color: ChompdColors.textDim,
                       ),
@@ -1306,18 +1329,18 @@ class _BudgetSetting extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Set Monthly Budget',
-                style: TextStyle(
+              Text(
+                context.l10n.setBudgetTitle,
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: ChompdColors.text,
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Enter your target monthly subscription spend.',
-                style: TextStyle(
+              Text(
+                context.l10n.setBudgetSubtitle,
+                style: const TextStyle(
                   fontSize: 12,
                   color: ChompdColors.textDim,
                 ),
@@ -1373,9 +1396,9 @@ class _BudgetSetting extends StatelessWidget {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(ctx).pop(),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: ChompdColors.textDim),
+                    child: Text(
+                      context.l10n.cancel,
+                      style: const TextStyle(color: ChompdColors.textDim),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1397,9 +1420,9 @@ class _BudgetSetting extends StatelessWidget {
                         color: ChompdColors.mint,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Text(
-                        'Save',
-                        style: TextStyle(
+                      child: Text(
+                        context.l10n.save,
+                        style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
                           color: ChompdColors.bg,
@@ -1488,6 +1511,55 @@ class _CurrencySetting extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Language selector — horizontal wrapping chips.
+class _LanguageSetting extends StatelessWidget {
+  final WidgetRef ref;
+  const _LanguageSetting({required this.ref});
+
+  @override
+  Widget build(BuildContext context) {
+    final currentLocale = ref.watch(localeProvider);
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: supportedLanguages.map((lang) {
+        final code = lang['code']!;
+        final isSelected = currentLocale.languageCode == code;
+        return GestureDetector(
+          onTap: () {
+            HapticService.instance.selection();
+            ref.read(localeProvider.notifier).setLocale(Locale(code));
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? ChompdColors.mint.withValues(alpha: 0.12)
+                  : ChompdColors.bgElevated,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected
+                    ? ChompdColors.mint.withValues(alpha: 0.4)
+                    : ChompdColors.border,
+              ),
+            ),
+            child: Text(
+              lang['native']!,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                color: isSelected ? ChompdColors.mint : ChompdColors.textMid,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

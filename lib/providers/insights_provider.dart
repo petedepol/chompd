@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/generated/app_localizations.dart';
 import '../models/subscription.dart';
 import '../services/exchange_rate_service.dart';
 import 'currency_provider.dart';
+import 'locale_provider.dart';
 import 'subscriptions_provider.dart';
 
 /// An insight is a piece of smart financial advice derived from the user's data.
@@ -32,6 +34,8 @@ enum InsightType { saving, warning, info, celebration }
 final insightsProvider = Provider<List<Insight>>((ref) {
   final subs = ref.watch(subscriptionsProvider);
   final currency = ref.watch(currencyProvider);
+  final locale = ref.watch(localeProvider);
+  final l = lookupS(locale);
   final fx = ExchangeRateService.instance;
   final active = subs.where((s) => s.isActive).toList();
   final cancelled = subs.where((s) => !s.isActive).toList();
@@ -47,9 +51,11 @@ final insightsProvider = Provider<List<Insight>>((ref) {
   if (priciestYearly > fx.convert(100, 'GBP', currency)) {
     insights.add(Insight(
       emoji: '\uD83D\uDCB8',
-      headline: 'Big spender',
-      message:
-          '${priciest.name} costs you **${Subscription.formatPrice(priciestYearly, currency, decimals: 0)}/year**. That\u2019s your most expensive subscription.',
+      headline: l.insightBigSpenderHeadline,
+      message: l.insightBigSpenderMessage(
+        priciest.name,
+        Subscription.formatPrice(priciestYearly, currency, decimals: 0),
+      ),
       type: InsightType.warning,
     ));
   }
@@ -65,9 +71,11 @@ final insightsProvider = Provider<List<Insight>>((ref) {
         monthlySubs.fold(0.0, (sum, s) => sum + (s.yearlyEquivalentIn(currency) * 0.17));
     insights.add(Insight(
       emoji: '\uD83D\uDCA1',
-      headline: 'Annual savings',
-      message:
-          'Switching **${monthlySubs.length} subscriptions** to annual billing could save ~**${Subscription.formatPrice(potentialSaving, currency, decimals: 0)}/year**.',
+      headline: l.insightAnnualSavingsHeadline,
+      message: l.insightAnnualSavingsMessage(
+        monthlySubs.length,
+        Subscription.formatPrice(potentialSaving, currency, decimals: 0),
+      ),
       type: InsightType.saving,
     ));
   }
@@ -76,9 +84,8 @@ final insightsProvider = Provider<List<Insight>>((ref) {
   if (active.length >= 8) {
     insights.add(Insight(
       emoji: '\uD83D\uDE32',
-      headline: 'Reality check',
-      message:
-          'You have **${active.length} active subscriptions**. The average person has 12 \u2014 are you using them all?',
+      headline: l.insightRealityCheckHeadline,
+      message: l.insightRealityCheckMessage(active.length),
       type: InsightType.info,
     ));
   }
@@ -94,9 +101,11 @@ final insightsProvider = Provider<List<Insight>>((ref) {
     if (monthsSaved > 0) {
       insights.add(Insight(
         emoji: '\uD83C\uDF89',
-        headline: 'Money saved',
-        message:
-            'You\u2019ve saved **${Subscription.formatPrice(monthsSaved, currency, decimals: 0)}** since cancelling **${cancelled.length} subscription${cancelled.length == 1 ? '' : 's'}**. Nice one!',
+        headline: l.insightMoneySavedHeadline,
+        message: l.insightMoneySavedMessage(
+          Subscription.formatPrice(monthsSaved, currency, decimals: 0),
+          cancelled.length,
+        ),
         type: InsightType.celebration,
       ));
     }
@@ -110,9 +119,8 @@ final insightsProvider = Provider<List<Insight>>((ref) {
     final names = expiringTrials.map((s) => s.name).join(', ');
     insights.add(Insight(
       emoji: '\u23F0',
-      headline: 'Trial ending',
-      message:
-          '**$names** trial${expiringTrials.length > 1 ? 's' : ''} ending soon. Cancel now or you\u2019ll be charged.',
+      headline: l.insightTrialEndingHeadline,
+      message: l.insightTrialEndingMessage(names, expiringTrials.length),
       type: InsightType.warning,
     ));
   }
@@ -123,9 +131,10 @@ final insightsProvider = Provider<List<Insight>>((ref) {
   if (dailyCost > fx.convert(5, 'GBP', currency)) {
     insights.add(Insight(
       emoji: '\u2615',
-      headline: 'Daily cost',
-      message:
-          'Your subscriptions cost **${Subscription.formatPrice(dailyCost, currency)}/day** \u2014 that\u2019s a fancy coffee, every single day.',
+      headline: l.insightDailyCostHeadline,
+      message: l.insightDailyCostMessage(
+        Subscription.formatPrice(dailyCost, currency),
+      ),
       type: InsightType.info,
     ));
   }

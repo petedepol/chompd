@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../models/scan_result.dart';
 import '../models/subscription.dart';
+import '../utils/l10n_extension.dart';
 
 /// Toast notification overlay for scan confirmations.
 ///
@@ -175,9 +176,9 @@ class _ScanToastState extends State<ScanToast>
                               color: ChompdColors.amberGlow,
                               borderRadius: BorderRadius.circular(4),
                             ),
-                            child: const Text(
-                              'TRIAL',
-                              style: TextStyle(
+                            child: Text(
+                              context.l10n.trialLabel,
+                              style: const TextStyle(
                                 fontSize: 8,
                                 fontWeight: FontWeight.w700,
                                 color: ChompdColors.amber,

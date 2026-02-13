@@ -7,6 +7,7 @@ import '../../models/cancel_guide.dart';
 import '../../models/subscription.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/l10n_extension.dart';
 import '../../widgets/cancel_celebration.dart';
 import '../refund/refund_rescue_screen.dart';
 
@@ -84,25 +85,25 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
             ),
             const SizedBox(height: 16),
 
-            const Text(
-              'Why are you cancelling?',
-              style: TextStyle(
+            Text(
+              context.l10n.whyCancelling,
+              style: const TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: ChompdColors.text,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
-              'Quick tap \u2014 helps us improve Chompd.',
-              style: TextStyle(
+            Text(
+              context.l10n.whyCancellingHint,
+              style: const TextStyle(
                 fontSize: 12,
                 color: ChompdColors.textDim,
               ),
             ),
             const SizedBox(height: 16),
 
-            ..._cancelReasons.map((reason) => Padding(
+            ..._cancelReasons(context).map((reason) => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: GestureDetector(
                     onTap: () {
@@ -154,11 +155,11 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                   Navigator.of(ctx).pop();
                   _completeCancellation(null);
                 },
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
-                    'Skip',
-                    style: TextStyle(
+                    context.l10n.skip,
+                    style: const TextStyle(
                       fontSize: 12,
                       color: ChompdColors.textDim,
                     ),
@@ -196,12 +197,12 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
     }
   }
 
-  static const _cancelReasons = [
-    _CancelReason('\uD83D\uDCB8', 'Too expensive'),
-    _CancelReason('\uD83D\uDE34', 'Don\u2019t use it enough'),
-    _CancelReason('\u23F8\uFE0F', 'Taking a break'),
-    _CancelReason('\uD83D\uDD04', 'Switching to something else'),
-    _CancelReason('\uD83E\uDD37', 'Other'),
+  List<_CancelReason> _cancelReasons(BuildContext context) => [
+    _CancelReason('\uD83D\uDCB8', context.l10n.reasonTooExpensive),
+    _CancelReason('\uD83D\uDE34', context.l10n.reasonDontUse),
+    _CancelReason('\u23F8\uFE0F', context.l10n.reasonBreak),
+    _CancelReason('\uD83D\uDD04', context.l10n.reasonSwitching),
+    _CancelReason('\uD83E\uDD37', context.l10n.other),
   ];
 
   void _handleOpenCancelPage() {
@@ -234,8 +235,8 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Cancel ${widget.subscription.name}',
-          style: TextStyle(
+          context.l10n.cancelGuideTitle(widget.subscription.name),
+          style: const TextStyle(
             color: ChompdColors.text,
             fontSize: 18,
             fontWeight: FontWeight.w600,
@@ -299,8 +300,8 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Difficulty Level',
-            style: TextStyle(
+            context.l10n.difficultyLevel,
+            style: const TextStyle(
               color: ChompdColors.textDim,
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -348,7 +349,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Cancellation Steps',
+          context.l10n.cancellationSteps,
           style: ChompdTypography.sectionLabel.copyWith(
             color: ChompdColors.text,
           ),
@@ -413,7 +414,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'STEP ${index + 1}',
+                  context.l10n.stepNumber(index + 1),
                   style: ChompdTypography.mono(
                     size: 11,
                     color: ChompdColors.textDim,
@@ -486,9 +487,9 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
           ),
           elevation: 0,
         ),
-        child: const Text(
-          'Open Cancel Page',
-          style: TextStyle(
+        child: Text(
+          context.l10n.openCancelPage,
+          style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
@@ -513,9 +514,9 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
             borderRadius: BorderRadius.circular(10),
           ),
         ),
-        child: const Text(
-          "I've Cancelled",
-          style: TextStyle(
+        child: Text(
+          context.l10n.iveCancelled,
+          style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
           ),
@@ -528,7 +529,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
     return GestureDetector(
       onTap: _navigateToRefundRescue,
       child: Text(
-        'Couldn\'t cancel? Get Refund Help →',
+        context.l10n.couldntCancelRefund,
         style: TextStyle(
           color: ChompdColors.mint,
           fontSize: 14,

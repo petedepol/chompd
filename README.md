@@ -21,6 +21,14 @@ For AI scan functionality, pass your Anthropic API key at build time:
 flutter run --dart-define=ANTHROPIC_API_KEY=your_key_here
 ```
 
+### Testing on physical device
+
+```bash
+flutter run -d <device-id> --dart-define=ANTHROPIC_API_KEY=your_key_here
+```
+
+> **Note:** Ensure your terminal has **Local Network** access in macOS System Settings > Privacy & Security > Local Network for device deployment.
+
 ## Tech Stack
 
 | Layer | Choice |

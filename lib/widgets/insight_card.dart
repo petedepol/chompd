@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../config/theme.dart';
 import '../providers/insights_provider.dart';
 import '../services/haptic_service.dart';
+import '../utils/l10n_extension.dart';
 
 /// Bevel-style conversational insight card.
 ///
@@ -117,7 +118,7 @@ class _InsightCardState extends State<InsightCard> {
                   ),
                   const Spacer(),
                   Text(
-                    'tap for more',
+                    context.l10n.tapForMore,
                     style: TextStyle(
                       fontSize: 9,
                       color: ChompdColors.textDim.withValues(alpha: 0.7),

@@ -11,6 +11,7 @@ import '../providers/subscriptions_provider.dart';
 import '../screens/detail/add_edit_screen.dart';
 import '../screens/paywall/paywall_screen.dart';
 import '../services/haptic_service.dart';
+import '../utils/l10n_extension.dart';
 
 /// Pre-loaded popular service templates for quick-add.
 class ServiceTemplate {
@@ -79,13 +80,14 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
   // Edit panel state
   ServiceTemplate? _selectedTemplate;
   late TextEditingController _priceCtrl;
-  String _editCurrency = 'GBP';
+  late String _editCurrency;
   BillingCycle _editCycle = BillingCycle.monthly;
 
   @override
   void initState() {
     super.initState();
     _priceCtrl = TextEditingController();
+    _editCurrency = ref.read(currencyProvider);
   }
 
   @override
@@ -113,7 +115,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
       } else {
         _selectedTemplate = tpl;
         _priceCtrl.text = tpl.price.toStringAsFixed(2);
-        _editCurrency = tpl.currency;
+        _editCurrency = ref.read(currencyProvider);
         _editCycle = tpl.cycle;
       }
     });
@@ -136,6 +138,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Use viewInsets to shrink the sheet when keyboard opens,
+    // instead of adding padding that causes overflow.
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return ClipRRect(
@@ -144,9 +148,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
         filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
         child: Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.85,
+        maxHeight: MediaQuery.of(context).size.height * 0.85 - bottomInset,
       ),
-      padding: EdgeInsets.only(bottom: bottomInset),
       decoration: BoxDecoration(
         color: ChompdColors.bgElevated.withValues(alpha: 0.85),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -172,10 +175,10 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Add Subscription',
-                    style: TextStyle(
+                    context.l10n.addSubscriptionSheet,
+                    style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: ChompdColors.text,
@@ -217,14 +220,14 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                     colors: [ChompdColors.mintDark, ChompdColors.mint],
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.edit_outlined, size: 16, color: ChompdColors.bg),
-                    SizedBox(width: 8),
+                    const Icon(Icons.edit_outlined, size: 16, color: ChompdColors.bg),
+                    const SizedBox(width: 8),
                     Text(
-                      'Add Manually',
-                      style: TextStyle(
+                      context.l10n.addManually,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: ChompdColors.bg,
@@ -247,8 +250,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
-                    'or choose a service',
-                    style: TextStyle(
+                    context.l10n.orChooseService,
+                    style: const TextStyle(
                       fontSize: 10,
                       color: ChompdColors.textDim,
                     ),
@@ -268,7 +271,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
               onChanged: _onSearchChanged,
               style: const TextStyle(fontSize: 13, color: ChompdColors.text),
               decoration: InputDecoration(
-                hintText: 'Search services...',
+                hintText: context.l10n.searchServices,
                 hintStyle: const TextStyle(color: ChompdColors.textDim),
                 prefixIcon: const Icon(
                   Icons.search_rounded,
@@ -312,8 +315,14 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
             ),
           ),
 
-          // Edit panel (animated)
-          _buildEditPanel(),
+          // Edit panel (animated) — inside a scrollable wrapper
+          // so the keyboard doesn't cause overflow
+          Flexible(
+            flex: 0,
+            child: SingleChildScrollView(
+              child: _buildEditPanel(),
+            ),
+          ),
         ],
       ),
     ),
@@ -389,7 +398,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
 
 // ─── Edit Panel ───
 
-class _EditPanelContent extends StatelessWidget {
+class _EditPanelContent extends StatefulWidget {
   final ServiceTemplate template;
   final TextEditingController priceCtrl;
   final String currency;
@@ -410,14 +419,36 @@ class _EditPanelContent extends StatelessWidget {
     required this.onAdd,
   });
 
+  @override
+  State<_EditPanelContent> createState() => _EditPanelContentState();
+}
+
+class _EditPanelContentState extends State<_EditPanelContent> {
+  final FocusNode _priceFocus = FocusNode();
+  bool _priceHasFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _priceFocus.addListener(() {
+      if (mounted) setState(() => _priceHasFocus = _priceFocus.hasFocus);
+    });
+  }
+
+  @override
+  void dispose() {
+    _priceFocus.dispose();
+    super.dispose();
+  }
+
   Color get _brandColor {
-    final hex = template.brandColor.replaceFirst('#', '');
+    final hex = widget.template.brandColor.replaceFirst('#', '');
     return Color(int.parse('FF$hex', radix: 16));
   }
 
   @override
   Widget build(BuildContext context) {
-    final isValid = (double.tryParse(priceCtrl.text) ?? 0) > 0;
+    final isValid = (double.tryParse(widget.priceCtrl.text) ?? 0) > 0;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(20, 4, 20, 16),
@@ -447,7 +478,7 @@ class _EditPanelContent extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  template.icon,
+                  widget.template.icon,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -461,7 +492,7 @@ class _EditPanelContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      template.name,
+                      widget.template.name,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -469,7 +500,7 @@ class _EditPanelContent extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      template.category,
+                      widget.template.category,
                       style: const TextStyle(
                         fontSize: 10,
                         color: ChompdColors.textDim,
@@ -479,7 +510,7 @@ class _EditPanelContent extends StatelessWidget {
                 ),
               ),
               GestureDetector(
-                onTap: onDismiss,
+                onTap: widget.onDismiss,
                 child: const Icon(
                   Icons.close_rounded,
                   size: 18,
@@ -498,17 +529,26 @@ class _EditPanelContent extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: TextField(
-                  controller: priceCtrl,
+                  controller: widget.priceCtrl,
+                  focusNode: _priceFocus,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (_) => setState(() {}),
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d.]')),
+                    // Allow digits, dots, and commas (European decimal)
+                    FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
+                    // Replace commas with dots so parsing works
+                    TextInputFormatter.withFunction((oldValue, newValue) {
+                      return newValue.copyWith(
+                        text: newValue.text.replaceAll(',', '.'),
+                      );
+                    }),
                   ],
                   style: ChompdTypography.mono(
                     size: 14,
                     weight: FontWeight.w700,
                   ),
                   decoration: InputDecoration(
-                    labelText: 'Price',
+                    labelText: context.l10n.priceField,
                     labelStyle: const TextStyle(
                       fontSize: 11,
                       color: ChompdColors.textDim,
@@ -518,6 +558,37 @@ class _EditPanelContent extends StatelessWidget {
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 10,
+                    ),
+                    // Tick button to confirm price & dismiss keyboard
+                    suffixIcon: _priceHasFocus
+                        ? GestureDetector(
+                            onTap: () {
+                              _priceFocus.unfocus();
+                              HapticService.instance.light();
+                            },
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              margin: const EdgeInsets.only(right: 4),
+                              decoration: BoxDecoration(
+                                color: isValid
+                                    ? ChompdColors.mint.withValues(alpha: 0.15)
+                                    : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Icon(
+                                Icons.check_rounded,
+                                size: 18,
+                                color: isValid
+                                    ? ChompdColors.mint
+                                    : ChompdColors.textDim,
+                              ),
+                            ),
+                          )
+                        : null,
+                    suffixIconConstraints: const BoxConstraints(
+                      minWidth: 36,
+                      minHeight: 32,
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
@@ -548,7 +619,7 @@ class _EditPanelContent extends StatelessWidget {
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
-                      value: currency,
+                      value: widget.currency,
                       isExpanded: true,
                       dropdownColor: ChompdColors.bgElevated,
                       style: ChompdTypography.mono(
@@ -573,7 +644,7 @@ class _EditPanelContent extends StatelessWidget {
                               ))
                           .toList(),
                       onChanged: (v) {
-                        if (v != null) onCurrencyChanged(v);
+                        if (v != null) widget.onCurrencyChanged(v);
                       },
                     ),
                   ),
@@ -587,10 +658,10 @@ class _EditPanelContent extends StatelessWidget {
           // Billing cycle chips
           Row(
             children: BillingCycle.values.map((c) {
-              final isSelected = c == cycle;
+              final isSelected = c == widget.cycle;
               return Expanded(
                 child: GestureDetector(
-                  onTap: () => onCycleChanged(c),
+                  onTap: () => widget.onCycleChanged(c),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     margin: EdgeInsets.only(
@@ -627,7 +698,7 @@ class _EditPanelContent extends StatelessWidget {
 
           // Add button
           GestureDetector(
-            onTap: isValid ? onAdd : null,
+            onTap: isValid ? widget.onAdd : null,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 150),
               width: double.infinity,
@@ -643,7 +714,7 @@ class _EditPanelContent extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Text(
-                'Add ${template.name}',
+                context.l10n.addServiceName(widget.template.name),
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,

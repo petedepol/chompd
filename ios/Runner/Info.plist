@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Subsnap</string>
+	<string>Chompd</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Chompd uses the camera to scan subscription screenshots, receipts, and confirmation emails.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Chompd needs access to your photo library to scan subscription screenshots.</string>
 </dict>
 </plist>

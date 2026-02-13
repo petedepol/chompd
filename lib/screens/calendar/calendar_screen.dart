@@ -8,6 +8,7 @@ import '../../providers/calendar_provider.dart';
 import '../../providers/currency_provider.dart';
 import '../../services/haptic_service.dart';
 import '../../utils/date_helpers.dart';
+import '../../utils/l10n_extension.dart';
 import '../detail/detail_screen.dart';
 
 /// Calendar view showing which days you get charged.
@@ -52,10 +53,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 children: [
                   _BackButton(onTap: () => Navigator.of(context).pop()),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'Renewal Calendar',
-                      style: TextStyle(
+                      context.l10n.renewalCalendar,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.text,
@@ -387,7 +388,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Text(
-                  'TODAY',
+                  context.l10n.today,
                   style: ChompdTypography.mono(
                     size: 9,
                     weight: FontWeight.w700,
@@ -427,9 +428,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   color: ChompdColors.mint.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'No renewals this day',
-                  style: TextStyle(
+                Text(
+                  context.l10n.noRenewalsThisDay,
+                  style: const TextStyle(
                     fontSize: 12,
                     color: ChompdColors.textDim,
                   ),
@@ -576,20 +577,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('THIS MONTH', style: ChompdTypography.sectionLabel),
+          Text(context.l10n.thisMonth, style: ChompdTypography.sectionLabel),
           const SizedBox(height: 14),
 
           // Stats row
           Row(
             children: [
               _StatPill(
-                label: 'Renewals',
+                label: context.l10n.renewals,
                 value: '$totalRenewals',
                 color: ChompdColors.mint,
               ),
               const SizedBox(width: 10),
               _StatPill(
-                label: 'Total',
+                label: context.l10n.total,
                 value: Subscription.formatPrice(totalSpend, _currencyCode),
                 color: ChompdColors.mint,
               ),
@@ -620,8 +621,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '${busiest.value.length} renewals on ${DateHelpers.shortDate(busiest.key)} '
-                      'totalling ${Subscription.formatPrice(busiest.value.fold(0.0, (s, sub) => s + sub.price), _currencyCode)}',
+                      context.l10n.renewalsOnDay(
+                        busiest.value.length,
+                        DateHelpers.shortDate(busiest.key),
+                        Subscription.formatPrice(busiest.value.fold(0.0, (s, sub) => s + sub.price), _currencyCode),
+                      ),
                       style: const TextStyle(
                         fontSize: 11,
                         color: ChompdColors.amber,
@@ -664,8 +668,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Biggest day: ${DateHelpers.shortDate(priciest.key)} '
-                      '\u2014 ${Subscription.formatPrice(priciestSpend, _currencyCode)}',
+                      context.l10n.biggestDay(
+                        DateHelpers.shortDate(priciest.key),
+                        Subscription.formatPrice(priciestSpend, _currencyCode),
+                      ),
                       style: TextStyle(
                         fontSize: 11,
                         color: priciestSpend >= 50
@@ -680,9 +686,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ],
 
           const SizedBox(height: 10),
-          const Text(
-            'Tap a day to see what renews',
-            style: TextStyle(
+          Text(
+            context.l10n.tapDayToSee,
+            style: const TextStyle(
               fontSize: 10,
               color: ChompdColors.textDim,
             ),

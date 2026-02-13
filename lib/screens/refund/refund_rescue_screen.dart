@@ -8,6 +8,7 @@ import '../../data/refund_paths_data.dart';
 import '../../models/refund_template.dart';
 import '../../models/subscription.dart';
 import '../../services/haptic_service.dart';
+import '../../utils/l10n_extension.dart';
 
 /// Refund Rescue screen — guides users through getting money back.
 ///
@@ -62,7 +63,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: const Text('Email copied to clipboard'),
+        content: Text(context.l10n.emailCopied),
         backgroundColor: ChompdColors.mint,
         duration: const Duration(milliseconds: 1500),
       ),
@@ -107,10 +108,10 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
               children: [
                 _BackButton(onTap: () => Navigator.of(context).pop()),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'Refund Rescue',
-                    style: TextStyle(
+                    context.l10n.refundRescue,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: ChompdColors.text,
@@ -137,10 +138,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   color: ChompdColors.purple.withValues(alpha: 0.25),
                 ),
               ),
-              child: const Text(
-                'Don\'t worry \u2014 most people get their money back. '
-                'Let\'s sort this.',
-                style: TextStyle(
+              child: Text(
+                context.l10n.refundIntro,
+                style: const TextStyle(
                   fontSize: 13,
                   color: ChompdColors.text,
                   height: 1.5,
@@ -158,8 +158,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              '${sub.name} charged you '
-              '${Subscription.formatPrice(sub.price, sub.currency)}',
+              context.l10n.chargedYou(sub.name, Subscription.formatPrice(sub.price, sub.currency)),
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -176,7 +175,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
-              'HOW WERE YOU CHARGED?',
+              context.l10n.howCharged,
               style: ChompdTypography.sectionLabel,
             ),
           ),
@@ -268,7 +267,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'Success: ${template.successRate}',
+                      context.l10n.successRate(template.successRate),
                       style: ChompdTypography.mono(
                         size: 11,
                         weight: FontWeight.w600,
@@ -327,9 +326,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                       borderRadius: BorderRadius.circular(14),
                     ),
                     alignment: Alignment.center,
-                    child: const Text(
-                      'Copy Dispute Email',
-                      style: TextStyle(
+                    child: Text(
+                      context.l10n.copyDisputeEmail,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         color: ChompdColors.bg,
@@ -370,9 +369,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Open Refund Page',
-                          style: TextStyle(
+                        Text(
+                          context.l10n.openRefundPage,
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: ChompdColors.mint,
@@ -408,9 +407,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                     border: Border.all(color: ChompdColors.border),
                   ),
                   alignment: Alignment.center,
-                  child: const Text(
-                    'I\'ve Submitted My Request',
-                    style: TextStyle(
+                  child: Text(
+                    context.l10n.iveSubmittedRequest,
+                    style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: ChompdColors.text,
@@ -455,9 +454,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Request Submitted!',
-              style: TextStyle(
+            Text(
+              context.l10n.requestSubmitted,
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: ChompdColors.text,
@@ -465,10 +464,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
-            const Text(
-              'We\'ve recorded your refund request. Keep an eye on '
-              'your email for updates.',
-              style: TextStyle(
+            Text(
+              context.l10n.requestSubmittedMessage,
+              style: const TextStyle(
                 fontSize: 13,
                 color: ChompdColors.textMid,
                 height: 1.5,
@@ -645,7 +643,7 @@ class _StepCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'STEP ${index + 1}',
+                    context.l10n.stepNumber(index + 1),
                     style: ChompdTypography.mono(
                       size: 9,
                       weight: FontWeight.w700,

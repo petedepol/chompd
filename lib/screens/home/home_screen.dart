@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/theme.dart';
+import '../../utils/l10n_extension.dart';
 import '../../models/subscription.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/insights_provider.dart';
@@ -53,6 +54,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _showConfetti = false;
+  final Set<String> _dismissedCards = {};
 
   void _showAddOptions(BuildContext context, WidgetRef ref) {
     HapticService.instance.selection();
@@ -103,10 +105,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _LimitBadge(label: 'Subs left', count: remainingSubs,
+                      _LimitBadge(label: ctx.l10n.subsLeft, count: remainingSubs,
                         color: canAdd ? ChompdColors.mint : ChompdColors.red),
                       Container(width: 1, height: 20, color: ChompdColors.border),
-                      _LimitBadge(label: 'Scans left', count: remainingScans,
+                      _LimitBadge(label: ctx.l10n.scansLeft, count: remainingScans,
                         color: canScan ? ChompdColors.purple : ChompdColors.red),
                     ],
                   ),
@@ -149,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Icon(canScan ? Icons.auto_awesome : Icons.lock_outline_rounded,
                       size: 16, color: Colors.white),
                     const SizedBox(width: 8),
-                    Text(canScan ? 'AI Scan Screenshot' : 'AI Scan (Upgrade to Pro)',
+                    Text(canScan ? ctx.l10n.aiScanScreenshot : ctx.l10n.aiScanUpgradeToPro,
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
                   ],
                 ),
@@ -185,7 +187,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     Icon(canAdd ? Icons.add_rounded : Icons.lock_outline_rounded,
                       size: 16, color: ChompdColors.bg),
                     const SizedBox(width: 8),
-                    Text(canAdd ? 'Quick Add / Manual' : 'Add Sub (Upgrade to Pro)',
+                    Text(canAdd ? ctx.l10n.quickAddManual : ctx.l10n.addSubUpgradeToPro,
                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ChompdColors.bg)),
                   ],
                 ),
@@ -257,7 +259,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            '${activeSubs.length} active \u00B7 ${cancelledSubs.length} cancelled',
+                            context.l10n.homeStatusLine(activeSubs.length, cancelledSubs.length),
                             style: const TextStyle(
                               fontSize: 11,
                               color: ChompdColors.textDim,
@@ -357,7 +359,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Ouch. That\u2019s a lot of chomping.',
+                                    context.l10n.overBudgetMood,
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: ChompdColors.red
@@ -381,7 +383,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Looking good! Well under budget.',
+                                    context.l10n.underBudgetMood,
                                     style: TextStyle(
                                       fontSize: 11,
                                       color: ChompdColors.mint
@@ -432,21 +434,58 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // ─── Smart Insights ───
               Builder(builder: (context) {
                 final insights = ref.watch(insightsProvider);
-                if (insights.isEmpty) {
+                if (insights.isEmpty || _dismissedCards.contains('insights')) {
                   return const SliverToBoxAdapter(child: SizedBox.shrink());
                 }
                 return SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: InsightCard(insights: insights),
+                    child: Dismissible(
+                      key: const ValueKey('insights_dismiss'),
+                      direction: DismissDirection.horizontal,
+                      onDismissed: (_) {
+                        HapticService.instance.light();
+                        setState(() => _dismissedCards.add('insights'));
+                      },
+                      background: Container(
+                        alignment: Alignment.centerLeft,
+                        padding: const EdgeInsets.only(left: 20),
+                        child: const Icon(Icons.close_rounded, color: ChompdColors.textDim, size: 20),
+                      ),
+                      secondaryBackground: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Icon(Icons.close_rounded, color: ChompdColors.textDim, size: 20),
+                      ),
+                      child: InsightCard(insights: insights),
+                    ),
                   ),
                 );
               }),
 
               // ─── Trap Stats Card (Saved from Traps) ───
-              const SliverToBoxAdapter(
-                child: TrapStatsCard(),
-              ),
+              if (!_dismissedCards.contains('trap_stats'))
+                SliverToBoxAdapter(
+                  child: Dismissible(
+                    key: const ValueKey('trap_stats_dismiss'),
+                    direction: DismissDirection.horizontal,
+                    onDismissed: (_) {
+                      HapticService.instance.light();
+                      setState(() => _dismissedCards.add('trap_stats'));
+                    },
+                    background: Container(
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: 20),
+                      child: const Icon(Icons.close_rounded, color: ChompdColors.textDim, size: 20),
+                    ),
+                    secondaryBackground: Container(
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20),
+                      child: const Icon(Icons.close_rounded, color: ChompdColors.textDim, size: 20),
+                    ),
+                    child: const TrapStatsCard(),
+                  ),
+                ),
 
               // ─── Category Bar ───
               if (activeSubs.isNotEmpty)
@@ -486,7 +525,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'ACTIVE SUBSCRIPTIONS',
+                        context.l10n.sectionActiveSubscriptions,
                         style: ChompdTypography.sectionLabel,
                       ),
                       Text(
@@ -555,7 +594,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     child: Row(
                       children: [
                         Text(
-                          'CANCELLED \u2014 MONEY SAVED',
+                          context.l10n.sectionCancelledSaved,
                           style: ChompdTypography.sectionLabel,
                         ),
                         const Spacer(),
@@ -602,7 +641,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 style: TextStyle(fontSize: 14),
                               ),
                               Text(
-                                'MILESTONES',
+                                context.l10n.sectionMilestones,
                                 style: ChompdTypography.sectionLabel.copyWith(
                                   color: ChompdColors.mint,
                                 ),
@@ -665,9 +704,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Delete Subscription?',
-                style: TextStyle(
+              Text(
+                ctx.l10n.deleteSubscriptionTitle,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
                   color: ChompdColors.text,
@@ -675,7 +714,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Remove ${sub.name} permanently?',
+                ctx.l10n.deleteSubscriptionMessage(sub.name),
                 style: const TextStyle(
                   fontSize: 13,
                   color: ChompdColors.textMid,
@@ -695,9 +734,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           border: Border.all(color: ChompdColors.border),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
-                          'Keep',
-                          style: TextStyle(
+                        child: Text(
+                          ctx.l10n.keep,
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: ChompdColors.textMid,
@@ -726,9 +765,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         alignment: Alignment.center,
-                        child: const Text(
-                          'Delete',
-                          style: TextStyle(
+                        child: Text(
+                          ctx.l10n.delete,
+                          style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                             color: ChompdColors.red,
@@ -781,7 +820,7 @@ class _TrialAlertBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${trials.length} trial${trials.length > 1 ? 's' : ''} expiring soon',
+                  context.l10n.trialsExpiringSoon(trials.length),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -791,7 +830,7 @@ class _TrialAlertBanner extends StatelessWidget {
                 if (urgentTrials.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
-                    '${urgentTrials.map((t) => t.name).join(', ')} \u2014 ${urgentTrials.first.trialDaysRemaining} days left',
+                    context.l10n.trialDaysLeft(urgentTrials.map((t) => t.name).join(', '), urgentTrials.first.trialDaysRemaining),
                     style: const TextStyle(
                       fontSize: 10.5,
                       color: ChompdColors.textDim,
@@ -875,8 +914,8 @@ class _CancelledCard extends StatelessWidget {
                   ),
                   Text(
                     _monthsSinceCancelled > 0
-                        ? 'Cancelled ${_monthsSinceCancelled}mo ago'
-                        : 'Just cancelled',
+                        ? context.l10n.cancelledMonthsAgo(_monthsSinceCancelled)
+                        : context.l10n.justCancelled,
                     style: const TextStyle(
                       fontSize: 10,
                       color: ChompdColors.textDim,
@@ -1163,7 +1202,7 @@ class _YearlyBurnBanner extends StatelessWidget {
           Row(
             children: [
               Text(
-                'YEARLY BURN',
+                context.l10n.sectionYearlyBurn,
                 style: ChompdTypography.sectionLabel.copyWith(
                   color: ChompdColors.purple,
                 ),
@@ -1189,18 +1228,18 @@ class _YearlyBurnBanner extends StatelessWidget {
                     color: ChompdColors.purple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Row(
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.share_outlined,
                         size: 12,
                         color: ChompdColors.purple,
                       ),
-                      SizedBox(width: 4),
+                      const SizedBox(width: 4),
                       Text(
-                        'Share',
-                        style: TextStyle(
+                        context.l10n.share,
+                        style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
                           color: ChompdColors.purple,
@@ -1227,7 +1266,7 @@ class _YearlyBurnBanner extends StatelessWidget {
 
           // Context line
           Text(
-            'per year across $subCount subscription${subCount == 1 ? '' : 's'}',
+            context.l10n.perYearAcrossSubs(subCount),
             style: const TextStyle(
               fontSize: 12,
               color: ChompdColors.textDim,
@@ -1239,12 +1278,12 @@ class _YearlyBurnBanner extends StatelessWidget {
           Row(
             children: [
               _BurnChip(
-                label: 'monthly avg',
+                label: context.l10n.monthlyAvg,
                 value: Subscription.formatPrice(monthlyAvg, currencyCode, decimals: 0),
               ),
               const SizedBox(width: 8),
               _BurnChip(
-                label: 'daily cost',
+                label: context.l10n.dailyCost,
                 value: Subscription.formatPrice(yearlyTotal / 365, currencyCode),
               ),
             ],
@@ -1321,7 +1360,7 @@ class _CompactSavings extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            'SAVED WITH CHOMPD',
+            context.l10n.sectionSavedWithChompd,
             style: ChompdTypography.sectionLabel.copyWith(
               color: ChompdColors.mint,
               fontSize: 9,
@@ -1340,7 +1379,7 @@ class _CompactSavings extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            'from $cancelledCount cancelled',
+            context.l10n.fromCancelled(cancelledCount),
             style: const TextStyle(
               fontSize: 11,
               color: ChompdColors.textDim,
