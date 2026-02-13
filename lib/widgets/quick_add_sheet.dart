@@ -82,6 +82,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
   late TextEditingController _priceCtrl;
   late String _editCurrency;
   BillingCycle _editCycle = BillingCycle.monthly;
+  final ScrollController _listScrollCtrl = ScrollController();
 
   @override
   void initState() {
@@ -93,6 +94,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
   @override
   void dispose() {
     _priceCtrl.dispose();
+    _listScrollCtrl.dispose();
     super.dispose();
   }
 
@@ -136,11 +138,32 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
     });
   }
 
+  /// Auto-scroll to the edit panel when keyboard opens.
+  void _scrollToEditPanel() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_listScrollCtrl.hasClients) {
+        _listScrollCtrl.animateTo(
+          _listScrollCtrl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     // Use viewInsets to shrink the sheet when keyboard opens,
     // instead of adding padding that causes overflow.
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final keyboardOpen = bottomInset > 50;
+    // When keyboard is open AND editing a template, collapse header to save space
+    final compactMode = keyboardOpen && _selectedTemplate != null;
+
+    // Auto-scroll to edit panel when keyboard appears
+    if (compactMode) {
+      _scrollToEditPanel();
+    }
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -197,111 +220,115 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          // Collapse header elements when keyboard is open + editing
+          if (!compactMode) ...[
+            const SizedBox(height: 16),
 
-          // Manual add button
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: GestureDetector(
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => const AddEditScreen(),
+            // Manual add button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const AddEditScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: const LinearGradient(
+                      colors: [ChompdColors.mintDark, ChompdColors.mint],
+                    ),
                   ),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(14),
-                  gradient: const LinearGradient(
-                    colors: [ChompdColors.mintDark, ChompdColors.mint],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.edit_outlined, size: 16, color: ChompdColors.bg),
+                      const SizedBox(width: 8),
+                      Text(
+                        context.l10n.addManually,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: ChompdColors.bg,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.edit_outlined, size: 16, color: ChompdColors.bg),
-                    const SizedBox(width: 8),
-                    Text(
-                      context.l10n.addManually,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Divider with "or choose a service"
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  const Expanded(child: Divider(color: ChompdColors.border)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      context.l10n.orChooseService,
                       style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: ChompdColors.bg,
+                        fontSize: 10,
+                        color: ChompdColors.textDim,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                  const Expanded(child: Divider(color: ChompdColors.border)),
+                ],
               ),
             ),
-          ),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 12),
 
-          // Divider with "or choose a service"
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                const Expanded(child: Divider(color: ChompdColors.border)),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    context.l10n.orChooseService,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: ChompdColors.textDim,
-                    ),
+            // Search
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: TextField(
+                onChanged: _onSearchChanged,
+                style: const TextStyle(fontSize: 13, color: ChompdColors.text),
+                decoration: InputDecoration(
+                  hintText: context.l10n.searchServices,
+                  hintStyle: const TextStyle(color: ChompdColors.textDim),
+                  prefixIcon: const Icon(
+                    Icons.search_rounded,
+                    size: 18,
+                    color: ChompdColors.textDim,
+                  ),
+                  filled: true,
+                  fillColor: ChompdColors.bgCard,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: ChompdColors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: ChompdColors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: ChompdColors.mint),
                   ),
                 ),
-                const Expanded(child: Divider(color: ChompdColors.border)),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Search
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: TextField(
-              onChanged: _onSearchChanged,
-              style: const TextStyle(fontSize: 13, color: ChompdColors.text),
-              decoration: InputDecoration(
-                hintText: context.l10n.searchServices,
-                hintStyle: const TextStyle(color: ChompdColors.textDim),
-                prefixIcon: const Icon(
-                  Icons.search_rounded,
-                  size: 18,
-                  color: ChompdColors.textDim,
-                ),
-                filled: true,
-                fillColor: ChompdColors.bgCard,
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: ChompdColors.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: ChompdColors.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: ChompdColors.mint),
-                ),
               ),
             ),
-          ),
+          ],
 
           const SizedBox(height: 12),
 
           // Service grid + edit panel in single scrollable area
           Expanded(
             child: ListView.builder(
+              controller: _listScrollCtrl,
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: _filtered.length + (_selectedTemplate != null ? 1 : 0),
               itemBuilder: (context, index) {
