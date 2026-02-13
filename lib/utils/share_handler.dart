@@ -94,7 +94,7 @@ class ShareHandler {
 
     // Increment scan counter and start the scan.
     cont.read(scanCounterProvider.notifier).increment();
-    cont.read(scanProvider.notifier).startScan(
+    cont.read(scanProvider.notifier).startTrapScan(
           imageBytes: bytes,
           mimeType: mimeType,
         );

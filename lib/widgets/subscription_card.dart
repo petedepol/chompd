@@ -217,16 +217,25 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        Subscription.formatPrice(subscription.price, subscription.currency),
-                        style: (subscription.isTrap == true)
-                            ? ChompdTypography.priceCard.copyWith(
-                                decoration: TextDecoration.lineThrough,
-                                color: ChompdColors.textDim,
-                                fontSize: 11,
-                              )
-                            : ChompdTypography.priceCard,
-                      ),
+                      // Zero price + not a trap = unknown price
+                      if (subscription.price == 0 && subscription.isTrap != true)
+                        Text(
+                          '\u2014',
+                          style: ChompdTypography.priceCard.copyWith(
+                            color: ChompdColors.textDim,
+                          ),
+                        )
+                      else
+                        Text(
+                          Subscription.formatPrice(subscription.price, subscription.currency),
+                          style: (subscription.isTrap == true)
+                              ? ChompdTypography.priceCard.copyWith(
+                                  decoration: TextDecoration.lineThrough,
+                                  color: ChompdColors.textDim,
+                                  fontSize: 11,
+                                )
+                              : ChompdTypography.priceCard,
+                        ),
                       if (subscription.isTrap == true &&
                           subscription.realPrice != null)
                         Text(

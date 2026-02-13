@@ -185,10 +185,13 @@ class AiScanService {
 
     if (decoded is List) {
       return decoded
+          .where((item) => item is Map<String, dynamic>)
           .map((item) => ScanOutput.fromJson(item as Map<String, dynamic>))
           .toList();
+    } else if (decoded is Map<String, dynamic>) {
+      return [ScanOutput.fromJson(decoded)];
     } else {
-      return [ScanOutput.fromJson(decoded as Map<String, dynamic>)];
+      throw Exception('Unexpected AI response format');
     }
   }
 
@@ -595,6 +598,21 @@ Bank and card transaction lists require extra attention:
 - Ignore one-off purchases (groceries, shops, restaurants, transfers)
 - If a transaction has a foreign currency conversion AND matches a known digital service, it is very likely a subscription
 
+HOW TO READ iOS SUBSCRIPTIONS SCREEN (Settings → Subscriptions):
+- "Expires on [date]" = trial or intro offer that will AUTO-RENEW at full price after that date
+  → set is_trial: true, trial_end_date: that date
+  → if no price is shown alongside "Expires on": flag is_trap: true, trap_type: "trial_bait",
+    severity: "medium", warning_message: "[Service] trial expires on [date] and will auto-renew at an unknown price. Cancel before then if you don't want to be charged."
+- "Renews [date]" WITH a visible price = active paid subscription (NOT a trial)
+- "(7 Day Trial)" or similar text in the plan name = trial period
+  → flag is_trap: true, trap_type: "trial_bait"
+
+DATE INFERENCE:
+- When a date has NO year (e.g. "18 April", "14 February"), assume the NEXT future occurrence from today's date.
+  Example: if today is February 2026 and the image says "Expires on 18 April", that means 18 April 2026, NOT 2024.
+- If a date with no year would be in the past for the current year, roll forward to next year.
+- Always return ISO format: "2026-04-18"
+
 IMPORTANT RULES:
 1. If a field is NOT visible in the image, set it to null. Do NOT guess or default to 0.
 2. For service_name: use the real product name. "Claude Pro" not "Anthropic". "ScreenPal" not "PayPro S.A."
@@ -693,13 +711,43 @@ HOW TO READ BANK STATEMENTS:
 - Common subscription merchants: Netflix, Spotify, YouTube, Apple, Google, Adobe, Microsoft, Amazon, Disney+, ChatGPT, Claude, Notion, Figma, Canva, ScreenPal, GitHub, Dropbox, iCloud, HBO, Hulu, Paramount+
 - IGNORE one-off purchases (groceries, shops, restaurants, transfers, physical stores)
 
+HOW TO READ iOS SUBSCRIPTIONS SCREEN (Settings → Subscriptions):
+- "Expires on [date]" = trial or intro offer that will AUTO-RENEW at full price after that date
+  → set is_trial: true, trial_end_date: that date
+  → if no price is shown alongside "Expires on": flag is_trap: true, trap_type: "trial_bait",
+    severity: "medium", warning_message: "[Service] trial expires on [date] and will auto-renew at an unknown price. Cancel before then if you don't want to be charged."
+- "Renews [date]" WITH a visible price = active paid subscription (NOT a trial)
+- "(7 Day Trial)" or similar text in the plan name = trial period
+  → flag is_trap: true, trap_type: "trial_bait"
+
+DATE INFERENCE:
+- When a date has NO year (e.g. "18 April", "14 February"), assume the NEXT future occurrence from today's date.
+  Example: if today is February 2026 and the image says "Expires on 18 April", that means 18 April 2026, NOT 2024.
+- If a date with no year would be in the past for the current year, roll forward to next year.
+- Always return ISO format: "2026-04-18"
+
 IMPORTANT RULES:
 1. If a field is NOT visible in the image, set it to null. Do NOT guess or default to 0.
 2. For service_name: use the real product name. "Claude Pro" not "Anthropic".
 3. Only include charges that are CLEARLY recurring subscriptions or digital services.
 4. Set confidence per field: 1.0 if clearly visible, 0.5 if inferred, 0.0 if not found.
 
-For each subscription, also perform TRAP DETECTION (trial_bait, price_framing, hidden_renewal).
+TRAP DETECTION — For each subscription, check these patterns:
+- trial_bait: Trial/intro price that auto-converts to a higher price. Flag when:
+  • "Expires on" date visible without a clear renewal price → user doesn't know what they'll pay
+  • Explicit "Trial" / "Free Trial" in plan name or description
+  • Intro price (e.g. £1) much lower than typical market price for that service
+- price_framing: Price shown in a misleading way (e.g. daily cost to hide monthly total)
+- hidden_renewal: Auto-renewal terms buried or not clearly stated
+
+Severity guide:
+- "high": Price jump >5x OR renewal price is completely hidden/unknown
+- "medium": Price increase 2-5x, or trial with unclear renewal terms
+- "low": Standard trial with visible and reasonable renewal price
+
+Set is_trap: true when ANY of these patterns are detected.
+ALWAYS set warning_message to a clear, direct sentence when is_trap is true, like:
+"This £1 trial auto-renews at £99.99/year in 3 days — cancel before then to avoid being charged."
 
 RESPOND WITH A JSON ARRAY (no markdown, no backticks):
 [

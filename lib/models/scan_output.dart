@@ -17,9 +17,10 @@ class ScanOutput {
   /// Parse from Claude Haiku JSON response containing both keys.
   factory ScanOutput.fromJson(Map<String, dynamic> json) {
     return ScanOutput(
-      subscription:
-          ScanResult.fromJson(json['subscription'] as Map<String, dynamic>),
-      trap: json['trap'] != null
+      subscription: json['subscription'] is Map<String, dynamic>
+          ? ScanResult.fromJson(json['subscription'] as Map<String, dynamic>)
+          : ScanResult.fromJson(json), // Fallback: treat the whole json as subscription
+      trap: json['trap'] is Map<String, dynamic>
           ? TrapResult.fromJson(json['trap'] as Map<String, dynamic>)
           : TrapResult.clean,
     );

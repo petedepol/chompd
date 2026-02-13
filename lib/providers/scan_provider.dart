@@ -35,6 +35,9 @@ enum ScanPhase {
 
   /// User skipped a trap — showing celebration + savings amount.
   trapSkipped,
+
+  /// Multi-subscription review — presenting subs one by one.
+  multiReview,
 }
 
 // ─── Chat Message Types ───
@@ -61,6 +64,9 @@ enum ChatMessageType {
 
   /// Multiple results (bank statement with several charges).
   multiResult,
+
+  /// Single item in a one-by-one multi-review flow.
+  multiReview,
 }
 
 /// Question interaction type.
@@ -85,6 +91,11 @@ class ChatMessage {
   final String? selectedAnswer;
   final bool isAnswered;
 
+  // Multi-review fields (one-by-one flow)
+  final int? multiReviewIndex;
+  final int? multiReviewTotal;
+  final TrapResult? trapResult;
+
   const ChatMessage({
     required this.type,
     required this.text,
@@ -94,6 +105,9 @@ class ChatMessage {
     this.options,
     this.selectedAnswer,
     this.isAnswered = false,
+    this.multiReviewIndex,
+    this.multiReviewTotal,
+    this.trapResult,
   });
 
   ChatMessage copyWith({
@@ -109,6 +123,9 @@ class ChatMessage {
       options: options,
       selectedAnswer: selectedAnswer ?? this.selectedAnswer,
       isAnswered: isAnswered ?? this.isAnswered,
+      multiReviewIndex: multiReviewIndex,
+      multiReviewTotal: multiReviewTotal,
+      trapResult: trapResult,
     );
   }
 }
@@ -138,6 +155,17 @@ class ScanState {
   /// Name of the service that was skipped.
   final String? skippedServiceName;
 
+  // ─── Multi-review fields (one-by-one flow) ───
+
+  /// All detected subscriptions (with trap data) for multi-review.
+  final List<ScanOutput>? multiOutputs;
+
+  /// Index of the subscription currently being reviewed (0-based).
+  final int multiReviewIndex;
+
+  /// How many subscriptions the user has added so far.
+  final int multiReviewAddedCount;
+
   const ScanState({
     this.phase = ScanPhase.idle,
     this.messages = const [],
@@ -149,6 +177,9 @@ class ScanState {
     this.trialNotice,
     this.skippedSavingsAmount,
     this.skippedServiceName,
+    this.multiOutputs,
+    this.multiReviewIndex = 0,
+    this.multiReviewAddedCount = 0,
   });
 
   ScanState copyWith({
@@ -162,6 +193,9 @@ class ScanState {
     TrapResult? trialNotice,
     double? skippedSavingsAmount,
     String? skippedServiceName,
+    List<ScanOutput>? multiOutputs,
+    int? multiReviewIndex,
+    int? multiReviewAddedCount,
   }) {
     return ScanState(
       phase: phase ?? this.phase,
@@ -175,6 +209,9 @@ class ScanState {
       trialNotice: trialNotice ?? this.trialNotice,
       skippedSavingsAmount: skippedSavingsAmount ?? this.skippedSavingsAmount,
       skippedServiceName: skippedServiceName ?? this.skippedServiceName,
+      multiOutputs: multiOutputs ?? this.multiOutputs,
+      multiReviewIndex: multiReviewIndex ?? this.multiReviewIndex,
+      multiReviewAddedCount: multiReviewAddedCount ?? this.multiReviewAddedCount,
     );
   }
 }
@@ -257,7 +294,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
     try {
       if (scenario == 'multi') {
-        await _handleMultiScan();
+        // Old mock path — redirect to startTrapScan for new flow
         return;
       }
 
@@ -460,97 +497,135 @@ class ScanNotifier extends StateNotifier<ScanState> {
     );
   }
 
-  /// Handle multi-sub bank statement scenario.
+  /// Handle multi-sub scan results — one-by-one review flow.
   ///
-  /// Accepts pre-fetched [results] from the real API, or falls back to mock.
-  Future<void> _handleMultiScan({List<ScanResult>? results}) async {
-    results ??= await AiScanService.mockMulti();
-
+  /// Accepts full [ScanOutput] list (subscription + trap data).
+  Future<void> _handleMultiScan({required List<ScanOutput> outputs}) async {
     // Filter out "Unknown" or empty results
-    final validResults = results.where((r) => !r.isNotFound).toList();
-    if (validResults.isEmpty) {
+    final validOutputs = outputs.where((o) => !o.subscription.isNotFound).toList();
+    if (validOutputs.isEmpty) {
       _addSystemMessage('No subscriptions found in this image.');
       state = state.copyWith(phase: ScanPhase.idle);
       return;
     }
 
-    final autoDetected =
-        validResults.where((r) => r.tier == 1 || r.isHighConfidence).toList();
-    final needsInput = validResults.where((r) => r.needsClarification).toList();
+    // Single result — use the existing single scan flow
+    if (validOutputs.length == 1) {
+      await _handleSingleScanOutput(validOutputs.first);
+      return;
+    }
 
-    // Use the currency from the first result for formatting
-    final currency = validResults.first.currency;
-    final totalMonthly =
-        validResults.fold(0.0, (sum, r) => sum + (r.price ?? 0));
-
+    // Multiple results — start one-by-one review
     final messages = <ChatMessage>[
       ...state.messages,
       ChatMessage(
         type: ChatMessageType.info,
-        text: 'Found ${validResults.length} recurring charges totalling ${Subscription.formatPrice(totalMonthly, currency)}/month.',
+        text: 'Found ${validOutputs.length} subscriptions! Let\u2019s go through them one by one.',
       ),
     ];
 
-    if (autoDetected.isNotEmpty) {
-      final names = autoDetected.map((r) => r.serviceName).join(', ');
-      messages.add(
-        ChatMessage(
-          type: ChatMessageType.info,
-          text: '$names auto-detected \u2713',
-        ),
-      );
-    }
+    // Add the first review card
+    final first = validOutputs.first;
+    messages.add(ChatMessage(
+      type: ChatMessageType.multiReview,
+      text: first.subscription.serviceName,
+      scanResult: first.subscription,
+      trapResult: first.trap,
+      multiReviewIndex: 0,
+      multiReviewTotal: validOutputs.length,
+    ));
 
-    // Add questions for unclear charges
-    for (final unclear in needsInput) {
-      final merchantDb = MerchantDb.instance;
-      final alternatives = merchantDb.getAlternatives(unclear.serviceName);
+    state = state.copyWith(
+      phase: ScanPhase.multiReview,
+      messages: messages,
+      multiOutputs: validOutputs,
+      multiReviewIndex: 0,
+      multiReviewAddedCount: 0,
+    );
+  }
 
-      if (unclear.tier == 2) {
-        messages.add(
-          ChatMessage(
-            type: ChatMessageType.question,
-            text: 'Is this charge for ${unclear.serviceName}?',
-            questionType: QuestionType.confirm,
-            options: [unclear.serviceName, ...alternatives],
-          ),
-        );
-      } else {
-        messages.add(
-          ChatMessage(
-            type: ChatMessageType.question,
-            text: 'Which service is the ${Subscription.formatPrice(unclear.price ?? 0, unclear.currency)}/mo charge for?',
-            questionType: QuestionType.choose,
-            options: alternatives,
-          ),
-        );
-      }
-    }
+  /// Show the multi-review card for the subscription at [index].
+  void _showMultiReviewItem(int index) {
+    final outputs = state.multiOutputs!;
+    final output = outputs[index];
+    final messages = [...state.messages];
 
-    // If all results are high-confidence, skip questioning and go to multi-result
-    if (needsInput.isEmpty) {
-      messages.add(
-        ChatMessage(
-          type: ChatMessageType.multiResult,
-          text: '${validResults.length} subscriptions found!',
-          multiResults: validResults,
-        ),
-      );
+    messages.add(ChatMessage(
+      type: ChatMessageType.multiReview,
+      text: output.subscription.serviceName,
+      scanResult: output.subscription,
+      trapResult: output.trap,
+      multiReviewIndex: index,
+      multiReviewTotal: outputs.length,
+    ));
+
+    state = state.copyWith(
+      phase: ScanPhase.multiReview,
+      messages: messages,
+      multiReviewIndex: index,
+    );
+  }
+
+  /// User taps "Add" on the current multi-review item.
+  void addCurrentMultiResult() {
+    final outputs = state.multiOutputs!;
+    final index = state.multiReviewIndex;
+    final output = outputs[index];
+
+    // Add confirmation message
+    final messages = [...state.messages];
+    messages.add(ChatMessage(
+      type: ChatMessageType.answer,
+      text: '\u2713 Added ${output.subscription.serviceName}',
+    ));
+
+    state = state.copyWith(
+      messages: messages,
+      multiReviewAddedCount: state.multiReviewAddedCount + 1,
+    );
+
+    // Move to next or finish
+    _advanceMultiReview();
+  }
+
+  /// User taps "Skip" on the current multi-review item.
+  void skipCurrentMultiResult() {
+    final output = state.multiOutputs![state.multiReviewIndex];
+
+    final messages = [...state.messages];
+    messages.add(ChatMessage(
+      type: ChatMessageType.answer,
+      text: 'Skipped ${output.subscription.serviceName}',
+    ));
+
+    state = state.copyWith(messages: messages);
+    _advanceMultiReview();
+  }
+
+  /// Advance to the next subscription in multi-review, or finish.
+  void _advanceMultiReview() {
+    final next = state.multiReviewIndex + 1;
+    if (next < state.multiOutputs!.length) {
+      // Show next subscription after short delay
+      Future.delayed(const Duration(milliseconds: 400), () {
+        if (state.phase == ScanPhase.multiReview) {
+          _showMultiReviewItem(next);
+        }
+      });
+    } else {
+      // All done — show summary
+      final added = state.multiReviewAddedCount;
+      final total = state.multiOutputs!.length;
+      final messages = [...state.messages];
+      messages.add(ChatMessage(
+        type: ChatMessageType.system,
+        text: 'All done! Added $added of $total subscriptions.',
+      ));
       state = state.copyWith(
         phase: ScanPhase.result,
         messages: messages,
-        multiResults: validResults,
       );
-      return;
     }
-
-    state = state.copyWith(
-      phase: ScanPhase.questioning,
-      messages: messages,
-      multiResults: validResults,
-      pendingQuestionIndex: messages.indexWhere(
-          (m) => m.type == ChatMessageType.question && !m.isAnswered),
-    );
   }
 
   /// User answers a question.
@@ -1061,9 +1136,8 @@ class ScanNotifier extends StateNotifier<ScanState> {
         // Single subscription → standard flow with trap detection
         await _handleSingleScanOutput(outputs.first);
       } else {
-        // Multiple subscriptions → multi-scan flow (add all at once)
-        final results = outputs.map((o) => o.subscription).toList();
-        await _handleMultiScan(results: results);
+        // Multiple subscriptions → one-by-one review flow
+        await _handleMultiScan(outputs: outputs);
       }
     } catch (e) {
       state = state.copyWith(

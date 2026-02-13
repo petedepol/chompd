@@ -217,7 +217,9 @@ class DetailScreen extends ConsumerWidget {
                           ),
                         ),
                         child: Text(
-                          context.l10n.trialDaysRemaining(sub.trialDaysRemaining!),
+                          sub.trialDaysRemaining! <= 0
+                              ? context.l10n.trialExpired
+                              : context.l10n.trialDaysRemaining(sub.trialDaysRemaining!),
                           style: const TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -1071,6 +1073,26 @@ class _TrapInfoCard extends StatelessWidget {
   final Subscription subscription;
   const _TrapInfoCard({required this.subscription});
 
+  /// Map stored trapType string to localised label.
+  String _trapTypeLabel(BuildContext context) {
+    return switch (subscription.trapType) {
+      'trialBait' => context.l10n.trapTypeTrialBait,
+      'priceFraming' => context.l10n.trapTypePriceFraming,
+      'hiddenRenewal' => context.l10n.trapTypeHiddenRenewal,
+      'cancelFriction' => context.l10n.trapTypeCancelFriction,
+      _ => context.l10n.trapTypeGeneric,
+    };
+  }
+
+  /// Map severity string to localised one-liner explanation.
+  String _severityExplanation(BuildContext context) {
+    return switch (subscription.trapSeverity) {
+      'high' => context.l10n.severityExplainHigh,
+      'medium' => context.l10n.severityExplainMedium,
+      _ => context.l10n.severityExplainLow,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final isHigh = subscription.trapSeverity == 'high';
@@ -1085,7 +1107,7 @@ class _TrapInfoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
+          // Header row: TRAP DETECTED + severity badge
           Row(
             children: [
               Icon(Icons.warning_rounded, size: 16, color: warningColor),
@@ -1123,6 +1145,67 @@ class _TrapInfoCard extends StatelessWidget {
               ),
             ],
           ),
+
+          // Trap type pill + severity explanation
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              // Trap type pill (e.g. "Trial Bait")
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: ChompdColors.purple.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: Text(
+                  _trapTypeLabel(context),
+                  style: ChompdTypography.mono(
+                    size: 10,
+                    weight: FontWeight.w600,
+                    color: ChompdColors.purple,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Severity one-liner
+              Expanded(
+                child: Text(
+                  _severityExplanation(context),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: ChompdColors.textDim,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+
+          // AI warning message (piranha explanation)
+          if (subscription.trapWarningMessage != null) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.only(left: 12),
+              decoration: const BoxDecoration(
+                border: Border(
+                  left: BorderSide(
+                    color: ChompdColors.mintGlow,
+                    width: 3,
+                  ),
+                ),
+              ),
+              child: Text(
+                subscription.trapWarningMessage!,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: ChompdColors.textMid,
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+
           const SizedBox(height: 12),
 
           // Trial price → Real price

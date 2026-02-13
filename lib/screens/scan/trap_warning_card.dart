@@ -9,6 +9,7 @@ import '../../models/subscription.dart';
 import '../../models/trap_result.dart';
 import '../../providers/scan_provider.dart';
 import '../../widgets/mascot_image.dart';
+import '../../providers/currency_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/price_breakdown_card.dart';
@@ -164,6 +165,12 @@ class TrapWarningCard extends ConsumerWidget {
                       subscription,
                       trap,
                     );
+
+                    // Fix currency when AI guessed (no visible price on screenshot)
+                    final displayCurrency = ref.read(currencyProvider);
+                    if (subscription.price == null && sub.currency != displayCurrency) {
+                      sub.currency = displayCurrency;
+                    }
 
                     // 3. Save to subscriptions list
                     ref.read(subscriptionsProvider.notifier).add(sub);

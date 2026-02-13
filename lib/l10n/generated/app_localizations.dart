@@ -757,6 +757,12 @@ abstract class S {
   /// **'⚠️ Trial — {days} days remaining'**
   String trialDaysRemaining(int days);
 
+  /// No description provided for @trialExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Trial expired'**
+  String get trialExpired;
+
   /// No description provided for @nextRenewal.
   ///
   /// In en, this message translates to:
@@ -1560,6 +1566,54 @@ abstract class S {
   /// In en, this message translates to:
   /// **'INFO'**
   String get severityInfo;
+
+  /// No description provided for @trapTypeTrialBait.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial Bait'**
+  String get trapTypeTrialBait;
+
+  /// No description provided for @trapTypePriceFraming.
+  ///
+  /// In en, this message translates to:
+  /// **'Price Framing'**
+  String get trapTypePriceFraming;
+
+  /// No description provided for @trapTypeHiddenRenewal.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden Renewal'**
+  String get trapTypeHiddenRenewal;
+
+  /// No description provided for @trapTypeCancelFriction.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel Friction'**
+  String get trapTypeCancelFriction;
+
+  /// No description provided for @trapTypeGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription Trap'**
+  String get trapTypeGeneric;
+
+  /// No description provided for @severityExplainHigh.
+  ///
+  /// In en, this message translates to:
+  /// **'Extreme price jump or deceptive framing'**
+  String get severityExplainHigh;
+
+  /// No description provided for @severityExplainMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Introductory price increases significantly'**
+  String get severityExplainMedium;
+
+  /// No description provided for @severityExplainLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard trial with auto-renewal'**
+  String get severityExplainLow;
 
   /// No description provided for @trialBadge.
   ///

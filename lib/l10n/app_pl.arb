@@ -169,6 +169,7 @@
   "@trialDaysRemaining": {
     "placeholders": { "days": {"type": "int"} }
   },
+  "trialExpired": "⚠️ Okres próbny wygasł",
   "nextRenewal": "NASTĘPNE ODNOWIENIE",
   "chargesToday": "{price} do zapłaty dziś",
   "@chargesToday": {
@@ -390,6 +391,14 @@
   "severityHigh": "WYSOKIE RYZYKO",
   "severityCaution": "UWAGA",
   "severityInfo": "INFO",
+  "trapTypeTrialBait": "Pułapka próbna",
+  "trapTypePriceFraming": "Ukrywanie ceny",
+  "trapTypeHiddenRenewal": "Ukryte odnowienie",
+  "trapTypeCancelFriction": "Utrudnione anulowanie",
+  "trapTypeGeneric": "Pułapka subskrypcyjna",
+  "severityExplainHigh": "Ekstremalny skok cen lub oszukańcze praktyki",
+  "severityExplainMedium": "Cena wstępna znacząco wzrasta",
+  "severityExplainLow": "Standardowy okres próbny z auto-odnowieniem",
   "trialBadge": "{days}d trial",
   "@trialBadge": {
     "placeholders": { "days": {"type": "int"} }

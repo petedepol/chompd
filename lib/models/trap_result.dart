@@ -38,19 +38,22 @@ class TrapResult {
   );
 
   /// Parse from the Claude Haiku JSON `trap` object.
+  ///
+  /// All casts use defensive `is` checks because Claude may return
+  /// unexpected types (e.g., `false` instead of `null` or `0`).
   factory TrapResult.fromJson(Map<String, dynamic> json) {
     return TrapResult(
-      isTrap: json['is_trap'] as bool? ?? false,
-      trapType: _parseTrapType(json['trap_type'] as String?),
-      severity: _parseSeverity(json['severity'] as String? ?? 'low'),
-      trialPrice: (json['trial_price'] as num?)?.toDouble(),
-      trialDurationDays: json['trial_duration_days'] as int?,
-      realPrice: (json['real_price'] as num?)?.toDouble(),
-      realBillingCycle: json['billing_cycle'] as String?,
-      realAnnualCost: (json['real_annual_cost'] as num?)?.toDouble(),
-      confidence: json['confidence'] as int? ?? 0,
-      warningMessage: json['warning_message'] as String? ?? '',
-      serviceName: json['service_name'] as String?,
+      isTrap: json['is_trap'] == true,
+      trapType: json['trap_type'] is String ? _parseTrapType(json['trap_type'] as String) : null,
+      severity: _parseSeverity(json['severity'] is String ? json['severity'] as String : 'low'),
+      trialPrice: json['trial_price'] is num ? (json['trial_price'] as num).toDouble() : null,
+      trialDurationDays: json['trial_duration_days'] is num ? (json['trial_duration_days'] as num).toInt() : null,
+      realPrice: json['real_price'] is num ? (json['real_price'] as num).toDouble() : null,
+      realBillingCycle: json['billing_cycle'] is String ? json['billing_cycle'] as String : null,
+      realAnnualCost: json['real_annual_cost'] is num ? (json['real_annual_cost'] as num).toDouble() : null,
+      confidence: json['confidence'] is num ? (json['confidence'] as num).toInt() : 0,
+      warningMessage: json['warning_message'] is String ? json['warning_message'] as String : '',
+      serviceName: json['service_name'] is String ? json['service_name'] as String : null,
     );
   }
 

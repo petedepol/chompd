@@ -58,11 +58,16 @@ class ScanResult {
   });
 
   /// Parse from the Claude Haiku JSON response.
+  ///
+  /// All numeric casts use defensive `is num` checks because Claude may
+  /// return `false` or other non-numeric types for fields it can't determine.
   factory ScanResult.fromJson(Map<String, dynamic> json) {
     final conf = <String, double>{};
     if (json['confidence'] is Map) {
       (json['confidence'] as Map).forEach((key, value) {
-        conf[key.toString()] = (value as num).toDouble();
+        if (value is num) {
+          conf[key.toString()] = value.toDouble();
+        }
       });
     }
 
@@ -76,26 +81,26 @@ class ScanResult {
 
     return ScanResult(
       serviceName: json['service_name'] as String? ?? 'Unknown',
-      price: json['price'] != null ? (json['price'] as num).toDouble() : null,
+      price: json['price'] is num ? (json['price'] as num).toDouble() : null,
       currency: json['currency'] as String? ?? 'GBP',
-      billingCycle: json['billing_cycle'] as String?,
-      nextRenewal: json['next_renewal'] != null
+      billingCycle: json['billing_cycle'] is String ? json['billing_cycle'] as String : null,
+      nextRenewal: json['next_renewal'] is String
           ? DateTime.tryParse(json['next_renewal'] as String)
           : null,
-      isTrial: json['is_trial'] as bool? ?? false,
-      trialEndDate: json['trial_end_date'] != null
+      isTrial: json['is_trial'] == true,
+      trialEndDate: json['trial_end_date'] is String
           ? DateTime.tryParse(json['trial_end_date'] as String)
           : null,
-      category: json['category'] as String?,
-      iconName: json['icon'] as String?,
-      brandColor: json['brand_color'] as String?,
+      category: json['category'] is String ? json['category'] as String : null,
+      iconName: json['icon'] is String ? json['icon'] as String : null,
+      brandColor: json['brand_color'] is String ? json['brand_color'] as String : null,
       confidence: conf,
       overallConfidence:
-          (json['overall_confidence'] as num?)?.toDouble() ?? 0.0,
-      tier: json['tier'] as int? ?? 3,
-      sourceType: json['source_type'] as String?,
+          json['overall_confidence'] is num ? (json['overall_confidence'] as num).toDouble() : 0.0,
+      tier: json['tier'] is num ? (json['tier'] as num).toInt() : 3,
+      sourceType: json['source_type'] is String ? json['source_type'] as String : null,
       missingFields: missing,
-      extractionNotes: json['extraction_notes'] as String?,
+      extractionNotes: json['extraction_notes'] is String ? json['extraction_notes'] as String : null,
     );
   }
 

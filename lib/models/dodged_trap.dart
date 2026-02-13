@@ -44,7 +44,7 @@ class DodgedTrap {
 
   static DodgedTrap fromJson(Map<String, dynamic> json) {
     return DodgedTrap()
-      ..id = json['id'] as int? ?? 0
+      ..id = (json['id'] as num?)?.toInt() ?? 0
       ..serviceName = json['serviceName'] as String
       ..savedAmount = (json['savedAmount'] as num).toDouble()
       ..dodgedAt = DateTime.parse(json['dodgedAt'] as String)

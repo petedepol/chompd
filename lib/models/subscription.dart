@@ -199,6 +199,9 @@ class Subscription {
   /// Trap severity: 'low', 'medium', 'high'.
   String? trapSeverity;
 
+  /// AI-generated warning explaining WHY this is a trap.
+  String? trapWarningMessage;
+
   /// Exact trial expiry timestamp (for aggressive alerts).
   DateTime? trialExpiresAt;
 
@@ -243,44 +246,58 @@ class Subscription {
   }
 
   /// Days remaining in trial (null if not a trial).
+  /// Returns 0 for expired trials (never negative).
   int? get trialDaysRemaining {
     if (!isTrial || trialEndDate == null) return null;
-    return trialEndDate!.difference(DateTime.now()).inDays;
+    final days = trialEndDate!.difference(DateTime.now()).inDays;
+    return days < 0 ? 0 : days;
+  }
+
+  /// The effective price for spending calculations.
+  /// For trap subscriptions, uses realPrice (what they'll actually pay)
+  /// so that yearly burn and category totals reflect the true cost.
+  double get effectivePrice {
+    if (isTrap == true && realPrice != null && realPrice! > 0) {
+      return realPrice!;
+    }
+    return price;
   }
 
   /// Monthly equivalent price for consistent comparisons.
   double get monthlyEquivalent {
+    final p = effectivePrice;
     switch (cycle) {
       case BillingCycle.weekly:
-        return price * 4.33;
+        return p * 4.33;
       case BillingCycle.monthly:
-        return price;
+        return p;
       case BillingCycle.quarterly:
-        return price / 3;
+        return p / 3;
       case BillingCycle.yearly:
-        return price / 12;
+        return p / 12;
     }
   }
 
   /// Annual cost regardless of billing cycle.
   double get yearlyEquivalent {
+    final p = effectivePrice;
     switch (cycle) {
       case BillingCycle.weekly:
-        return price * 52;
+        return p * 52;
       case BillingCycle.monthly:
-        return price * 12;
+        return p * 12;
       case BillingCycle.quarterly:
-        return price * 4;
+        return p * 4;
       case BillingCycle.yearly:
-        return price;
+        return p;
     }
   }
 
   // ─── Currency Conversion Helpers ───
 
-  /// Price converted to a target currency.
+  /// Effective price converted to a target currency.
   double priceIn(String targetCurrency) =>
-      ExchangeRateService.instance.convert(price, currency, targetCurrency);
+      ExchangeRateService.instance.convert(effectivePrice, currency, targetCurrency);
 
   /// Monthly equivalent converted to a target currency.
   double monthlyEquivalentIn(String targetCurrency) =>
@@ -293,8 +310,9 @@ class Subscription {
           .convert(yearlyEquivalent, currency, targetCurrency);
 
   /// Price display string (e.g. "£15.99/mo" or "10.00 zł/mo").
+  /// Uses effectivePrice so trap subs show real cost.
   String get priceDisplay {
-    return '${formatPrice(price, currency)}/${cycle.shortLabel}';
+    return '${formatPrice(effectivePrice, currency)}/${cycle.shortLabel}';
   }
 
   /// The currency symbol for a given ISO 4217 code.
@@ -386,12 +404,23 @@ class Subscription {
       ..trialDurationDays = trap.trialDurationDays
       ..realPrice = trap.realPrice
       ..realAnnualCost = trap.realAnnualCost
-      ..trapSeverity = trap.severity.name;
+      ..trapSeverity = trap.severity.name
+      ..trapWarningMessage = trap.warningMessage.isNotEmpty ? trap.warningMessage : null;
 
-    // Calculate trial expiry from duration
-    if (trap.trialDurationDays != null) {
+    // Set trial expiry: prefer AI-extracted date from screenshot,
+    // fall back to calculated (now + trialDurationDays) if not available.
+    if (scan.trialEndDate != null) {
+      sub.trialExpiresAt = scan.trialEndDate;
+      sub.trialEndDate = scan.trialEndDate;
+    } else if (trap.trialDurationDays != null) {
       sub.trialExpiresAt = now.add(Duration(days: trap.trialDurationDays!));
       sub.trialEndDate ??= sub.trialExpiresAt;
+    }
+
+    // For trap/trial subs, "next renewal" = when trial expires and real charge kicks in.
+    // This drives the countdown, reminders, and "Renews in X days" label.
+    if (sub.isTrap == true && sub.trialExpiresAt != null) {
+      sub.nextRenewal = sub.trialExpiresAt!;
     }
 
     return sub;

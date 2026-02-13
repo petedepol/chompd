@@ -396,6 +396,9 @@ class SEn extends S {
   }
 
   @override
+  String get trialExpired => '⚠️ Trial expired';
+
+  @override
   String get nextRenewal => 'NEXT RENEWAL';
 
   @override
@@ -871,6 +874,31 @@ class SEn extends S {
 
   @override
   String get severityInfo => 'INFO';
+
+  @override
+  String get trapTypeTrialBait => 'Trial Bait';
+
+  @override
+  String get trapTypePriceFraming => 'Price Framing';
+
+  @override
+  String get trapTypeHiddenRenewal => 'Hidden Renewal';
+
+  @override
+  String get trapTypeCancelFriction => 'Cancel Friction';
+
+  @override
+  String get trapTypeGeneric => 'Subscription Trap';
+
+  @override
+  String get severityExplainHigh => 'Extreme price jump or deceptive framing';
+
+  @override
+  String get severityExplainMedium =>
+      'Introductory price increases significantly';
+
+  @override
+  String get severityExplainLow => 'Standard trial with auto-renewal';
 
   @override
   String trialBadge(int days) {

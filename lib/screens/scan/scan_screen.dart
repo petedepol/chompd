@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../config/theme.dart';
 import '../../models/scan_result.dart';
 import '../../models/subscription.dart';
+import '../../models/trap_result.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/scan_provider.dart';
@@ -366,7 +367,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               : 'image/jpeg');
 
       ref.read(scanCounterProvider.notifier).increment();
-      ref.read(scanProvider.notifier).startScan(
+      ref.read(scanProvider.notifier).startTrapScan(
             imageBytes: bytes,
             mimeType: mimeType,
           );
@@ -605,7 +606,69 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
           results: msg.multiResults!,
           onAddAll: () => _addAllSubscriptions(msg.multiResults!),
         );
+
+      case ChatMessageType.multiReview:
+        return _MultiReviewMessage(
+          result: msg.scanResult!,
+          trap: msg.trapResult,
+          index: msg.multiReviewIndex!,
+          total: msg.multiReviewTotal!,
+          onAdd: () => _addMultiReviewItem(msg.multiReviewIndex!),
+          onSkip: () => ref.read(scanProvider.notifier).skipCurrentMultiResult(),
+        );
     }
+  }
+
+  /// Add a single subscription from the multi-review flow, then advance.
+  void _addMultiReviewItem(int index) async {
+    final scanState = ref.read(scanProvider);
+    final outputs = scanState.multiOutputs;
+    if (outputs == null || index >= outputs.length) return;
+
+    final canAdd = ref.read(canAddSubProvider);
+    if (!canAdd) {
+      await showPaywall(context, trigger: PaywallTrigger.subscriptionLimit);
+      return;
+    }
+
+    final output = outputs[index];
+    final scan = output.subscription;
+    final trap = output.trap;
+
+    // Create subscription using fromScanWithTrap if trap exists, else manual
+    final Subscription sub;
+    if (trap.isTrap) {
+      sub = Subscription.fromScanWithTrap(scan, trap);
+    } else {
+      final now = DateTime.now();
+      final cycle = _parseCycle(scan.billingCycle ?? 'monthly');
+      sub = Subscription()
+        ..uid =
+            '${scan.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}-$index'
+        ..name = scan.serviceName
+        ..price = scan.price ?? 0
+        ..currency = scan.currency
+        ..cycle = cycle
+        ..nextRenewal = _nextFutureRenewal(scan.nextRenewal, cycle)
+        ..category = scan.category ?? 'Other'
+        ..isTrial = scan.isTrial
+        ..trialEndDate = scan.trialEndDate
+        ..iconName = scan.iconName
+        ..brandColor = scan.brandColor
+        ..isActive = true
+        ..source = SubscriptionSource.aiScan
+        ..createdAt = now;
+    }
+
+    // Fix currency when AI guessed (no visible price on screenshot).
+    // Use the user's display currency instead (e.g. PLN for Polish users).
+    final displayCurrency = ref.read(currencyProvider);
+    if (scan.price == null && sub.currency != displayCurrency) {
+      sub.currency = displayCurrency;
+    }
+
+    ref.read(subscriptionsProvider.notifier).add(sub);
+    ref.read(scanProvider.notifier).addCurrentMultiResult();
   }
 
   void _onAnswer(int index, String answer, ScanState scanState) {
@@ -764,11 +827,46 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       return SizedBox(height: bottomPadding + 16);
     }
 
+    // Multi-review — cards have their own buttons, no bottom bar needed
+    if (scanState.phase == ScanPhase.multiReview) {
+      return SizedBox(height: bottomPadding + 8);
+    }
+
+    // After multi-review finishes → show "Back to Home" button
+    if (scanState.phase == ScanPhase.result && scanState.multiOutputs != null) {
+      return Container(
+        padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPadding + 16),
+        child: GestureDetector(
+          onTap: () {
+            ref.read(scanProvider.notifier).reset();
+            Navigator.of(context).pop();
+          },
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [ChompdColors.mintDark, ChompdColors.mint],
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              context.l10n.done,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: ChompdColors.bg,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Container(
       padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPadding + 16),
-      child: scanState.phase == ScanPhase.result
-          ? const SizedBox.shrink()
-          : const SizedBox.shrink(),
+      child: const SizedBox.shrink(),
     );
   }
 }
@@ -1795,6 +1893,344 @@ class _MiniResultRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Single subscription card for the one-by-one multi-review flow.
+///
+/// Shows progress (1 of 6), service details, trap warning if applicable,
+/// and Add/Skip buttons.
+class _MultiReviewMessage extends StatelessWidget {
+  final ScanResult result;
+  final TrapResult? trap;
+  final int index;
+  final int total;
+  final VoidCallback onAdd;
+  final VoidCallback onSkip;
+
+  const _MultiReviewMessage({
+    required this.result,
+    required this.trap,
+    required this.index,
+    required this.total,
+    required this.onAdd,
+    required this.onSkip,
+  });
+
+  Color get _brandColor {
+    final hex = result.brandColor?.replaceFirst('#', '') ?? '6EE7B7';
+    return Color(int.parse('FF$hex', radix: 16));
+  }
+
+  String _cycleLabel(String? cycle) {
+    return switch (cycle?.toLowerCase()) {
+      'yearly' => 'yr',
+      'weekly' => 'wk',
+      'quarterly' => 'qtr',
+      _ => 'mo',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasTrap = trap != null && trap!.isTrap;
+    final isHighSeverity = hasTrap && trap!.severity != TrapSeverity.low;
+
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.85,
+        ),
+        margin: const EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+          color: ChompdColors.bgCard,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: hasTrap
+                ? (isHighSeverity
+                    ? ChompdColors.red.withValues(alpha: 0.4)
+                    : ChompdColors.amber.withValues(alpha: 0.4))
+                : ChompdColors.border,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ─── Progress pill ───
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: ChompdColors.purple.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${index + 1} of $total',
+                  style: ChompdTypography.mono(
+                    size: 10,
+                    weight: FontWeight.w700,
+                    color: ChompdColors.purple,
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            // ─── Service info row ───
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Row(
+                children: [
+                  // Brand icon
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      gradient: LinearGradient(
+                        colors: [
+                          _brandColor.withValues(alpha: 0.87),
+                          _brandColor.withValues(alpha: 0.53),
+                        ],
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      result.iconName ?? result.serviceName[0],
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          result.serviceName,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: ChompdColors.text,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Text(
+                              '${Subscription.formatPrice(result.price ?? 0, result.currency)}/${_cycleLabel(result.billingCycle)}',
+                              style: ChompdTypography.mono(
+                                size: 13,
+                                weight: FontWeight.w700,
+                                color: ChompdColors.textMid,
+                              ),
+                            ),
+                            if (result.isTrial) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 5,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: ChompdColors.amber.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  context.l10n.trialLabel,
+                                  style: const TextStyle(
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w700,
+                                    color: ChompdColors.amber,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Category chip
+                  if (result.category != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: ChompdColors.bgElevated,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        result.category!,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: ChompdColors.textDim,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // ─── Trap warning banner ───
+            if (hasTrap) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 14),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isHighSeverity
+                      ? ChompdColors.red.withValues(alpha: 0.08)
+                      : ChompdColors.amber.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isHighSeverity
+                        ? ChompdColors.red.withValues(alpha: 0.2)
+                        : ChompdColors.amber.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      isHighSeverity ? '\u26A0\uFE0F' : '\u23F0',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            trap!.trapTypeLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: isHighSeverity
+                                  ? ChompdColors.red
+                                  : ChompdColors.amber,
+                            ),
+                          ),
+                          if (trap!.realPrice != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              'Real cost: ${Subscription.formatPrice(trap!.realPrice!, result.currency)}/${trap!.realBillingCycle ?? 'year'}',
+                              style: ChompdTypography.mono(
+                                size: 10,
+                                weight: FontWeight.w600,
+                                color: isHighSeverity
+                                    ? ChompdColors.red.withValues(alpha: 0.8)
+                                    : ChompdColors.amber.withValues(alpha: 0.8),
+                              ),
+                            ),
+                          ],
+                          if (trap!.warningMessage.isNotEmpty) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              trap!.warningMessage,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: ChompdColors.textMid,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 12),
+
+            // ─── Action buttons ───
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              child: Row(
+                children: [
+                  // Skip button
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: onSkip,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: ChompdColors.border),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          'Skip',
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: ChompdColors.textMid,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 10),
+
+                  // Add button
+                  Expanded(
+                    flex: 2,
+                    child: GestureDetector(
+                      onTap: onAdd,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [ChompdColors.mintDark, ChompdColors.mint],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: ChompdColors.mint.withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.add_rounded, size: 15, color: ChompdColors.bg),
+                            const SizedBox(width: 4),
+                            Text(
+                              context.l10n.addToChompd,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: ChompdColors.bg,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

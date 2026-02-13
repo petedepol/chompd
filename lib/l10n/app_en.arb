@@ -169,6 +169,7 @@
   "@trialDaysRemaining": {
     "placeholders": { "days": {"type": "int"} }
   },
+  "trialExpired": "\u26A0\uFE0F Trial expired",
   "nextRenewal": "NEXT RENEWAL",
   "chargesToday": "{price} charges today",
   "@chargesToday": {
@@ -390,6 +391,14 @@
   "severityHigh": "HIGH RISK",
   "severityCaution": "CAUTION",
   "severityInfo": "INFO",
+  "trapTypeTrialBait": "Trial Bait",
+  "trapTypePriceFraming": "Price Framing",
+  "trapTypeHiddenRenewal": "Hidden Renewal",
+  "trapTypeCancelFriction": "Cancel Friction",
+  "trapTypeGeneric": "Subscription Trap",
+  "severityExplainHigh": "Extreme price jump or deceptive framing",
+  "severityExplainMedium": "Introductory price increases significantly",
+  "severityExplainLow": "Standard trial with auto-renewal",
   "trialBadge": "{days}d trial",
   "@trialBadge": {
     "placeholders": { "days": {"type": "int"} }

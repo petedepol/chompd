@@ -64,7 +64,9 @@ class _TrialBadgeState extends State<TrialBadge>
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        context.l10n.trialBadge(widget.daysRemaining),
+        widget.daysRemaining <= 0
+            ? context.l10n.trialExpired
+            : context.l10n.trialBadge(widget.daysRemaining),
         style: ChompdTypography.mono(
           size: 8,
           weight: FontWeight.w700,

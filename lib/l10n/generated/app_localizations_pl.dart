@@ -402,6 +402,9 @@ class SPl extends S {
   }
 
   @override
+  String get trialExpired => '⚠️ Okres próbny wygasł';
+
+  @override
   String get nextRenewal => 'NASTĘPNE ODNOWIENIE';
 
   @override
@@ -886,6 +889,32 @@ class SPl extends S {
 
   @override
   String get severityInfo => 'INFO';
+
+  @override
+  String get trapTypeTrialBait => 'Pułapka próbna';
+
+  @override
+  String get trapTypePriceFraming => 'Ukrywanie ceny';
+
+  @override
+  String get trapTypeHiddenRenewal => 'Ukryte odnowienie';
+
+  @override
+  String get trapTypeCancelFriction => 'Utrudnione anulowanie';
+
+  @override
+  String get trapTypeGeneric => 'Pułapka subskrypcyjna';
+
+  @override
+  String get severityExplainHigh =>
+      'Ekstremalny skok cen lub oszukańcze praktyki';
+
+  @override
+  String get severityExplainMedium => 'Cena wstępna znacząco wzrasta';
+
+  @override
+  String get severityExplainLow =>
+      'Standardowy okres próbny z auto-odnowieniem';
 
   @override
   String trialBadge(int days) {
