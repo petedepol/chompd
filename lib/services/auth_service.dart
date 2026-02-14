@@ -9,6 +9,10 @@ class AuthService {
   AuthService._();
   static final instance = AuthService._();
 
+  /// Whether Supabase was initialized with valid credentials.
+  bool get isConfigured =>
+      const String.fromEnvironment('SUPABASE_URL').isNotEmpty;
+
   SupabaseClient get _client => Supabase.instance.client;
 
   /// Ensure a user session exists. Creates anonymous user if none.
@@ -20,16 +24,20 @@ class AuthService {
   }
 
   /// Whether the current user is anonymous (not linked to a provider).
-  bool get isAnonymous => _client.auth.currentUser?.isAnonymous ?? true;
+  bool get isAnonymous =>
+      !isConfigured || (_client.auth.currentUser?.isAnonymous ?? true);
 
   /// Whether any user session exists.
-  bool get isSignedIn => _client.auth.currentUser != null;
+  bool get isSignedIn =>
+      isConfigured && _client.auth.currentUser != null;
 
   /// Current user UUID (null if not signed in).
-  String? get userId => _client.auth.currentUser?.id;
+  String? get userId =>
+      isConfigured ? _client.auth.currentUser?.id : null;
 
   /// Current user email (null if anonymous).
-  String? get email => _client.auth.currentUser?.email;
+  String? get email =>
+      isConfigured ? _client.auth.currentUser?.email : null;
 
   /// Link anonymous account to Apple Sign-In via OAuth.
   Future<void> linkAppleSignIn() async {
@@ -60,5 +68,6 @@ class AuthService {
   }
 
   /// Auth state change stream for listening to sign-in/sign-out events.
-  Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
+  Stream<AuthState> get onAuthStateChange =>
+      isConfigured ? _client.auth.onAuthStateChange : const Stream.empty();
 }

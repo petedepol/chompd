@@ -45,28 +45,35 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
     super.dispose();
   }
 
-  Color get _borderColor => switch (widget.trap.severity) {
-        TrapSeverity.high => ChompdColors.red.withValues(alpha: 0.3),
-        TrapSeverity.medium => ChompdColors.amber.withValues(alpha: 0.3),
-        TrapSeverity.low => ChompdColors.blue.withValues(alpha: 0.3),
-      };
+  Color _borderColor(BuildContext context) {
+    final c = context.colors;
+    return switch (widget.trap.severity) {
+      TrapSeverity.high => c.red.withValues(alpha: 0.3),
+      TrapSeverity.medium => c.amber.withValues(alpha: 0.3),
+      TrapSeverity.low => c.blue.withValues(alpha: 0.3),
+    };
+  }
 
-  Color get _priceColor => switch (widget.trap.severity) {
-        TrapSeverity.high => ChompdColors.red,
-        TrapSeverity.medium => ChompdColors.amber,
-        TrapSeverity.low => ChompdColors.blue,
-      };
+  Color _priceColor(BuildContext context) {
+    final c = context.colors;
+    return switch (widget.trap.severity) {
+      TrapSeverity.high => c.red,
+      TrapSeverity.medium => c.amber,
+      TrapSeverity.low => c.blue,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final trap = widget.trap;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ChompdColors.bgElevated,
+        color: c.bgElevated,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _borderColor),
+        border: Border.all(color: _borderColor(context)),
       ),
       child: Column(
         children: [
@@ -80,24 +87,24 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                   children: [
                     Text(
                       context.l10n.priceToday,
-                      style: const TextStyle(fontSize: 10, color: ChompdColors.textDim),
+                      style: TextStyle(fontSize: 10, color: c.textDim),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       Subscription.formatPrice(trap.trialPrice ?? 0, 'GBP'),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'SpaceMono',
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       context.l10n.dayTrial((trap.trialDurationDays ?? '?').toString()),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                     ),
                   ],
@@ -107,11 +114,11 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
               // ARROW (animated)
               SlideTransition(
                 position: _arrowSlide,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Text(
                     '\u2192',
-                    style: TextStyle(fontSize: 20, color: ChompdColors.textMid),
+                    style: TextStyle(fontSize: 20, color: c.textMid),
                   ),
                 ),
               ),
@@ -123,7 +130,7 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                   children: [
                     Text(
                       context.l10n.priceThen,
-                      style: const TextStyle(fontSize: 10, color: ChompdColors.textDim),
+                      style: TextStyle(fontSize: 10, color: c.textDim),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -134,15 +141,15 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                         fontFamily: 'SpaceMono',
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: _priceColor,
+                        color: _priceColor(context),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '/${trap.realBillingCycle ?? "year"}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                     ),
                   ],
@@ -158,16 +165,16 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: ChompdColors.bg,
+                color: c.bg,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 context.l10n.realCostFirstYear(Subscription.formatPrice(trap.realAnnualCost!, 'GBP')),
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'SpaceMono',
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: ChompdColors.text,
+                  color: c.text,
                 ),
                 textAlign: TextAlign.center,
               ),

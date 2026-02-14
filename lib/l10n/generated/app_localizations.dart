@@ -1036,7 +1036,7 @@ abstract class S {
   /// No description provided for @paywallFeature1.
   ///
   /// In en, this message translates to:
-  /// **'Save £100–£500/year on hidden waste'**
+  /// **'Save 100–500/year on hidden waste'**
   String get paywallFeature1;
 
   /// No description provided for @paywallFeature2.

@@ -2,180 +2,377 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Chompd Design System — Dark & Light Themes
+/// Chompd Design System v2 — Dark & Light Themes
 ///
-/// Colour tokens from the visual design prototype.
+/// Updated colour tokens from the theme v2 spec.
 /// Typography: System default for UI, Space Mono for data/prices.
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DARK THEME COLOURS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 class ChompdColors {
   ChompdColors._();
 
-  // ─── Backgrounds (warm olive-black) ───
-  static const bg = Color(0xFF080808);
-  static const bgCard = Color(0xFF141412);
-  static const bgElevated = Color(0xFF1C1C19);
-  static const bgGlass = Color(0xD91C1C19); // 85% opacity
+  // ─── Backgrounds (deep green-black) ───
+  static const bg = Color(0xFF0B0F0E);
+  static const bgCard = Color(0xFF141C1A);       // = surface
+  static const bgElevated = Color(0xFF1A2422);    // = card
+  static const bgGlass = Color(0xD91A2422);       // 85% opacity of card
 
   // ─── Borders ───
-  static const border = Color(0xFF262622);
-  static const borderLight = Color(0xFF333330);
-  static const borderHighlight = Color(0xFF2E2E2A); // Top-edge highlight
+  static const border = Color(0xFF243430);        // = cardBorder
+  static const borderLight = Color(0xFF2A3632);
+  static const borderHighlight = Color(0xFF2A3632);
 
   // ─── Text ───
-  static const text = Color(0xFFF0F0EC);
-  static const textMid = Color(0xFFA0A098);
-  static const textDim = Color(0xFF6A6A64);
+  static const text = Color(0xFFF0F5F3);
+  static const textMid = Color(0xFF8A9B95);
+  static const textDim = Color(0xFF5A6B65);
 
-  // ─── Accent: Mint (primary) ───
-  static const mint = Color(0xFF6EE7B7);
-  static const mintDark = Color(0xFF34D399);
-  static const mintGlow = Color(0x266EE7B7); // 15% opacity
+  // ─── Accent: Teal (primary) ───
+  static const mint = Color(0xFF4ECCA3);
+  static const mintDark = Color(0xFF4ECCA3);
+  static const mintGlow = Color(0x1F4ECCA3);      // 12% opacity
 
   // ─── Semantic Colours ───
-  static const amber = Color(0xFFFBBF24);
-  static const amberGlow = Color(0x1FFBBF24); // 12% opacity
-  static const red = Color(0xFFF87171);
-  static const redGlow = Color(0x1FF87171); // 12% opacity
-  static const purple = Color(0xFFA78BFA);
-  static const blue = Color(0xFF60A5FA);
+  static const amber = Color(0xFFE8B341);
+  static const amberGlow = Color(0x1FE8B341);
+  static const red = Color(0xFFE85D4A);
+  static const redGlow = Color(0x1FE85D4A);
+  static const purple = Color(0xFF9B7FE6);
+  static const blue = Color(0xFF4A9DE8);
   static const pink = Color(0xFFF472B6);
+
+  // ─── New v2 tokens ───
+  static const surface = Color(0xFF141C1A);
+  static const card = Color(0xFF1A2422);
+  static const cardBorder = Color(0xFF243430);
+  static const accentSoft = Color(0x1F4ECCA3);    // 12% opacity
+  static const divider = Color(0xFF1E2D28);
+  static const toggleOn = Color(0xFF4ECCA3);
+  static const toggleOff = Color(0xFF2A3632);
+  static const ringTrack = Color(0xFF1E2D28);
+  static const proTag = Color(0xFF9B7FE6);
+  static const proTagBg = Color(0x269B7FE6);      // 15% opacity
+  static const warningSoft = Color(0x1FE8B341);
+  static const dangerSoft = Color(0x1FE85D4A);
+  static const infoSoft = Color(0x1F4A9DE8);
 }
 
-/// Light theme colour tokens.
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// LIGHT THEME COLOURS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 class ChompdColorsLight {
   ChompdColorsLight._();
 
-  // ─── Backgrounds ───
-  static const bg = Color(0xFFF5F5F7);
-  static const bgCard = Color(0xFFFFFFFF);
-  static const bgElevated = Color(0xFFEFEFF1);
-  static const bgGlass = Color(0xD9EFEFF1);
+  // ─── Backgrounds (warm parchment) ───
+  static const bg = Color(0xFFF4F1EC);
+  static const bgCard = Color(0xFFFAFAF8);        // = surface
+  static const bgElevated = Color(0xFFFFFFFF);     // = card
+  static const bgGlass = Color(0xD9FFFFFF);
 
   // ─── Borders ───
-  static const border = Color(0xFFDCDCE2);
-  static const borderLight = Color(0xFFD0D0D8);
-  static const borderHighlight = Color(0xFFE8E8EE);
+  static const border = Color(0xFFE8E3DB);        // = cardBorder
+  static const borderLight = Color(0xFFD4CFC7);
+  static const borderHighlight = Color(0xFFE8E3DB);
 
   // ─── Text ───
-  static const text = Color(0xFF1A1A24);
-  static const textMid = Color(0xFF5A5A6E);
-  static const textDim = Color(0xFF9090A4);
+  static const text = Color(0xFF1A2B25);
+  static const textMid = Color(0xFF5E6D67);
+  static const textDim = Color(0xFF94A09B);
 
-  // ─── Accent: Mint (slightly darker for light bg contrast) ───
-  static const mint = Color(0xFF10B981);
-  static const mintDark = Color(0xFF059669);
-  static const mintGlow = Color(0x2610B981);
+  // ─── Accent: Forest green ───
+  static const mint = Color(0xFF1B8F6A);
+  static const mintDark = Color(0xFF1B8F6A);
+  static const mintGlow = Color(0x141B8F6A);       // 8% opacity
 
-  // ─── Semantic Colours (slightly darker for light bg) ───
-  static const amber = Color(0xFFD97706);
-  static const amberGlow = Color(0x1FD97706);
-  static const red = Color(0xFFDC2626);
-  static const redGlow = Color(0x1FDC2626);
-  static const purple = Color(0xFF7C3AED);
-  static const blue = Color(0xFF2563EB);
+  // ─── Semantic Colours ───
+  static const amber = Color(0xFFC4890E);
+  static const amberGlow = Color(0x14C4890E);
+  static const red = Color(0xFFC9402E);
+  static const redGlow = Color(0x14C9402E);
+  static const purple = Color(0xFF7B5FC4);
+  static const blue = Color(0xFF2D7BC4);
   static const pink = Color(0xFFEC4899);
+
+  // ─── New v2 tokens ───
+  static const surface = Color(0xFFFAFAF8);
+  static const card = Color(0xFFFFFFFF);
+  static const cardBorder = Color(0xFFE8E3DB);
+  static const accentSoft = Color(0x141B8F6A);    // 8% opacity
+  static const divider = Color(0xFFE8E3DB);
+  static const toggleOn = Color(0xFF1B8F6A);
+  static const toggleOff = Color(0xFFD4CFC7);
+  static const ringTrack = Color(0xFFE8E3DB);
+  static const proTag = Color(0xFF7B5FC4);
+  static const proTagBg = Color(0x1A7B5FC4);      // 10% opacity
+  static const warningSoft = Color(0x14C4890E);
+  static const dangerSoft = Color(0x14C9402E);
+  static const infoSoft = Color(0x142D7BC4);
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// THEME-AWARE COLOUR SET (context.colors)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// Extension to get the correct colour tokens based on brightness.
 ///
-/// Usage: `context.colors.bg`, `context.colors.text`, etc.
+/// Usage: `context.colors.bg`, `context.colors.accent`, etc.
 extension ChompdColorScheme on BuildContext {
   _ChompdColorSet get colors {
     final isDark = Theme.of(this).brightness == Brightness.dark;
     return isDark ? _ChompdColorSet.dark : _ChompdColorSet.light;
   }
+
+  bool get isDarkMode => Theme.of(this).brightness == Brightness.dark;
 }
 
 class _ChompdColorSet {
+  // ─── Backgrounds ───
   final Color bg;
-  final Color bgCard;
-  final Color bgElevated;
+  final Color surface;
+  final Color card;
   final Color bgGlass;
-  final Color border;
+
+  // ─── Backward compat aliases ───
+  Color get bgCard => surface;
+  Color get bgElevated => card;
+
+  // ─── Borders ───
+  final Color cardBorder;
   final Color borderLight;
   final Color borderHighlight;
+
+  // Backward compat alias
+  Color get border => cardBorder;
+
+  // ─── Text ───
   final Color text;
   final Color textMid;
   final Color textDim;
-  final Color mint;
-  final Color mintDark;
+
+  // ─── Accent ───
+  final Color accent;
+  final Color accentSoft;
   final Color mintGlow;
-  final Color amber;
-  final Color amberGlow;
-  final Color red;
-  final Color redGlow;
-  final Color purple;
-  final Color blue;
+
+  // Backward compat aliases
+  Color get mint => accent;
+  Color get mintDark => accent;
+
+  // ─── Semantic ───
+  final Color warning;
+  final Color warningSoft;
+  final Color danger;
+  final Color dangerSoft;
+  final Color info;
+  final Color infoSoft;
+  final Color proTag;
+  final Color proTagBg;
   final Color pink;
+
+  // Backward compat aliases
+  Color get amber => warning;
+  Color get amberGlow => warningSoft;
+  Color get red => danger;
+  Color get redGlow => dangerSoft;
+  Color get blue => info;
+  Color get purple => proTag;
+
+  // ─── UI Components ───
+  final Color divider;
+  final Color toggleOn;
+  final Color toggleOff;
+  final Color ringTrack;
 
   const _ChompdColorSet({
     required this.bg,
-    required this.bgCard,
-    required this.bgElevated,
+    required this.surface,
+    required this.card,
     required this.bgGlass,
-    required this.border,
+    required this.cardBorder,
     required this.borderLight,
     required this.borderHighlight,
     required this.text,
     required this.textMid,
     required this.textDim,
-    required this.mint,
-    required this.mintDark,
+    required this.accent,
+    required this.accentSoft,
     required this.mintGlow,
-    required this.amber,
-    required this.amberGlow,
-    required this.red,
-    required this.redGlow,
-    required this.purple,
-    required this.blue,
+    required this.warning,
+    required this.warningSoft,
+    required this.danger,
+    required this.dangerSoft,
+    required this.info,
+    required this.infoSoft,
+    required this.proTag,
+    required this.proTagBg,
     required this.pink,
+    required this.divider,
+    required this.toggleOn,
+    required this.toggleOff,
+    required this.ringTrack,
   });
 
   static const dark = _ChompdColorSet(
     bg: ChompdColors.bg,
-    bgCard: ChompdColors.bgCard,
-    bgElevated: ChompdColors.bgElevated,
+    surface: ChompdColors.surface,
+    card: ChompdColors.card,
     bgGlass: ChompdColors.bgGlass,
-    border: ChompdColors.border,
+    cardBorder: ChompdColors.cardBorder,
     borderLight: ChompdColors.borderLight,
     borderHighlight: ChompdColors.borderHighlight,
     text: ChompdColors.text,
     textMid: ChompdColors.textMid,
     textDim: ChompdColors.textDim,
-    mint: ChompdColors.mint,
-    mintDark: ChompdColors.mintDark,
+    accent: ChompdColors.mint,
+    accentSoft: ChompdColors.accentSoft,
     mintGlow: ChompdColors.mintGlow,
-    amber: ChompdColors.amber,
-    amberGlow: ChompdColors.amberGlow,
-    red: ChompdColors.red,
-    redGlow: ChompdColors.redGlow,
-    purple: ChompdColors.purple,
-    blue: ChompdColors.blue,
+    warning: ChompdColors.amber,
+    warningSoft: ChompdColors.warningSoft,
+    danger: ChompdColors.red,
+    dangerSoft: ChompdColors.dangerSoft,
+    info: ChompdColors.blue,
+    infoSoft: ChompdColors.infoSoft,
+    proTag: ChompdColors.proTag,
+    proTagBg: ChompdColors.proTagBg,
     pink: ChompdColors.pink,
+    divider: ChompdColors.divider,
+    toggleOn: ChompdColors.toggleOn,
+    toggleOff: ChompdColors.toggleOff,
+    ringTrack: ChompdColors.ringTrack,
   );
 
   static const light = _ChompdColorSet(
     bg: ChompdColorsLight.bg,
-    bgCard: ChompdColorsLight.bgCard,
-    bgElevated: ChompdColorsLight.bgElevated,
+    surface: ChompdColorsLight.surface,
+    card: ChompdColorsLight.card,
     bgGlass: ChompdColorsLight.bgGlass,
-    border: ChompdColorsLight.border,
+    cardBorder: ChompdColorsLight.cardBorder,
     borderLight: ChompdColorsLight.borderLight,
     borderHighlight: ChompdColorsLight.borderHighlight,
     text: ChompdColorsLight.text,
     textMid: ChompdColorsLight.textMid,
     textDim: ChompdColorsLight.textDim,
-    mint: ChompdColorsLight.mint,
-    mintDark: ChompdColorsLight.mintDark,
+    accent: ChompdColorsLight.mint,
+    accentSoft: ChompdColorsLight.accentSoft,
     mintGlow: ChompdColorsLight.mintGlow,
-    amber: ChompdColorsLight.amber,
-    amberGlow: ChompdColorsLight.amberGlow,
-    red: ChompdColorsLight.red,
-    redGlow: ChompdColorsLight.redGlow,
-    purple: ChompdColorsLight.purple,
-    blue: ChompdColorsLight.blue,
+    warning: ChompdColorsLight.amber,
+    warningSoft: ChompdColorsLight.warningSoft,
+    danger: ChompdColorsLight.red,
+    dangerSoft: ChompdColorsLight.dangerSoft,
+    info: ChompdColorsLight.blue,
+    infoSoft: ChompdColorsLight.infoSoft,
+    proTag: ChompdColorsLight.proTag,
+    proTagBg: ChompdColorsLight.proTagBg,
     pink: ChompdColorsLight.pink,
+    divider: ChompdColorsLight.divider,
+    toggleOn: ChompdColorsLight.toggleOn,
+    toggleOff: ChompdColorsLight.toggleOff,
+    ringTrack: ChompdColorsLight.ringTrack,
   );
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// EFFECTS — Glows, gradients, shadows
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+class ChompdEffects {
+  ChompdEffects._();
+
+  /// Card shadow — subtle accent-tinted elevation.
+  static List<BoxShadow> cardShadow(bool isDark, Color accent) {
+    return isDark
+        ? [BoxShadow(color: accent.withValues(alpha: 0.06), blurRadius: 20)]
+        : [BoxShadow(color: accent.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 2))];
+  }
+
+  /// Ring glow — dual shadow for the spending ring arc.
+  static List<Shadow> ringGlow(bool isDark, Color accent) {
+    return isDark
+        ? [
+            Shadow(color: accent.withValues(alpha: 0.5), blurRadius: 8),
+            Shadow(color: accent.withValues(alpha: 0.2), blurRadius: 20),
+          ]
+        : [
+            Shadow(color: accent.withValues(alpha: 0.3), blurRadius: 6),
+            Shadow(color: accent.withValues(alpha: 0.1), blurRadius: 14),
+          ];
+  }
+
+  /// Ring gradient — accent → blue-teal sweep.
+  static LinearGradient ringGradient(bool isDark) {
+    return isDark
+        ? const LinearGradient(colors: [Color(0xFF4ECCA3), Color(0xFF3DBEE0)])
+        : const LinearGradient(colors: [Color(0xFF1B8F6A), Color(0xFF2D7BC4)]);
+  }
+
+  /// Yearly burn card gradient — 3-stop moody gradient.
+  static LinearGradient burnCardGradient(bool isDark) {
+    return isDark
+        ? const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1A2422), Color(0xFF1E2838), Color(0xFF2A1F3A)],
+          )
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFFFFFFF), Color(0xFFF0FAF5), Color(0xFFF5F0FA)],
+          );
+  }
+
+  /// Burn card shimmer — purple radial in top-right corner.
+  static RadialGradient burnCardShimmer(bool isDark) {
+    return isDark
+        ? RadialGradient(
+            center: Alignment.topRight,
+            radius: 0.8,
+            colors: [const Color(0xFF9B7FE6).withValues(alpha: 0.08), Colors.transparent],
+          )
+        : RadialGradient(
+            center: Alignment.topRight,
+            radius: 0.8,
+            colors: [const Color(0xFF7B5FC4).withValues(alpha: 0.05), Colors.transparent],
+          );
+  }
+
+  /// Ambient top glow — radial gradient behind header.
+  static BoxDecoration ambientTopGlow(bool isDark, Color accent) {
+    return BoxDecoration(
+      gradient: RadialGradient(
+        center: Alignment.topCenter,
+        radius: 0.8,
+        colors: [
+          accent.withValues(alpha: isDark ? 0.06 : 0.04),
+          Colors.transparent,
+        ],
+      ),
+    );
+  }
+
+  /// Category bar segment glow — dark only for non-accent segments.
+  static List<BoxShadow>? categoryBarGlow(bool isDark, Color segmentColor, {bool isAccent = false}) {
+    if (isDark) {
+      return [BoxShadow(color: segmentColor.withValues(alpha: 0.3), blurRadius: 8)];
+    }
+    if (isAccent) {
+      return [BoxShadow(color: segmentColor.withValues(alpha: 0.2), blurRadius: 4)];
+    }
+    return null;
+  }
+
+  /// Burn card border — accent at 15% opacity.
+  static Border burnCardBorder(bool isDark) {
+    return isDark
+        ? Border.all(color: const Color(0xFF4ECCA3).withValues(alpha: 0.15))
+        : Border.all(color: const Color(0xFF1B8F6A).withValues(alpha: 0.15));
+  }
+}
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// CATEGORY COLOURS & ICONS
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// Category brand colours for the spending breakdown bar.
 class CategoryColors {
@@ -218,6 +415,10 @@ class CategoryIcons {
   static IconData? forCategory(String category) => map[category];
 }
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// TYPOGRAPHY
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 /// Typography scale: 10 / 12 / 14 / 16 / 20 / 28
 class ChompdTypography {
   ChompdTypography._();
@@ -226,7 +427,7 @@ class ChompdTypography {
   static TextStyle mono({
     double size = 14,
     FontWeight weight = FontWeight.w400,
-    Color color = ChompdColors.text,
+    Color? color,
     double? letterSpacing,
   }) {
     return GoogleFonts.spaceMono(
@@ -238,6 +439,7 @@ class ChompdTypography {
   }
 
   // Section header labels (e.g. "ACTIVE SUBSCRIPTIONS")
+  // NOTE: Hardcoded colour — callers should override with context.colors
   static TextStyle sectionLabel = GoogleFonts.spaceMono(
     fontSize: 10,
     fontWeight: FontWeight.w400,
@@ -246,6 +448,7 @@ class ChompdTypography {
   );
 
   // Price display (large)
+  // NOTE: Hardcoded colour — callers should override with context.colors
   static TextStyle priceHero = GoogleFonts.spaceMono(
     fontSize: 28,
     fontWeight: FontWeight.w700,
@@ -254,6 +457,7 @@ class ChompdTypography {
   );
 
   // Price in cards
+  // NOTE: Hardcoded colour — callers should override with context.colors
   static TextStyle priceCard = GoogleFonts.spaceMono(
     fontSize: 14,
     fontWeight: FontWeight.w700,
@@ -261,11 +465,16 @@ class ChompdTypography {
   );
 
   // Cycle label (/mo, /yr)
+  // NOTE: Hardcoded colour — callers should override with context.colors
   static TextStyle cycleLabel = const TextStyle(
     fontSize: 9.5,
     color: ChompdColors.textDim,
   );
 }
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// THEME DATA
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 /// The complete themes for Chompd.
 class ChompdTheme {
@@ -278,7 +487,7 @@ class ChompdTheme {
       colorScheme: const ColorScheme.light(
         surface: ChompdColorsLight.bg,
         primary: ChompdColorsLight.mint,
-        secondary: ChompdColorsLight.mintDark,
+        secondary: ChompdColorsLight.mint,
         error: ChompdColorsLight.red,
         onSurface: ChompdColorsLight.text,
         onPrimary: Colors.white,
@@ -299,15 +508,15 @@ class ChompdTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: ChompdColorsLight.bgCard,
+        color: ChompdColorsLight.card,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: ChompdColorsLight.border, width: 1),
+          side: const BorderSide(color: ChompdColorsLight.cardBorder, width: 1),
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: ChompdColorsLight.border,
+        color: ChompdColorsLight.divider,
         thickness: 1,
         space: 0,
       ),
@@ -374,7 +583,7 @@ class ChompdTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: ChompdColorsLight.textMid,
-          side: const BorderSide(color: ChompdColorsLight.border),
+          side: const BorderSide(color: ChompdColorsLight.cardBorder),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
@@ -399,7 +608,7 @@ class ChompdTheme {
       colorScheme: const ColorScheme.dark(
         surface: ChompdColors.bg,
         primary: ChompdColors.mint,
-        secondary: ChompdColors.mintDark,
+        secondary: ChompdColors.mint,
         error: ChompdColors.red,
         onSurface: ChompdColors.text,
         onPrimary: ChompdColors.bg,
@@ -420,15 +629,15 @@ class ChompdTheme {
         ),
       ),
       cardTheme: CardThemeData(
-        color: ChompdColors.bgCard,
+        color: ChompdColors.card,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
-          side: const BorderSide(color: ChompdColors.border, width: 1),
+          side: const BorderSide(color: ChompdColors.cardBorder, width: 1),
         ),
       ),
       dividerTheme: const DividerThemeData(
-        color: ChompdColors.border,
+        color: ChompdColors.divider,
         thickness: 1,
         space: 0,
       ),
@@ -495,7 +704,7 @@ class ChompdTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: ChompdColors.textMid,
-          side: const BorderSide(color: ChompdColors.border),
+          side: const BorderSide(color: ChompdColors.cardBorder),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),

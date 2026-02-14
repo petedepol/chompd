@@ -578,7 +578,7 @@ class SEn extends S {
   String get paywallGeneric => 'Unlock the full Chompd experience.';
 
   @override
-  String get paywallFeature1 => 'Save £100–£500/year on hidden waste';
+  String get paywallFeature1 => 'Save 100–500/year on hidden waste';
 
   @override
   String get paywallFeature2 => 'Never miss a trial expiry again';

@@ -57,7 +57,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
   }
 
   /// Amount with smaller currency symbol, handling prefix/suffix currencies.
-  Widget _buildSplitPrice(double amount, String currency) {
+  Widget _buildSplitPrice(double amount, String currency, Color textColor) {
     final symbol = Subscription.currencySymbol(currency);
     final number = amount.toStringAsFixed(2);
     final isSuffix = Subscription.isSymbolSuffix(currency);
@@ -67,12 +67,12 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
       style: ChompdTypography.mono(
         size: 16,
         weight: FontWeight.w700,
-        color: ChompdColors.text,
+        color: textColor,
       ),
     );
     final numberWidget = Text(
       number,
-      style: ChompdTypography.priceHero,
+      style: ChompdTypography.priceHero.copyWith(color: textColor),
     );
 
     return Row(
@@ -96,6 +96,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final view = ref.watch(spendViewProvider);
     final totalMonthly = ref.watch(monthlySpendProvider);
     final totalYearly = ref.watch(yearlySpendProvider);
@@ -112,6 +113,8 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
     final screenWidth = MediaQuery.of(context).size.width;
     final ringSize = widget.size ?? (screenWidth * 0.42).clamp(140.0, 220.0);
 
+    final isDark = context.isDarkMode;
+
     return GestureDetector(
       onTap: _toggleView,
       child: SizedBox(
@@ -125,6 +128,12 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                 progress: _progress.value,
                 percentage: percentage,
                 overBudget: overBudget,
+                trackColor: c.border,
+                accentColor: c.mint,
+                accentDarkColor: c.mintDark,
+                warningColor: c.amber,
+                dangerColor: c.red,
+                isDark: isDark,
               ),
               child: child,
             );
@@ -145,7 +154,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                         key: ValueKey(isYearly ? 'yearly' : 'monthly'),
                         style: ChompdTypography.mono(
                           size: 11,
-                          color: ChompdColors.textDim,
+                          color: c.textDim,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -153,7 +162,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                     const SizedBox(height: 2),
 
                     // Amount — smaller currency symbol
-                    _buildSplitPrice(animatedTotal, currency),
+                    _buildSplitPrice(animatedTotal, currency, c.text),
                     const SizedBox(height: 2),
 
                     // Budget context
@@ -167,10 +176,10 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                         style: TextStyle(
                           fontSize: 11,
                           color: overBudget
-                              ? ChompdColors.red
+                              ? c.red
                               : percentage > 0.9
-                                  ? ChompdColors.amber
-                                  : ChompdColors.textMid,
+                                  ? c.amber
+                                  : c.textMid,
                         ),
                       ),
                     ),
@@ -181,7 +190,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                       isYearly ? context.l10n.tapForMonthly : context.l10n.tapForYearly,
                       style: ChompdTypography.mono(
                         size: 10,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -190,7 +199,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                       context.l10n.budgetRange(Subscription.formatPrice(0, currency, decimals: 0), Subscription.formatPrice(displayBudget, currency, decimals: 0)),
                       style: TextStyle(
                         fontSize: 10,
-                        color: ChompdColors.textDim.withValues(alpha: 0.7),
+                        color: c.textDim.withValues(alpha: 0.7),
                         letterSpacing: 0.3,
                       ),
                     ),
@@ -209,11 +218,23 @@ class _RingPainter extends CustomPainter {
   final double progress;
   final double percentage;
   final bool overBudget;
+  final Color trackColor;
+  final Color accentColor;
+  final Color accentDarkColor;
+  final Color warningColor;
+  final Color dangerColor;
+  final bool isDark;
 
   _RingPainter({
     required this.progress,
     required this.percentage,
     required this.overBudget,
+    required this.trackColor,
+    required this.accentColor,
+    required this.accentDarkColor,
+    required this.warningColor,
+    required this.dangerColor,
+    required this.isDark,
   });
 
   @override
@@ -224,7 +245,7 @@ class _RingPainter extends CustomPainter {
 
     // Background track
     final trackPaint = Paint()
-      ..color = ChompdColors.border
+      ..color = trackColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth;
     canvas.drawCircle(center, radius, trackPaint);
@@ -239,6 +260,11 @@ class _RingPainter extends CustomPainter {
         ..strokeWidth = strokeWidth
         ..strokeCap = StrokeCap.round;
 
+      // Healthy gradient colours based on theme
+      final healthyGradientColors = isDark
+          ? [const Color(0xFF4ECCA3), const Color(0xFF3DBEE0)]
+          : [const Color(0xFF1B8F6A), const Color(0xFF2D7BC4)];
+
       if (overBudget) {
         // Over budget: red with pulsing intensity
         arcPaint.shader = const LinearGradient(
@@ -249,8 +275,8 @@ class _RingPainter extends CustomPainter {
         final urgency = (percentage - 0.9) / 0.1; // 0.0 → 1.0
         arcPaint.shader = LinearGradient(
           colors: [
-            Color.lerp(ChompdColors.amber, ChompdColors.red, urgency)!,
-            Color.lerp(const Color(0xFFFCD34D), ChompdColors.red, urgency * 0.7)!,
+            Color.lerp(warningColor, dangerColor, urgency)!,
+            Color.lerp(const Color(0xFFFCD34D), dangerColor, urgency * 0.7)!,
           ],
         ).createShader(rect);
       } else if (percentage > 0.7) {
@@ -258,14 +284,14 @@ class _RingPainter extends CustomPainter {
         final caution = (percentage - 0.7) / 0.2; // 0.0 → 1.0
         arcPaint.shader = LinearGradient(
           colors: [
-            Color.lerp(ChompdColors.mintDark, ChompdColors.amber, caution)!,
-            Color.lerp(ChompdColors.mint, const Color(0xFFFCD34D), caution)!,
+            Color.lerp(accentDarkColor, warningColor, caution)!,
+            Color.lerp(accentColor, const Color(0xFFFCD34D), caution)!,
           ],
         ).createShader(rect);
       } else {
-        // 0-70%: healthy mint gradient
-        arcPaint.shader = const LinearGradient(
-          colors: [ChompdColors.mintDark, ChompdColors.mint],
+        // 0-70%: healthy gradient from theme v2
+        arcPaint.shader = LinearGradient(
+          colors: healthyGradientColors,
         ).createShader(rect);
       }
 
@@ -280,15 +306,15 @@ class _RingPainter extends CustomPainter {
       // Subtle glow effect
       final Color glowColor;
       if (overBudget) {
-        glowColor = ChompdColors.red;
+        glowColor = dangerColor;
       } else if (percentage > 0.9) {
         final urgency = (percentage - 0.9) / 0.1;
-        glowColor = Color.lerp(ChompdColors.amber, ChompdColors.red, urgency)!;
+        glowColor = Color.lerp(warningColor, dangerColor, urgency)!;
       } else if (percentage > 0.7) {
         final caution = (percentage - 0.7) / 0.2;
-        glowColor = Color.lerp(ChompdColors.mint, ChompdColors.amber, caution)!;
+        glowColor = Color.lerp(accentColor, warningColor, caution)!;
       } else {
-        glowColor = ChompdColors.mint;
+        glowColor = accentColor;
       }
 
       final glowPaint = Paint()
@@ -326,6 +352,12 @@ class _RingPainter extends CustomPainter {
   bool shouldRepaint(_RingPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.percentage != percentage ||
-        oldDelegate.overBudget != overBudget;
+        oldDelegate.overBudget != overBudget ||
+        oldDelegate.trackColor != trackColor ||
+        oldDelegate.accentColor != accentColor ||
+        oldDelegate.accentDarkColor != accentDarkColor ||
+        oldDelegate.warningColor != warningColor ||
+        oldDelegate.dangerColor != dangerColor ||
+        oldDelegate.isDark != isDark;
   }
 }

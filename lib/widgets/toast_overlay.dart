@@ -88,9 +88,10 @@ class _ScanToastState extends State<ScanToast>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final r = widget.result;
     final isWarning = r.isTrial;
-    final glowColor = isWarning ? ChompdColors.amber : ChompdColors.mint;
+    final glowColor = isWarning ? c.amber : c.mint;
 
     return SlideTransition(
       position: _slideAnimation,
@@ -100,7 +101,7 @@ class _ScanToastState extends State<ScanToast>
           margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: ChompdColors.bgElevated,
+            color: c.bgElevated,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: glowColor.withValues(alpha: 0.3),
@@ -148,10 +149,10 @@ class _ScanToastState extends State<ScanToast>
                   children: [
                     Text(
                       r.serviceName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -162,7 +163,7 @@ class _ScanToastState extends State<ScanToast>
                           style: ChompdTypography.mono(
                             size: 12,
                             weight: FontWeight.w700,
-                            color: ChompdColors.textMid,
+                            color: c.textMid,
                           ),
                         ),
                         if (isWarning) ...[
@@ -173,15 +174,15 @@ class _ScanToastState extends State<ScanToast>
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: ChompdColors.amberGlow,
+                              color: c.amberGlow,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               context.l10n.trialLabel,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 8,
                                 fontWeight: FontWeight.w700,
-                                color: ChompdColors.amber,
+                                color: c.amber,
                               ),
                             ),
                           ),

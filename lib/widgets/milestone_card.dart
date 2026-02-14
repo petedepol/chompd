@@ -181,6 +181,7 @@ class _MilestoneChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final remaining = (milestone.amount - totalSaved).clamp(0.0, milestone.amount);
 
     return Container(
@@ -188,20 +189,20 @@ class _MilestoneChip extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: isReached
-            ? ChompdColors.mint.withValues(alpha: 0.08)
-            : ChompdColors.bgCard,
+            ? c.mint.withValues(alpha: 0.08)
+            : c.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: isReached
-              ? ChompdColors.mint.withValues(alpha: 0.25)
+              ? c.mint.withValues(alpha: 0.25)
               : isCurrent
-                  ? ChompdColors.mint.withValues(alpha: 0.15)
-                  : ChompdColors.border,
+                  ? c.mint.withValues(alpha: 0.15)
+                  : c.border,
         ),
         boxShadow: isReached
             ? [
                 BoxShadow(
-                  color: ChompdColors.mint.withValues(alpha: 0.08),
+                  color: c.mint.withValues(alpha: 0.08),
                   blurRadius: 12,
                 ),
               ]
@@ -221,7 +222,7 @@ class _MilestoneChip extends StatelessWidget {
                 style: ChompdTypography.mono(
                   size: 11,
                   weight: FontWeight.w700,
-                  color: isReached ? ChompdColors.mint : ChompdColors.textDim,
+                  color: isReached ? c.mint : c.textDim,
                 ),
               ),
             ],
@@ -234,7 +235,7 @@ class _MilestoneChip extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: isReached ? ChompdColors.text : ChompdColors.textMid,
+              color: isReached ? c.text : c.textMid,
             ),
           ),
           const SizedBox(height: 6),
@@ -245,9 +246,9 @@ class _MilestoneChip extends StatelessWidget {
             child: LinearProgressIndicator(
               value: fillProgress,
               minHeight: 3,
-              backgroundColor: ChompdColors.bgElevated,
+              backgroundColor: c.bgElevated,
               valueColor: AlwaysStoppedAnimation<Color>(
-                isReached ? ChompdColors.mint : ChompdColors.mint.withValues(alpha: 0.5),
+                isReached ? c.mint : c.mint.withValues(alpha: 0.5),
               ),
             ),
           ),
@@ -260,7 +261,7 @@ class _MilestoneChip extends StatelessWidget {
                 : context.l10n.milestoneToGo(Subscription.formatPrice(remaining, currencyCode, decimals: 0)),
             style: ChompdTypography.mono(
               size: 8,
-              color: isReached ? ChompdColors.mint : ChompdColors.textDim,
+              color: isReached ? c.mint : c.textDim,
             ),
           ),
         ],
@@ -277,13 +278,14 @@ class MilestoneBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: ChompdColors.mint.withValues(alpha: 0.12),
+        color: c.mint.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: ChompdColors.mint.withValues(alpha: 0.2),
+          color: c.mint.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -296,7 +298,7 @@ class MilestoneBadge extends StatelessWidget {
             style: ChompdTypography.mono(
               size: 9,
               weight: FontWeight.w700,
-              color: ChompdColors.mint,
+              color: c.mint,
             ),
           ),
         ],

@@ -167,6 +167,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     // Use viewInsets to shrink the sheet when keyboard opens,
     // instead of adding padding that causes overflow.
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
@@ -188,7 +189,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
         maxHeight: MediaQuery.of(context).size.height * 0.85 - bottomInset,
       ),
       decoration: BoxDecoration(
-        color: ChompdColors.bgElevated.withValues(alpha: 0.85),
+        color: c.bgElevated.withValues(alpha: 0.85),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -201,7 +202,7 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
               width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: ChompdColors.border,
+                color: c.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -215,19 +216,19 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                 Expanded(
                   child: Text(
                     context.l10n.addSubscriptionSheet,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(
+                  child: Icon(
                     Icons.close_rounded,
                     size: 20,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                 ),
               ],
@@ -255,21 +256,21 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(14),
-                    gradient: const LinearGradient(
-                      colors: [ChompdColors.mintDark, ChompdColors.mint],
+                    gradient: LinearGradient(
+                      colors: [c.mintDark, c.mint],
                     ),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.edit_outlined, size: 16, color: ChompdColors.bg),
+                      Icon(Icons.edit_outlined, size: 16, color: c.bg),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.addManually,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: ChompdColors.bg,
+                          color: c.bg,
                         ),
                       ),
                     ],
@@ -285,18 +286,18 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  const Expanded(child: Divider(color: ChompdColors.border)),
+                  Expanded(child: Divider(color: c.border)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
                       context.l10n.orChooseService,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                     ),
                   ),
-                  const Expanded(child: Divider(color: ChompdColors.border)),
+                  Expanded(child: Divider(color: c.border)),
                 ],
               ),
             ),
@@ -308,29 +309,29 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: TextField(
                 onChanged: _onSearchChanged,
-                style: const TextStyle(fontSize: 13, color: ChompdColors.text),
+                style: TextStyle(fontSize: 13, color: c.text),
                 decoration: InputDecoration(
                   hintText: context.l10n.searchServices,
-                  hintStyle: const TextStyle(color: ChompdColors.textDim),
-                  prefixIcon: const Icon(
+                  hintStyle: TextStyle(color: c.textDim),
+                  prefixIcon: Icon(
                     Icons.search_rounded,
                     size: 18,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                   filled: true,
-                  fillColor: ChompdColors.bgCard,
+                  fillColor: c.bgCard,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: ChompdColors.border),
+                    borderSide: BorderSide(color: c.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: ChompdColors.border),
+                    borderSide: BorderSide(color: c.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: ChompdColors.mint),
+                    borderSide: BorderSide(color: c.mint),
                   ),
                 ),
               ),
@@ -447,10 +448,11 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
     ref.read(subscriptionsProvider.notifier).add(sub);
     Navigator.of(context).pop();
 
+    final c = context.colors;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('${tpl.name} added!'),
-        backgroundColor: ChompdColors.bgElevated,
+        backgroundColor: c.bgElevated,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 2),
@@ -519,13 +521,14 @@ class _EditPanelContentState extends State<_EditPanelContent> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final isValid = (double.tryParse(widget.priceCtrl.text) ?? 0) > 0;
 
     return Container(
       margin: const EdgeInsets.only(top: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: _brandColor.withValues(alpha: 0.3)),
       ),
@@ -564,17 +567,17 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                   children: [
                     Text(
                       widget.template.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                     Text(
                       AppConstants.localisedCategory(widget.template.category, context.l10n),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                     ),
                   ],
@@ -582,10 +585,10 @@ class _EditPanelContentState extends State<_EditPanelContent> {
               ),
               GestureDetector(
                 onTap: widget.onDismiss,
-                child: const Icon(
+                child: Icon(
                   Icons.close_rounded,
                   size: 18,
-                  color: ChompdColors.textDim,
+                  color: c.textDim,
                 ),
               ),
             ],
@@ -620,12 +623,12 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                   ),
                   decoration: InputDecoration(
                     labelText: context.l10n.priceField,
-                    labelStyle: const TextStyle(
+                    labelStyle: TextStyle(
                       fontSize: 11,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                     filled: true,
-                    fillColor: ChompdColors.bgElevated,
+                    fillColor: c.bgElevated,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 12,
                       vertical: 10,
@@ -643,7 +646,7 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                               margin: const EdgeInsets.only(right: 4),
                               decoration: BoxDecoration(
                                 color: isValid
-                                    ? ChompdColors.mint.withValues(alpha: 0.15)
+                                    ? c.mint.withValues(alpha: 0.15)
                                     : Colors.transparent,
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -651,8 +654,8 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                                 Icons.check_rounded,
                                 size: 18,
                                 color: isValid
-                                    ? ChompdColors.mint
-                                    : ChompdColors.textDim,
+                                    ? c.mint
+                                    : c.textDim,
                               ),
                             ),
                           )
@@ -663,15 +666,15 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                     ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: ChompdColors.border),
+                      borderSide: BorderSide(color: c.border),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: ChompdColors.border),
+                      borderSide: BorderSide(color: c.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: ChompdColors.mint),
+                      borderSide: BorderSide(color: c.mint),
                     ),
                   ),
                 ),
@@ -684,29 +687,29 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
-                    color: ChompdColors.bgElevated,
+                    color: c.bgElevated,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: ChompdColors.border),
+                    border: Border.all(color: c.border),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: widget.currency,
                       isExpanded: true,
-                      dropdownColor: ChompdColors.bgElevated,
+                      dropdownColor: c.bgElevated,
                       style: ChompdTypography.mono(
                         size: 12,
                         weight: FontWeight.w600,
                       ),
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.expand_more_rounded,
                         size: 16,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                       items: supportedCurrencies
-                          .map((c) => DropdownMenuItem<String>(
-                                value: c['code'] as String,
+                          .map((cur) => DropdownMenuItem<String>(
+                                value: cur['code'] as String,
                                 child: Text(
-                                  '${c['symbol']} ${c['code']}',
+                                  '${cur['symbol']} ${cur['code']}',
                                   style: ChompdTypography.mono(
                                     size: 12,
                                     weight: FontWeight.w600,
@@ -728,35 +731,35 @@ class _EditPanelContentState extends State<_EditPanelContent> {
 
           // Billing cycle chips
           Row(
-            children: BillingCycle.values.map((c) {
-              final isSelected = c == widget.cycle;
+            children: BillingCycle.values.map((cycle) {
+              final isSelected = cycle == widget.cycle;
               return Expanded(
                 child: GestureDetector(
-                  onTap: () => widget.onCycleChanged(c),
+                  onTap: () => widget.onCycleChanged(cycle),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     margin: EdgeInsets.only(
-                      right: c != BillingCycle.values.last ? 6 : 0,
+                      right: cycle != BillingCycle.values.last ? 6 : 0,
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? ChompdColors.mint.withValues(alpha: 0.12)
-                          : ChompdColors.bgElevated,
+                          ? c.mint.withValues(alpha: 0.12)
+                          : c.bgElevated,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isSelected
-                            ? ChompdColors.mint.withValues(alpha: 0.5)
-                            : ChompdColors.border,
+                            ? c.mint.withValues(alpha: 0.5)
+                            : c.border,
                       ),
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      c.localShortLabel(context.l10n),
+                      cycle.localShortLabel(context.l10n),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? ChompdColors.mint : ChompdColors.textDim,
+                        color: isSelected ? c.mint : c.textDim,
                       ),
                     ),
                   ),
@@ -777,13 +780,13 @@ class _EditPanelContentState extends State<_EditPanelContent> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: widget.isTrial
-                    ? ChompdColors.amber.withValues(alpha: 0.08)
-                    : ChompdColors.bgElevated,
+                    ? c.amber.withValues(alpha: 0.08)
+                    : c.bgElevated,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: widget.isTrial
-                      ? ChompdColors.amber.withValues(alpha: 0.3)
-                      : ChompdColors.border,
+                      ? c.amber.withValues(alpha: 0.3)
+                      : c.border,
                 ),
               ),
               child: Row(
@@ -794,8 +797,8 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                         : Icons.timer_off_outlined,
                     size: 16,
                     color: widget.isTrial
-                        ? ChompdColors.amber
-                        : ChompdColors.textDim,
+                        ? c.amber
+                        : c.textDim,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -805,8 +808,8 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: widget.isTrial
-                            ? ChompdColors.amber
-                            : ChompdColors.textDim,
+                            ? c.amber
+                            : c.textDim,
                       ),
                     ),
                   ),
@@ -816,8 +819,8 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(10),
                       color: widget.isTrial
-                          ? ChompdColors.amber
-                          : ChompdColors.border,
+                          ? c.amber
+                          : c.border,
                     ),
                     alignment: widget.isTrial
                         ? Alignment.centerRight
@@ -828,8 +831,8 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                       height: 16,
                       decoration: BoxDecoration(
                         color: widget.isTrial
-                            ? ChompdColors.bg
-                            : ChompdColors.textDim,
+                            ? c.bg
+                            : c.textDim,
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
@@ -846,9 +849,9 @@ class _EditPanelContentState extends State<_EditPanelContent> {
               children: [
                 Text(
                   context.l10n.trialDurationLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -867,13 +870,13 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                         ),
                         decoration: BoxDecoration(
                           color: widget.trialDays == days
-                              ? ChompdColors.amber.withValues(alpha: 0.15)
-                              : ChompdColors.bgElevated,
+                              ? c.amber.withValues(alpha: 0.15)
+                              : c.bgElevated,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: widget.trialDays == days
-                                ? ChompdColors.amber.withValues(alpha: 0.4)
-                                : ChompdColors.border,
+                                ? c.amber.withValues(alpha: 0.4)
+                                : c.border,
                           ),
                         ),
                         child: Text(
@@ -888,8 +891,8 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                                 ? FontWeight.w700
                                 : FontWeight.w500,
                             color: widget.trialDays == days
-                                ? ChompdColors.amber
-                                : ChompdColors.textDim,
+                                ? c.amber
+                                : c.textDim,
                           ),
                         ),
                       ),
@@ -911,11 +914,11 @@ class _EditPanelContentState extends State<_EditPanelContent> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 gradient: isValid
-                    ? const LinearGradient(
-                        colors: [ChompdColors.mintDark, ChompdColors.mint],
+                    ? LinearGradient(
+                        colors: [c.mintDark, c.mint],
                       )
                     : null,
-                color: isValid ? null : ChompdColors.border,
+                color: isValid ? null : c.border,
               ),
               alignment: Alignment.center,
               child: Text(
@@ -923,7 +926,7 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
-                  color: isValid ? ChompdColors.bg : ChompdColors.textDim,
+                  color: isValid ? c.bg : c.textDim,
                 ),
               ),
             ),
@@ -953,6 +956,7 @@ class _TemplateRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -962,12 +966,12 @@ class _TemplateRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? _color.withValues(alpha: 0.08)
-              : ChompdColors.bgCard,
+              : c.bgCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected
                 ? _color.withValues(alpha: 0.4)
-                : ChompdColors.border,
+                : c.border,
           ),
         ),
         child: Row(
@@ -998,17 +1002,17 @@ class _TemplateRow extends StatelessWidget {
                 children: [
                   Text(
                     template.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                   Text(
                     AppConstants.localisedCategory(template.category, context.l10n),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ],
@@ -1019,7 +1023,7 @@ class _TemplateRow extends StatelessWidget {
               style: ChompdTypography.mono(
                 size: 12,
                 weight: FontWeight.w700,
-                color: ChompdColors.textMid,
+                color: c.textMid,
               ),
             ),
             const SizedBox(width: 8),
@@ -1030,14 +1034,14 @@ class _TemplateRow extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isSelected
                     ? _color.withValues(alpha: 0.2)
-                    : ChompdColors.mint.withValues(alpha: 0.12),
+                    : c.mint.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(8),
               ),
               alignment: Alignment.center,
               child: Icon(
                 isSelected ? Icons.check_rounded : Icons.add_rounded,
                 size: 16,
-                color: isSelected ? _color : ChompdColors.mint,
+                color: isSelected ? _color : c.mint,
               ),
             ),
           ],

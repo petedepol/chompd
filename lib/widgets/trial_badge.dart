@@ -52,6 +52,7 @@ class _TrialBadgeState extends State<TrialBadge>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final isUrgent = widget.daysRemaining <= 3;
     final shouldPulse = widget.daysRemaining <= 7;
 
@@ -59,8 +60,8 @@ class _TrialBadgeState extends State<TrialBadge>
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: isUrgent
-            ? ChompdColors.amberGlow
-            : ChompdColors.amber.withValues(alpha: 0.09),
+            ? c.amberGlow
+            : c.amber.withValues(alpha: 0.09),
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
@@ -70,7 +71,7 @@ class _TrialBadgeState extends State<TrialBadge>
         style: ChompdTypography.mono(
           size: 10,
           weight: FontWeight.w700,
-          color: ChompdColors.amber,
+          color: c.amber,
         ).copyWith(
           textBaseline: TextBaseline.alphabetic,
         ),

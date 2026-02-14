@@ -13,6 +13,7 @@ class TrapStatsCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     final trapStats = ref.watch(trapStatsProvider);
     final currency = ref.watch(currencyProvider);
 
@@ -37,10 +38,10 @@ class TrapStatsCard extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
       child: Container(
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: ChompdColors.mintGlow.withValues(alpha: 0.15),
+          color: c.mintGlow.withValues(alpha: 0.15),
         ),
       ),
       padding: const EdgeInsets.all(16),
@@ -58,7 +59,7 @@ class TrapStatsCard extends ConsumerWidget {
               Text(
                 context.l10n.unchompd,
                 style: TextStyle(
-                  color: ChompdColors.textMid,
+                  color: c.textMid,
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                 ),
@@ -69,7 +70,7 @@ class TrapStatsCard extends ConsumerWidget {
           Text(
             Subscription.formatPrice(trapStats.totalSaved, currency),
             style: GoogleFonts.spaceMono(
-              color: ChompdColors.mint,
+              color: c.mint,
               fontSize: 28,
               fontWeight: FontWeight.bold,
             ),
@@ -78,7 +79,7 @@ class TrapStatsCard extends ConsumerWidget {
           Text(
             context.l10n.fromSubscriptionTraps,
             style: TextStyle(
-              color: ChompdColors.textDim,
+              color: c.textDim,
               fontSize: 12,
             ),
           ),
@@ -86,7 +87,7 @@ class TrapStatsCard extends ConsumerWidget {
           Text(
             breakdownText,
             style: GoogleFonts.spaceMono(
-              color: ChompdColors.textDim,
+              color: c.textDim,
               fontSize: 10,
             ),
           ),

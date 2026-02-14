@@ -59,6 +59,7 @@ class _MoneySavedCounterState extends State<MoneySavedCounter>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return AnimatedBuilder(
       animation: _countAnimation,
       builder: (context, child) {
@@ -67,7 +68,7 @@ class _MoneySavedCounterState extends State<MoneySavedCounter>
           style: ChompdTypography.mono(
             size: 14,
             weight: FontWeight.w700,
-            color: ChompdColors.mint,
+            color: c.mint,
           ),
         );
       },

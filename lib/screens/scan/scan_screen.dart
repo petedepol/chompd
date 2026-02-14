@@ -67,6 +67,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final scanState = ref.watch(scanProvider);
     final scanCounter = ref.watch(scanCounterProvider);
 
@@ -78,7 +79,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     });
 
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       body: Stack(
         children: [
           // ─── Main Content ───
@@ -125,6 +126,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
   Widget _buildTopBar(
       BuildContext context, ScanState scanState, int scanCount) {
+    final c = context.colors;
     final isPro = ref.watch(isProProvider);
     final remaining = ref.watch(remainingScansProvider);
 
@@ -142,15 +144,15 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: ChompdColors.bgElevated,
+                color: c.bgElevated,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: ChompdColors.border),
+                border: Border.all(color: c.border),
               ),
               alignment: Alignment.center,
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 14,
-                color: ChompdColors.textMid,
+                color: c.textMid,
               ),
             ),
           ),
@@ -163,18 +165,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.auto_awesome,
                       size: 14,
-                      color: ChompdColors.purple,
+                      color: c.purple,
                     ),
                     const SizedBox(width: 6),
                     Text(
                       context.l10n.scanTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                   ],
@@ -182,9 +184,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 if (scanState.phase == ScanPhase.scanning)
                   Text(
                     context.l10n.scanAnalysing,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: ChompdColors.purple,
+                      color: c.purple,
                     ),
                   ),
               ],
@@ -196,10 +198,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: isPro
-                  ? ChompdColors.mint.withValues(alpha: 0.12)
+                  ? c.mint.withValues(alpha: 0.12)
                   : (remaining == 0
-                      ? ChompdColors.red.withValues(alpha: 0.12)
-                      : ChompdColors.purple.withValues(alpha: 0.12)),
+                      ? c.red.withValues(alpha: 0.12)
+                      : c.purple.withValues(alpha: 0.12)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
@@ -208,10 +210,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 size: 9,
                 weight: FontWeight.w700,
                 color: isPro
-                    ? ChompdColors.mint
+                    ? c.mint
                     : (remaining == 0
-                        ? ChompdColors.red
-                        : ChompdColors.purple),
+                        ? c.red
+                        : c.purple),
               ),
             ),
           ),
@@ -223,6 +225,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   // ─── Idle View — scenario picker for prototype ───
 
   Widget _buildIdleView(int scanCount) {
+    final c = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -234,33 +237,33 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: ChompdColors.purple.withValues(alpha: 0.12),
+              color: c.purple.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(24),
             ),
             alignment: Alignment.center,
-            child: const Icon(
+            child: Icon(
               Icons.auto_awesome,
               size: 32,
-              color: ChompdColors.purple,
+              color: c.purple,
             ),
           ),
           const SizedBox(height: 20),
 
           Text(
             context.l10n.scanIdleTitle,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w700,
-              color: ChompdColors.text,
+              color: c.text,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             context.l10n.scanIdleSubtitle,
             textAlign: TextAlign.center,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: ChompdColors.textDim,
+              color: c.textDim,
               height: 1.5,
             ),
           ),
@@ -274,13 +277,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [ChompdColors.purple, Color(0xFF8B5CF6)],
+                gradient: LinearGradient(
+                  colors: [c.purple, Color(0xFF8B5CF6)],
                 ),
                 borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
-                    color: ChompdColors.purple.withValues(alpha: 0.27),
+                    color: c.purple.withValues(alpha: 0.27),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -315,20 +318,20 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: ChompdColors.border),
+                border: Border.all(color: c.border),
               ),
               alignment: Alignment.center,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.photo_library_outlined, size: 18, color: ChompdColors.textMid),
+                  Icon(Icons.photo_library_outlined, size: 18, color: c.textMid),
                   const SizedBox(width: 8),
                   Text(
                     context.l10n.chooseFromGallery,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.textMid,
+                      color: c.textMid,
                     ),
                   ),
                 ],
@@ -381,7 +384,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 ? context.l10n.cameraPermError
                 : context.l10n.galleryPermError,
           ),
-          backgroundColor: ChompdColors.bgElevated,
+          backgroundColor: context.colors.bgElevated,
         ),
       );
     }
@@ -390,6 +393,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   // ─── Trap Skipped Celebration View ───
 
   Widget _buildTrapSkippedView(ScanState scanState) {
+    final c = context.colors;
     final savedAmount = scanState.skippedSavingsAmount ?? 0;
     final serviceName = scanState.skippedServiceName ?? 'Unknown';
 
@@ -411,10 +415,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             // Smart move text
             Text(
               context.l10n.smartMove,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w700,
-                color: ChompdColors.text,
+                color: c.text,
               ),
             ),
             const SizedBox(height: 8),
@@ -422,9 +426,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             // Service name
             Text(
               context.l10n.youSkipped(serviceName),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: ChompdColors.textMid,
+                color: c.textMid,
               ),
             ),
             const SizedBox(height: 20),
@@ -436,13 +440,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 vertical: 14,
               ),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [ChompdColors.mintDark, ChompdColors.mint],
+                gradient: LinearGradient(
+                  colors: [c.mintDark, c.mint],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: ChompdColors.mint.withValues(alpha: 0.3),
+                    color: c.mint.withValues(alpha: 0.3),
                     blurRadius: 20,
                     offset: const Offset(0, 4),
                   ),
@@ -452,10 +456,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 children: [
                   Text(
                     context.l10n.saved,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: ChompdColors.bg,
+                      color: c.bg,
                       letterSpacing: 1.5,
                     ),
                   ),
@@ -465,7 +469,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                     style: ChompdTypography.mono(
                       size: 32,
                       weight: FontWeight.w700,
-                      color: ChompdColors.bg,
+                      color: c.bg,
                     ),
                   ),
                 ],
@@ -476,9 +480,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             // Added to Unchompd note
             Text(
               context.l10n.addedToUnchompd,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: ChompdColors.textDim,
+                color: c.textDim,
               ),
             ),
             const SizedBox(height: 32),
@@ -493,16 +497,16 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 decoration: BoxDecoration(
-                  border: Border.all(color: ChompdColors.border),
+                  border: Border.all(color: c.border),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 alignment: Alignment.center,
                 child: Text(
                   context.l10n.done,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: ChompdColors.textMid,
+                    color: c.textMid,
                   ),
                 ),
               ),
@@ -516,6 +520,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   // ─── Chat View ───
 
   Widget _buildChatView(ScanState scanState) {
+    final c = context.colors;
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -539,7 +544,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                 const SizedBox(height: 8),
                 _ChatBubble(
                   isUser: false,
-                  borderColor: ChompdColors.purple,
+                  borderColor: c.purple,
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -549,7 +554,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                         context.l10n.analysing,
                         style: TextStyle(
                           fontSize: 12,
-                          color: ChompdColors.purple.withValues(alpha: 0.7),
+                          color: c.purple.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -892,6 +897,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   // ─── Bottom Bar ───
 
   Widget _buildBottomBar(ScanState scanState) {
+    final c = context.colors;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
     if (scanState.phase == ScanPhase.idle) {
@@ -916,18 +922,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 14),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [ChompdColors.mintDark, ChompdColors.mint],
+              gradient: LinearGradient(
+                colors: [c.mintDark, c.mint],
               ),
               borderRadius: BorderRadius.circular(14),
             ),
             alignment: Alignment.center,
             child: Text(
               context.l10n.done,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: ChompdColors.bg,
+                color: c.bg,
               ),
             ),
           ),
@@ -962,6 +968,7 @@ class _ChatBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Align(
       alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -973,8 +980,8 @@ class _ChatBubble extends StatelessWidget {
         decoration: BoxDecoration(
           color: backgroundColor ??
               (isUser
-                  ? ChompdColors.mint.withValues(alpha: 0.12)
-                  : ChompdColors.bgCard),
+                  ? c.mint.withValues(alpha: 0.12)
+                  : c.bgCard),
           borderRadius: BorderRadius.only(
             topLeft: const Radius.circular(14),
             topRight: const Radius.circular(14),
@@ -982,7 +989,7 @@ class _ChatBubble extends StatelessWidget {
             bottomRight: Radius.circular(isUser ? 4 : 14),
           ),
           border: Border.all(
-            color: borderColor ?? ChompdColors.border,
+            color: borderColor ?? c.border,
           ),
         ),
         child: child,
@@ -998,10 +1005,11 @@ class _SystemMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return _ChatBubble(
       isUser: false,
-      borderColor: ChompdColors.purple.withValues(alpha: 0.3),
-      backgroundColor: ChompdColors.purple.withValues(alpha: 0.08),
+      borderColor: c.purple.withValues(alpha: 0.3),
+      backgroundColor: c.purple.withValues(alpha: 0.08),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1010,9 +1018,9 @@ class _SystemMessage extends StatelessWidget {
           Flexible(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: ChompdColors.text,
+                color: c.text,
               ),
             ),
           ),
@@ -1029,9 +1037,10 @@ class _InfoMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return _ChatBubble(
       isUser: false,
-      borderColor: ChompdColors.blue.withValues(alpha: 0.3),
+      borderColor: c.blue.withValues(alpha: 0.3),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1040,9 +1049,9 @@ class _InfoMessage extends StatelessWidget {
           Flexible(
             child: Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12.5,
-                color: ChompdColors.textMid,
+                color: c.textMid,
                 height: 1.4,
               ),
             ),
@@ -1061,9 +1070,10 @@ class _PartialResultMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return _ChatBubble(
       isUser: false,
-      borderColor: ChompdColors.amber.withValues(alpha: 0.4),
+      borderColor: c.amber.withValues(alpha: 0.4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1076,9 +1086,9 @@ class _PartialResultMessage extends StatelessWidget {
               Flexible(
                 child: Text(
                   text,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
-                    color: ChompdColors.text,
+                    color: c.text,
                     height: 1.4,
                   ),
                 ),
@@ -1090,7 +1100,7 @@ class _PartialResultMessage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: ChompdColors.bgElevated,
+                color: c.bgElevated,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -1102,16 +1112,16 @@ class _PartialResultMessage extends StatelessWidget {
                       size: 11,
                       weight: FontWeight.w700,
                       color: result!.overallConfidence >= 0.7
-                          ? ChompdColors.amber
-                          : ChompdColors.red,
+                          ? c.amber
+                          : c.red,
                     ),
                   ),
                   const SizedBox(width: 6),
                   Text(
                     context.l10n.confidence,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ],
@@ -1174,9 +1184,10 @@ class _QuestionMessageState extends State<_QuestionMessage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return _ChatBubble(
       isUser: false,
-      borderColor: ChompdColors.purple.withValues(alpha: 0.4),
+      borderColor: c.purple.withValues(alpha: 0.4),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1189,9 +1200,9 @@ class _QuestionMessageState extends State<_QuestionMessage> {
               Flexible(
                 child: Text(
                   widget.text,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12.5,
-                    color: ChompdColors.text,
+                    color: c.text,
                     height: 1.4,
                   ),
                 ),
@@ -1205,27 +1216,27 @@ class _QuestionMessageState extends State<_QuestionMessage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: ChompdColors.mint.withValues(alpha: 0.1),
+                color: c.mint.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: ChompdColors.mint.withValues(alpha: 0.3),
+                  color: c.mint.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.check_rounded,
                     size: 14,
-                    color: ChompdColors.mint,
+                    color: c.mint,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     widget.selectedAnswer ?? '',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.mint,
+                      color: c.mint,
                     ),
                   ),
                 ],
@@ -1242,37 +1253,37 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                   child: TextField(
                     controller: _otherCtrl,
                     autofocus: true,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                     decoration: InputDecoration(
                       hintText: context.l10n.typeYourAnswer,
-                      hintStyle: const TextStyle(
-                        color: ChompdColors.textDim,
+                      hintStyle: TextStyle(
+                        color: c.textDim,
                       ),
                       filled: true,
-                      fillColor: ChompdColors.bgElevated,
+                      fillColor: c.bgElevated,
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: ChompdColors.border,
+                        borderSide: BorderSide(
+                          color: c.border,
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: ChompdColors.border,
+                        borderSide: BorderSide(
+                          color: c.border,
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(
-                          color: ChompdColors.purple,
+                        borderSide: BorderSide(
+                          color: c.purple,
                         ),
                       ),
                     ),
@@ -1294,7 +1305,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: ChompdColors.purple,
+                      color: c.purple,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     alignment: Alignment.center,
@@ -1328,6 +1339,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
   }
 
   Widget _buildPriceInput() {
+    final c = context.colors;
     final isValid = (double.tryParse(_priceCtrl.text.trim()) ?? 0) > 0;
 
     return Column(
@@ -1353,25 +1365,25 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                 decoration: InputDecoration(
                   hintText: '0.00',
                   hintStyle: TextStyle(
-                    color: ChompdColors.textDim.withValues(alpha: 0.5),
+                    color: c.textDim.withValues(alpha: 0.5),
                   ),
                   filled: true,
-                  fillColor: ChompdColors.bgElevated,
+                  fillColor: c.bgElevated,
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 10,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: ChompdColors.border),
+                    borderSide: BorderSide(color: c.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: ChompdColors.border),
+                    borderSide: BorderSide(color: c.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: ChompdColors.purple),
+                    borderSide: BorderSide(color: c.purple),
                   ),
                 ),
                 onChanged: (_) => setState(() {}),
@@ -1384,22 +1396,22 @@ class _QuestionMessageState extends State<_QuestionMessage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
-                color: ChompdColors.bgElevated,
+                color: c.bgElevated,
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: ChompdColors.border),
+                border: Border.all(color: c.border),
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: _priceCurrency,
-                  dropdownColor: ChompdColors.bgElevated,
+                  dropdownColor: c.bgElevated,
                   style: ChompdTypography.mono(
                     size: 11,
                     weight: FontWeight.w600,
                   ),
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.expand_more_rounded,
                     size: 14,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                   items: supportedCurrencies
                       .map((c) => DropdownMenuItem<String>(
@@ -1428,31 +1440,31 @@ class _QuestionMessageState extends State<_QuestionMessage> {
         Row(
           children: [
             // Cycle chips
-            ...['mo', 'yr', 'wk', 'qtr'].map((c) {
-              final isSelected = c == _priceCycle;
-              final label = c == 'mo'
+            ...['mo', 'yr', 'wk', 'qtr'].map((cycle) {
+              final isSelected = cycle == _priceCycle;
+              final label = cycle == 'mo'
                   ? context.l10n.cycleMonthly
-                  : c == 'yr'
+                  : cycle == 'yr'
                       ? context.l10n.cycleYearly
-                      : c == 'wk'
+                      : cycle == 'wk'
                           ? context.l10n.cycleWeekly
                           : context.l10n.cycleQuarterly;
               return Padding(
                 padding: const EdgeInsets.only(right: 6),
                 child: GestureDetector(
-                  onTap: () => setState(() => _priceCycle = c),
+                  onTap: () => setState(() => _priceCycle = cycle),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? ChompdColors.purple.withValues(alpha: 0.15)
-                          : ChompdColors.bgElevated,
+                          ? c.purple.withValues(alpha: 0.15)
+                          : c.bgElevated,
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
                         color: isSelected
-                            ? ChompdColors.purple.withValues(alpha: 0.5)
-                            : ChompdColors.border,
+                            ? c.purple.withValues(alpha: 0.5)
+                            : c.border,
                       ),
                     ),
                     child: Text(
@@ -1460,7 +1472,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected ? ChompdColors.purple : ChompdColors.textDim,
+                        color: isSelected ? c.purple : c.textDim,
                       ),
                     ),
                   ),
@@ -1478,14 +1490,14 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: isValid ? ChompdColors.purple : ChompdColors.border,
+                  color: isValid ? c.purple : c.border,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.send_rounded,
                   size: 16,
-                  color: isValid ? Colors.white : ChompdColors.textDim,
+                  color: isValid ? Colors.white : c.textDim,
                 ),
               ),
             ),
@@ -1496,6 +1508,7 @@ class _QuestionMessageState extends State<_QuestionMessage> {
   }
 
   Widget _buildOptions() {
+    final c = context.colors;
     if (widget.questionType == QuestionType.confirm) {
       // Confirm: large primary button + smaller alternatives
       return Column(
@@ -1508,18 +1521,18 @@ class _QuestionMessageState extends State<_QuestionMessage> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [ChompdColors.mintDark, ChompdColors.mint],
+                gradient: LinearGradient(
+                  colors: [c.mintDark, c.mint],
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
               child: Text(
                 context.l10n.yesIts(widget.options.first),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: ChompdColors.bg,
+                  color: c.bg,
                 ),
               ),
             ),
@@ -1574,14 +1587,15 @@ class _AnswerMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return _ChatBubble(
       isUser: true,
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: ChompdColors.mint,
+          color: c.mint,
         ),
       ),
     );
@@ -1631,11 +1645,12 @@ class _ResultMessageState extends State<_ResultMessage>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final r = widget.result;
     return _ChatBubble(
       isUser: false,
-      borderColor: ChompdColors.mint.withValues(alpha: 0.4),
-      backgroundColor: ChompdColors.mint.withValues(alpha: 0.06),
+      borderColor: c.mint.withValues(alpha: 0.4),
+      backgroundColor: c.mint.withValues(alpha: 0.06),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1646,10 +1661,10 @@ class _ResultMessageState extends State<_ResultMessage>
               const SizedBox(width: 8),
               Text(
                 widget.text,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: ChompdColors.mint,
+                  color: c.mint,
                 ),
               ),
             ],
@@ -1660,9 +1675,9 @@ class _ResultMessageState extends State<_ResultMessage>
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: ChompdColors.bgCard,
+              color: c.bgCard,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: ChompdColors.border),
+              border: Border.all(color: c.border),
             ),
             child: Row(
               children: [
@@ -1697,10 +1712,10 @@ class _ResultMessageState extends State<_ResultMessage>
                     children: [
                       Text(
                         r.serviceName,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: ChompdColors.text,
+                          color: c.text,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -1711,7 +1726,7 @@ class _ResultMessageState extends State<_ResultMessage>
                             style: ChompdTypography.mono(
                               size: 12,
                               weight: FontWeight.w700,
-                              color: ChompdColors.textMid,
+                              color: c.textMid,
                             ),
                           ),
                           if (r.isTrial) ...[
@@ -1722,15 +1737,15 @@ class _ResultMessageState extends State<_ResultMessage>
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: ChompdColors.amberGlow,
+                                color: c.amberGlow,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 context.l10n.trialLabel,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 8,
                                   fontWeight: FontWeight.w700,
-                                  color: ChompdColors.amber,
+                                  color: c.amber,
                                 ),
                               ),
                             ),
@@ -1756,13 +1771,13 @@ class _ResultMessageState extends State<_ResultMessage>
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [ChompdColors.mintDark, ChompdColors.mint],
+                    gradient: LinearGradient(
+                      colors: [c.mintDark, c.mint],
                     ),
                     borderRadius: BorderRadius.circular(10),
                     boxShadow: [
                       BoxShadow(
-                        color: ChompdColors.mint.withValues(alpha: 
+                        color: c.mint.withValues(alpha: 
                           0.15 + _pulseController.value * 0.15,
                         ),
                         blurRadius: 8 + _pulseController.value * 8,
@@ -1774,14 +1789,14 @@ class _ResultMessageState extends State<_ResultMessage>
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.add_rounded, size: 16, color: ChompdColors.bg),
+                      Icon(Icons.add_rounded, size: 16, color: c.bg),
                       const SizedBox(width: 6),
                       Text(
                         context.l10n.addToChompd,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: ChompdColors.bg,
+                          color: c.bg,
                         ),
                       ),
                     ],
@@ -1810,13 +1825,14 @@ class _MultiResultMessage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final total = results.fold(0.0, (sum, r) => sum + (r.price ?? 0));
     final currency = results.isNotEmpty ? results.first.currency : 'GBP';
 
     return _ChatBubble(
       isUser: false,
-      borderColor: ChompdColors.mint.withValues(alpha: 0.4),
-      backgroundColor: ChompdColors.mint.withValues(alpha: 0.06),
+      borderColor: c.mint.withValues(alpha: 0.4),
+      backgroundColor: c.mint.withValues(alpha: 0.06),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -1827,10 +1843,10 @@ class _MultiResultMessage extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 text,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: ChompdColors.mint,
+                  color: c.mint,
                 ),
               ),
             ],
@@ -1841,15 +1857,15 @@ class _MultiResultMessage extends StatelessWidget {
           ...results.map((r) => _MiniResultRow(result: r)),
 
           // Total
-          const Divider(color: ChompdColors.border, height: 16),
+          Divider(color: c.border, height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 context.l10n.monthlyTotal,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: ChompdColors.textDim,
+                  color: c.textDim,
                 ),
               ),
               Text(
@@ -1857,7 +1873,7 @@ class _MultiResultMessage extends StatelessWidget {
                 style: ChompdTypography.mono(
                   size: 13,
                   weight: FontWeight.w700,
-                  color: ChompdColors.text,
+                  color: c.text,
                 ),
               ),
             ],
@@ -1872,18 +1888,18 @@ class _MultiResultMessage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [ChompdColors.mintDark, ChompdColors.mint],
+                gradient: LinearGradient(
+                  colors: [c.mintDark, c.mint],
                 ),
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
               child: Text(
                 context.l10n.addAllToChompd(results.length),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
-                  color: ChompdColors.bg,
+                  color: c.bg,
                 ),
               ),
             ),
@@ -1906,6 +1922,7 @@ class _MiniResultRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -1931,10 +1948,10 @@ class _MiniResultRow extends StatelessWidget {
           Expanded(
             child: Text(
               result.serviceName,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: ChompdColors.text,
+                color: c.text,
               ),
             ),
           ),
@@ -1943,15 +1960,15 @@ class _MiniResultRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
               margin: const EdgeInsets.only(right: 8),
               decoration: BoxDecoration(
-                color: ChompdColors.mint.withValues(alpha: 0.12),
+                color: c.mint.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 context.l10n.autoTier,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 7,
                   fontWeight: FontWeight.w700,
-                  color: ChompdColors.mint,
+                  color: c.mint,
                 ),
               ),
             ),
@@ -1960,7 +1977,7 @@ class _MiniResultRow extends StatelessWidget {
             style: ChompdTypography.mono(
               size: 11,
               weight: FontWeight.w700,
-              color: ChompdColors.textMid,
+              color: c.textMid,
             ),
           ),
         ],
@@ -2080,6 +2097,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -2088,9 +2106,9 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
         ),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2105,10 +2123,10 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                   const SizedBox(width: 8),
                   Text(
                     'Found ${widget.outputs.length} subscriptions',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                 ],
@@ -2119,9 +2137,9 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Text(
                 'Tap to expand and edit details',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: ChompdColors.textMid,
+                  color: c.textMid,
                 ),
               ),
             ),
@@ -2135,10 +2153,10 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                   decoration: BoxDecoration(
-                    color: ChompdColors.blue.withValues(alpha: 0.08),
+                    color: c.blue.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: ChompdColors.blue.withValues(alpha: 0.2),
+                      color: c.blue.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
@@ -2150,7 +2168,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                           'Some subscriptions are already cancelled and will expire soon — we\'ve unticked them for you.',
                           style: TextStyle(
                             fontSize: 11,
-                            color: ChompdColors.blue.withValues(alpha: 0.9),
+                            color: c.blue.withValues(alpha: 0.9),
                             height: 1.35,
                           ),
                         ),
@@ -2176,12 +2194,12 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                 children: [
                   GestureDetector(
                     onTap: () => widget.onAddSelected([], {}),
-                    child: const Text(
+                    child: Text(
                       'Skip all',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.textMid,
+                        color: c.textMid,
                       ),
                     ),
                   ),
@@ -2195,16 +2213,16 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           gradient: _selectedCount > 0
-                              ? const LinearGradient(
-                                  colors: [ChompdColors.mintDark, ChompdColors.mint],
+                              ? LinearGradient(
+                                  colors: [c.mintDark, c.mint],
                                 )
                               : null,
-                          color: _selectedCount > 0 ? null : ChompdColors.border,
+                          color: _selectedCount > 0 ? null : c.border,
                           borderRadius: BorderRadius.circular(10),
                           boxShadow: _selectedCount > 0
                               ? [
                                   BoxShadow(
-                                    color: ChompdColors.mint.withValues(alpha: 0.2),
+                                    color: c.mint.withValues(alpha: 0.2),
                                     blurRadius: 8,
                                     offset: const Offset(0, 2),
                                   ),
@@ -2218,7 +2236,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                             Icon(
                               Icons.add_rounded,
                               size: 15,
-                              color: _selectedCount > 0 ? ChompdColors.bg : ChompdColors.textDim,
+                              color: _selectedCount > 0 ? c.bg : c.textDim,
                             ),
                             const SizedBox(width: 4),
                             Text(
@@ -2228,7 +2246,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: _selectedCount > 0 ? ChompdColors.bg : ChompdColors.textDim,
+                                color: _selectedCount > 0 ? c.bg : c.textDim,
                               ),
                             ),
                           ],
@@ -2246,6 +2264,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
   }
 
   Widget _buildChecklistRow(BuildContext context, int i) {
+    final c = context.colors;
     final output = widget.outputs[i];
     final scan = output.subscription;
     final trap = output.trap;
@@ -2263,19 +2282,19 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
         margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
         decoration: BoxDecoration(
           color: _checked[i]
-              ? ChompdColors.mint.withValues(alpha: 0.06)
-              : (isExpanded ? ChompdColors.bgElevated.withValues(alpha: 0.5) : Colors.transparent),
+              ? c.mint.withValues(alpha: 0.06)
+              : (isExpanded ? c.bgElevated.withValues(alpha: 0.5) : Colors.transparent),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: _checked[i]
-                ? ChompdColors.mint.withValues(alpha: 0.2)
+                ? c.mint.withValues(alpha: 0.2)
                 : isExpiring
-                    ? ChompdColors.textDim.withValues(alpha: 0.3)
+                    ? c.textDim.withValues(alpha: 0.3)
                     : (hasTrap
                         ? (isHigh
-                            ? ChompdColors.red.withValues(alpha: 0.3)
-                            : ChompdColors.amber.withValues(alpha: 0.3))
-                        : ChompdColors.border.withValues(alpha: 0.5)),
+                            ? c.red.withValues(alpha: 0.3)
+                            : c.amber.withValues(alpha: 0.3))
+                        : c.border.withValues(alpha: 0.5)),
           ),
         ),
         child: Column(
@@ -2301,15 +2320,15 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                           height: 22,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(6),
-                            color: _checked[i] ? ChompdColors.mint : Colors.transparent,
+                            color: _checked[i] ? c.mint : Colors.transparent,
                             border: Border.all(
-                              color: _checked[i] ? ChompdColors.mint : ChompdColors.textDim,
+                              color: _checked[i] ? c.mint : c.textDim,
                               width: 1.5,
                             ),
                           ),
                           alignment: Alignment.center,
                           child: _checked[i]
-                              ? const Icon(Icons.check_rounded, size: 14, color: ChompdColors.bg)
+                              ? Icon(Icons.check_rounded, size: 14, color: c.bg)
                               : null,
                         ),
                       ),
@@ -2353,16 +2372,16 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: isExpiring ? ChompdColors.textMid : ChompdColors.text,
+                              color: isExpiring ? c.textMid : c.text,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                           if (isExpiring)
                             Text(
                               'Already cancelled${scan.nextRenewal != null ? ' · Expires ${_formatShortDate(scan.nextRenewal!)}' : ''}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: ChompdColors.textDim,
+                                color: c.textDim,
                               ),
                             )
                           else
@@ -2370,7 +2389,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                               '${Subscription.formatPrice(_getEffectivePrice(i), _getEffectiveCurrency(i))}/${_cycleLabel(_getEffectiveCycle(i))}',
                               style: ChompdTypography.mono(
                                 size: 11,
-                                color: ChompdColors.textMid,
+                                color: c.textMid,
                               ),
                             ),
                         ],
@@ -2382,7 +2401,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
-                          color: ChompdColors.textDim.withValues(alpha: 0.12),
+                          color: c.textDim.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(
@@ -2391,7 +2410,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                             Icon(
                               Icons.event_busy_rounded,
                               size: 10,
-                              color: ChompdColors.textMid,
+                              color: c.textMid,
                             ),
                             const SizedBox(width: 3),
                             Text(
@@ -2399,7 +2418,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
-                                color: ChompdColors.textMid,
+                                color: c.textMid,
                               ),
                             ),
                           ],
@@ -2414,8 +2433,8 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
                         decoration: BoxDecoration(
                           color: isHigh
-                              ? ChompdColors.red.withValues(alpha: 0.12)
-                              : ChompdColors.amber.withValues(alpha: 0.12),
+                              ? c.red.withValues(alpha: 0.12)
+                              : c.amber.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Row(
@@ -2424,7 +2443,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                             Icon(
                               Icons.warning_rounded,
                               size: 10,
-                              color: isHigh ? ChompdColors.red : ChompdColors.amber,
+                              color: isHigh ? c.red : c.amber,
                             ),
                             const SizedBox(width: 3),
                             Text(
@@ -2432,7 +2451,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
-                                color: isHigh ? ChompdColors.red : ChompdColors.amber,
+                                color: isHigh ? c.red : c.amber,
                               ),
                             ),
                           ],
@@ -2445,7 +2464,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                     Icon(
                       isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
                       size: 18,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ],
                 ),
@@ -2454,7 +2473,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
 
             // ─── Expanded detail panel ───
             if (isExpanded) ...[
-              const Divider(color: ChompdColors.border, height: 1),
+              Divider(color: c.border, height: 1),
               Padding(
                 padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
                 child: Column(
@@ -2468,13 +2487,13 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
                           color: isHigh
-                              ? ChompdColors.red.withValues(alpha: 0.08)
-                              : ChompdColors.amber.withValues(alpha: 0.08),
+                              ? c.red.withValues(alpha: 0.08)
+                              : c.amber.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: isHigh
-                                ? ChompdColors.red.withValues(alpha: 0.2)
-                                : ChompdColors.amber.withValues(alpha: 0.2),
+                                ? c.red.withValues(alpha: 0.2)
+                                : c.amber.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Row(
@@ -2493,7 +2512,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: isHigh ? ChompdColors.red : ChompdColors.amber,
+                                      color: isHigh ? c.red : c.amber,
                                     ),
                                   ),
                                   if (trap.realPrice != null) ...[
@@ -2503,7 +2522,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                                       style: ChompdTypography.mono(
                                         size: 10,
                                         weight: FontWeight.w600,
-                                        color: (isHigh ? ChompdColors.red : ChompdColors.amber)
+                                        color: (isHigh ? c.red : c.amber)
                                             .withValues(alpha: 0.8),
                                       ),
                                     ),
@@ -2512,9 +2531,9 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                                     const SizedBox(height: 4),
                                     Text(
                                       trap.warningMessage,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 11,
-                                        color: ChompdColors.textMid,
+                                        color: c.textMid,
                                       ),
                                       maxLines: 3,
                                       overflow: TextOverflow.ellipsis,
@@ -2546,23 +2565,23 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                             decoration: InputDecoration(
                               hintText: '0.00',
                               hintStyle: TextStyle(
-                                color: ChompdColors.textDim.withValues(alpha: 0.5),
+                                color: c.textDim.withValues(alpha: 0.5),
                               ),
                               filled: true,
-                              fillColor: ChompdColors.bgElevated,
+                              fillColor: c.bgElevated,
                               contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                               isDense: true,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: ChompdColors.border),
+                                borderSide: BorderSide(color: c.border),
                               ),
                               enabledBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: ChompdColors.border),
+                                borderSide: BorderSide(color: c.border),
                               ),
                               focusedBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: ChompdColors.mint),
+                                borderSide: BorderSide(color: c.mint),
                               ),
                             ),
                             onChanged: (v) {
@@ -2580,23 +2599,23 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6),
                           decoration: BoxDecoration(
-                            color: ChompdColors.bgElevated,
+                            color: c.bgElevated,
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: ChompdColors.border),
+                            border: Border.all(color: c.border),
                           ),
                           child: DropdownButtonHideUnderline(
                             child: DropdownButton<String>(
                               value: _getEffectiveCurrency(i),
-                              dropdownColor: ChompdColors.bgElevated,
+                              dropdownColor: c.bgElevated,
                               isDense: true,
                               style: ChompdTypography.mono(
                                 size: 11,
                                 weight: FontWeight.w600,
                               ),
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.expand_more_rounded,
                                 size: 14,
-                                color: ChompdColors.textDim,
+                                color: c.textDim,
                               ),
                               items: supportedCurrencies
                                   .map((c) => DropdownMenuItem<String>(
@@ -2624,31 +2643,31 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
 
                     // Cycle chips
                     Row(
-                      children: ['monthly', 'yearly', 'weekly', 'quarterly'].map((c) {
+                      children: ['monthly', 'yearly', 'weekly', 'quarterly'].map((cycle) {
                         final current = _getEffectiveCycle(i);
-                        final isSelected = c == current;
-                        final label = c == 'monthly'
+                        final isSelected = cycle == current;
+                        final label = cycle == 'monthly'
                             ? 'Mo'
-                            : c == 'yearly'
+                            : cycle == 'yearly'
                                 ? 'Yr'
-                                : c == 'weekly'
+                                : cycle == 'weekly'
                                     ? 'Wk'
                                     : 'Qtr';
                         return Padding(
                           padding: const EdgeInsets.only(right: 6),
                           child: GestureDetector(
-                            onTap: () => setState(() => _getEdits(i).cycle = c),
+                            onTap: () => setState(() => _getEdits(i).cycle = cycle),
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? ChompdColors.mint.withValues(alpha: 0.15)
-                                    : ChompdColors.bgElevated,
+                                    ? c.mint.withValues(alpha: 0.15)
+                                    : c.bgElevated,
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
                                   color: isSelected
-                                      ? ChompdColors.mint.withValues(alpha: 0.5)
-                                      : ChompdColors.border,
+                                      ? c.mint.withValues(alpha: 0.5)
+                                      : c.border,
                                 ),
                               ),
                               child: Text(
@@ -2656,7 +2675,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                  color: isSelected ? ChompdColors.mint : ChompdColors.textDim,
+                                  color: isSelected ? c.mint : c.textDim,
                                 ),
                               ),
                             ),
@@ -2670,13 +2689,13 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          const Icon(Icons.label_outline_rounded, size: 12, color: ChompdColors.textDim),
+                          Icon(Icons.label_outline_rounded, size: 12, color: c.textDim),
                           const SizedBox(width: 4),
                           Text(
                             scan.category!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: ChompdColors.textDim,
+                              color: c.textDim,
                             ),
                           ),
                         ],
@@ -2708,6 +2727,7 @@ class _OptionPillState extends State<_OptionPill> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTapDown: (_) => setState(() => _pressed = true),
       onTapUp: (_) {
@@ -2720,13 +2740,13 @@ class _OptionPillState extends State<_OptionPill> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: _pressed
-              ? ChompdColors.purple.withValues(alpha: 0.15)
-              : ChompdColors.bgElevated,
+              ? c.purple.withValues(alpha: 0.15)
+              : c.bgElevated,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: _pressed
-                ? ChompdColors.purple.withValues(alpha: 0.5)
-                : ChompdColors.border,
+                ? c.purple.withValues(alpha: 0.5)
+                : c.border,
           ),
         ),
         child: Text(
@@ -2734,7 +2754,7 @@ class _OptionPillState extends State<_OptionPill> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w500,
-            color: _pressed ? ChompdColors.purple : ChompdColors.textMid,
+            color: _pressed ? c.purple : c.textMid,
           ),
         ),
       ),

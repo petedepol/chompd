@@ -26,7 +26,7 @@ class ShareCardBuilder {
     required int subCount,
     required double totalSaved,
     required int cancelledCount,
-    String currencySymbol = '\u00A3',
+    required String currencySymbol,
   }) async {
     HapticService.instance.light();
 
@@ -55,7 +55,7 @@ class ShareCardBuilder {
     required BuildContext context,
     required double totalSaved,
     required int cancelledCount,
-    String currencySymbol = '\u00A3',
+    required String currencySymbol,
   }) async {
     HapticService.instance.light();
 

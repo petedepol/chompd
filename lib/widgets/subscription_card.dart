@@ -81,6 +81,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final subscription = widget.subscription;
     final trialDays = subscription.trialDaysRemaining;
     final isTrialUrgent = trialDays != null && trialDays <= 3;
@@ -88,11 +89,11 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
     final iconColor = _brandColor;
 
     final borderColor = isTrialUrgent
-        ? ChompdColors.amber.withValues(alpha: 0.27)
-        : ChompdColors.border;
+        ? c.amber.withValues(alpha: 0.27)
+        : c.border;
 
     final accentColor = isTrialUrgent
-        ? ChompdColors.amber.withValues(alpha: 0.6)
+        ? c.amber.withValues(alpha: 0.6)
         : catColor.withValues(alpha: 0.5);
 
     Widget card = GestureDetector(
@@ -107,7 +108,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
         duration: const Duration(milliseconds: 150),
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: _pressed ? ChompdColors.bgElevated : ChompdColors.bgCard,
+          color: _pressed ? c.bgElevated : c.bgCard,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: borderColor),
           boxShadow: [
@@ -123,7 +124,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
             ),
             if (isTrialUrgent)
               BoxShadow(
-                color: ChompdColors.amberGlow,
+                color: c.amberGlow,
                 blurRadius: 16,
                 spreadRadius: 0,
               ),
@@ -146,11 +147,11 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
               top: 0,
               height: 1,
               child: Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
                       Colors.transparent,
-                      ChompdColors.borderHighlight,
+                      c.borderHighlight,
                       Colors.transparent,
                     ],
                   ),
@@ -200,10 +201,10 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                             Flexible(
                               child: Text(
                                 subscription.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.w600,
-                                  color: ChompdColors.text,
+                                  color: c.text,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -224,8 +225,8 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                           style: TextStyle(
                             fontSize: 11,
                             color: subscription.daysUntilRenewal < 0
-                                ? ChompdColors.amber
-                                : ChompdColors.textMid,
+                                ? c.amber
+                                : c.textMid,
                           ),
                         ),
                       ],
@@ -241,7 +242,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         Text(
                           '\u2014',
                           style: ChompdTypography.priceCard.copyWith(
-                            color: ChompdColors.textDim,
+                            color: c.textDim,
                           ),
                         )
                       else
@@ -250,10 +251,12 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                           style: (subscription.isTrap == true)
                               ? ChompdTypography.priceCard.copyWith(
                                   decoration: TextDecoration.lineThrough,
-                                  color: ChompdColors.textDim,
+                                  color: c.textDim,
                                   fontSize: 11,
                                 )
-                              : ChompdTypography.priceCard,
+                              : ChompdTypography.priceCard.copyWith(
+                                  color: c.text,
+                                ),
                         ),
                       if (subscription.isTrap == true &&
                           subscription.realPrice != null)
@@ -263,14 +266,16 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: subscription.trapSeverity == 'high'
-                                ? ChompdColors.red
-                                : ChompdColors.amber,
+                                ? c.red
+                                : c.amber,
                           ),
                         )
                       else
                         Text(
                           '/${subscription.cycle.localShortLabel(context.l10n)}',
-                          style: ChompdTypography.cycleLabel,
+                          style: ChompdTypography.cycleLabel.copyWith(
+                            color: c.textDim,
+                          ),
                         ),
                     ],
                   ),
@@ -288,13 +293,13 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
         key: ValueKey(subscription.uid),
         background: _buildSwipeBackground(
           alignment: Alignment.centerLeft,
-          color: ChompdColors.blue,
+          color: c.blue,
           icon: Icons.edit_outlined,
           label: context.l10n.edit,
         ),
         secondaryBackground: _buildSwipeBackground(
           alignment: Alignment.centerRight,
-          color: ChompdColors.red,
+          color: c.red,
           icon: Icons.delete_outline_rounded,
           label: context.l10n.delete,
         ),
@@ -367,8 +372,9 @@ class _TrapBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final isHigh = subscription.trapSeverity == 'high';
-    final color = isHigh ? ChompdColors.red : ChompdColors.amber;
+    final color = isHigh ? c.red : c.amber;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

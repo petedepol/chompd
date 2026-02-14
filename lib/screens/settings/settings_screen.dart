@@ -39,12 +39,13 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     final prefs = ref.watch(notificationPrefsProvider);
     final summary = ref.watch(notificationSummaryProvider);
     final prefsNotifier = ref.read(notificationPrefsProvider.notifier);
 
     return Scaffold(
-      backgroundColor: context.colors.bg,
+      backgroundColor: c.bg,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -64,16 +65,16 @@ class SettingsScreen extends ConsumerWidget {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: ChompdColors.bgElevated,
+                        color: c.bgElevated,
                         borderRadius: BorderRadius.circular(10),
                         border:
-                            Border.all(color: ChompdColors.border),
+                            Border.all(color: c.border),
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_back_ios_new_rounded,
                         size: 14,
-                        color: ChompdColors.textMid,
+                        color: c.textMid,
                       ),
                     ),
                   ),
@@ -81,10 +82,10 @@ class SettingsScreen extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       context.l10n.settingsTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                   ),
@@ -125,16 +126,16 @@ class SettingsScreen extends ConsumerWidget {
                   // Section header
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.notifications_outlined,
                         size: 16,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.sectionNotifications,
                         style: ChompdTypography.sectionLabel.copyWith(
-                          color: ChompdColors.mint,
+                          color: c.mint,
                         ),
                       ),
                     ],
@@ -142,9 +143,9 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${summary.totalScheduled} reminders scheduled',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 11,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -187,19 +188,19 @@ class SettingsScreen extends ConsumerWidget {
                                 ),
                                 decoration: BoxDecoration(
                                   color:
-                                      ChompdColors.bgElevated,
+                                      c.bgElevated,
                                   borderRadius:
                                       BorderRadius.circular(6),
                                   border: Border.all(
                                       color:
-                                          ChompdColors.border),
+                                          c.border),
                                 ),
                                 child: Text(
                                   _formatTime(prefs.digestTime),
                                   style: ChompdTypography.mono(
                                     size: 11,
                                     weight: FontWeight.w700,
-                                    color: ChompdColors.textMid,
+                                    color: c.textMid,
                                   ),
                                 ),
                               ),
@@ -229,7 +230,7 @@ class SettingsScreen extends ConsumerWidget {
                             value: prefs.trialAlertsEnabled,
                             onChanged:
                                 prefsNotifier.toggleTrialAlerts,
-                            accentColor: ChompdColors.amber,
+                            accentColor: c.amber,
                           ),
                         ],
                       ),
@@ -241,16 +242,16 @@ class SettingsScreen extends ConsumerWidget {
                   // ─── Reminder Schedule Preview ───
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_month_outlined,
                         size: 16,
-                        color: ChompdColors.purple,
+                        color: c.purple,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.sectionReminderSchedule,
                         style: ChompdTypography.sectionLabel.copyWith(
-                          color: ChompdColors.purple,
+                          color: c.purple,
                         ),
                       ),
                     ],
@@ -267,16 +268,16 @@ class SettingsScreen extends ConsumerWidget {
                   // ─── Upcoming Notifications ───
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.schedule_outlined,
                         size: 16,
-                        color: ChompdColors.blue,
+                        color: c.blue,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.sectionUpcoming,
                         style: ChompdTypography.sectionLabel.copyWith(
-                          color: ChompdColors.blue,
+                          color: c.blue,
                         ),
                       ),
                     ],
@@ -291,16 +292,16 @@ class SettingsScreen extends ConsumerWidget {
                   if (!prefs.isPro) ...[
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.auto_awesome,
                           size: 16,
-                          color: ChompdColors.mint,
+                          color: c.mint,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           context.l10n.sectionChompdPro,
                           style: ChompdTypography.sectionLabel.copyWith(
-                            color: ChompdColors.mint,
+                            color: c.mint,
                           ),
                         ),
                       ],
@@ -319,13 +320,13 @@ class SettingsScreen extends ConsumerWidget {
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                             colors: [
-                              ChompdColors.mint.withValues(alpha: 0.08),
-                              ChompdColors.bgCard,
+                              c.mint.withValues(alpha: 0.08),
+                              c.bgCard,
                             ],
                           ),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: ChompdColors.mint.withValues(alpha: 0.2),
+                            color: c.mint.withValues(alpha: 0.2),
                           ),
                         ),
                         child: Row(
@@ -335,18 +336,18 @@ class SettingsScreen extends ConsumerWidget {
                               height: 44,
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(14),
-                                gradient: const LinearGradient(
+                                gradient: LinearGradient(
                                   colors: [
-                                    ChompdColors.mintDark,
-                                    ChompdColors.mint,
+                                    c.mintDark,
+                                    c.mint,
                                   ],
                                 ),
                               ),
                               alignment: Alignment.center,
-                              child: const Icon(
+                              child: Icon(
                                 Icons.auto_awesome,
                                 size: 20,
-                                color: ChompdColors.bg,
+                                color: c.bg,
                               ),
                             ),
                             const SizedBox(width: 14),
@@ -357,27 +358,27 @@ class SettingsScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     context.l10n.unlockChompdPro,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w700,
-                                      color: ChompdColors.text,
+                                      color: c.text,
                                     ),
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${Subscription.formatPrice(AppConstants.proPrice, 'GBP')} \u2022 One-time payment',
+                                    '${Subscription.formatPrice(AppConstants.proPrice, 'GBP')} \u2022 ${context.l10n.oneTimePayment}',
                                     style: ChompdTypography.mono(
                                       size: 11,
-                                      color: ChompdColors.textDim,
+                                      color: c.textDim,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(
+                            Icon(
                               Icons.arrow_forward_ios_rounded,
                               size: 14,
-                              color: ChompdColors.mint,
+                              color: c.mint,
                             ),
                           ],
                         ),
@@ -390,16 +391,16 @@ class SettingsScreen extends ConsumerWidget {
                   // ─── Currency ───
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.currency_exchange_outlined,
                         size: 16,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.sectionCurrency,
                         style: ChompdTypography.sectionLabel.copyWith(
-                          color: ChompdColors.mint,
+                          color: c.mint,
                         ),
                       ),
                     ],
@@ -413,16 +414,16 @@ class SettingsScreen extends ConsumerWidget {
                   // ─── Language ───
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.language_outlined,
                         size: 16,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.sectionLanguage,
                         style: ChompdTypography.sectionLabel.copyWith(
-                          color: ChompdColors.mint,
+                          color: c.mint,
                         ),
                       ),
                     ],
@@ -434,16 +435,16 @@ class SettingsScreen extends ConsumerWidget {
                   // ─── Monthly Budget ───
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.account_balance_wallet_outlined,
                         size: 16,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.sectionMonthlyBudget,
                         style: ChompdTypography.sectionLabel.copyWith(
-                          color: ChompdColors.mint,
+                          color: c.mint,
                         ),
                       ),
                     ],
@@ -457,16 +458,16 @@ class SettingsScreen extends ConsumerWidget {
                   // ─── Haptics ───
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.vibration_outlined,
                         size: 16,
-                        color: ChompdColors.blue,
+                        color: c.blue,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.sectionHapticFeedback,
                         style: ChompdTypography.sectionLabel.copyWith(
-                          color: ChompdColors.blue,
+                          color: c.blue,
                         ),
                       ),
                     ],
@@ -484,7 +485,7 @@ class SettingsScreen extends ConsumerWidget {
                       // Force rebuild
                       (context as Element).markNeedsBuild();
                     },
-                    accentColor: ChompdColors.blue,
+                    accentColor: c.blue,
                   ),
 
                   const SizedBox(height: 28),
@@ -492,16 +493,16 @@ class SettingsScreen extends ConsumerWidget {
                   // ─── Data Export ───
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.download_outlined,
                         size: 16,
-                        color: ChompdColors.purple,
+                        color: c.purple,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         context.l10n.sectionDataExport,
                         style: ChompdTypography.sectionLabel.copyWith(
-                          color: ChompdColors.purple,
+                          color: c.purple,
                         ),
                       ),
                     ],
@@ -515,10 +516,10 @@ class SettingsScreen extends ConsumerWidget {
                   // ─── App Info ───
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.info_outline_rounded,
                         size: 16,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -542,8 +543,8 @@ class SettingsScreen extends ConsumerWidget {
                     label: context.l10n.tier,
                     value: prefs.isPro ? context.l10n.pro : context.l10n.free,
                     valueColor: prefs.isPro
-                        ? ChompdColors.mint
-                        : ChompdColors.textDim,
+                        ? c.mint
+                        : c.textDim,
                   ),
                   const SizedBox(height: 6),
                   _InfoRow(
@@ -589,15 +590,22 @@ class SettingsScreen extends ConsumerWidget {
     WidgetRef ref,
     TimeOfDay currentTime,
   ) async {
+    final c = context.colors;
     final picked = await showTimePicker(
       context: context,
       initialTime: currentTime,
       builder: (ctx, child) => Theme(
-        data: ChompdTheme.dark.copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: ChompdColors.mint,
-            surface: ChompdColors.bgElevated,
-            onSurface: ChompdColors.text,
+        data: (context.isDarkMode ? ChompdTheme.dark : ChompdTheme.light).copyWith(
+          colorScheme: ColorScheme(
+            brightness: context.isDarkMode ? Brightness.dark : Brightness.light,
+            primary: c.mint,
+            onPrimary: c.bg,
+            secondary: c.mint,
+            onSecondary: c.bg,
+            surface: c.bgElevated,
+            onSurface: c.text,
+            error: c.red,
+            onError: c.text,
           ),
         ),
         child: child!,
@@ -740,6 +748,7 @@ class _ThemeChip extends StatelessWidget {
 class _AccountSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     final authState = ref.watch(authProvider);
     final syncState = ref.watch(syncProvider);
 
@@ -772,12 +781,12 @@ class _AccountSection extends ConsumerWidget {
           child: Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: ChompdColors.bgCard,
+              color: c.bgCard,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
                 color: isAnonymous
-                    ? ChompdColors.amber.withValues(alpha: 0.3)
-                    : ChompdColors.mint.withValues(alpha: 0.3),
+                    ? c.amber.withValues(alpha: 0.3)
+                    : c.mint.withValues(alpha: 0.3),
               ),
             ),
             child: Row(
@@ -787,8 +796,8 @@ class _AccountSection extends ConsumerWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: isAnonymous
-                        ? ChompdColors.amber.withValues(alpha: 0.1)
-                        : ChompdColors.mint.withValues(alpha: 0.1),
+                        ? c.amber.withValues(alpha: 0.1)
+                        : c.mint.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
@@ -798,8 +807,8 @@ class _AccountSection extends ConsumerWidget {
                         : Icons.cloud_done_outlined,
                     size: 20,
                     color: isAnonymous
-                        ? ChompdColors.amber
-                        : ChompdColors.mint,
+                        ? c.amber
+                        : c.mint,
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -811,10 +820,10 @@ class _AccountSection extends ConsumerWidget {
                         isAnonymous
                             ? context.l10n.accountAnonymous
                             : context.l10n.accountBackedUp,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: ChompdColors.text,
+                          color: c.text,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -824,9 +833,9 @@ class _AccountSection extends ConsumerWidget {
                             : (email != null
                                 ? context.l10n.accountSignedInAs(email)
                                 : _syncLabel(context, syncState)),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10.5,
-                          color: ChompdColors.textDim,
+                          color: c.textDim,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -838,12 +847,12 @@ class _AccountSection extends ConsumerWidget {
                 if (!isAnonymous) ...[
                   const SizedBox(width: 8),
                   if (syncState.isSyncing)
-                    const SizedBox(
+                    SizedBox(
                       width: 14,
                       height: 14,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                     )
                   else
@@ -853,15 +862,15 @@ class _AccountSection extends ConsumerWidget {
                           : Icons.wifi_off_rounded,
                       size: 16,
                       color: syncState.isOnline
-                          ? ChompdColors.mint
-                          : ChompdColors.textDim,
+                          ? c.mint
+                          : c.textDim,
                     ),
                 ],
                 const SizedBox(width: 4),
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 12,
-                  color: ChompdColors.textDim,
+                  color: c.textDim,
                 ),
               ],
             ),
@@ -890,9 +899,10 @@ class _AccountSection extends ConsumerWidget {
     WidgetRef ref,
     bool isAnonymous,
   ) {
+    final c = context.colors;
     showModalBottomSheet(
       context: context,
-      backgroundColor: ChompdColors.bgCard,
+      backgroundColor: c.bgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -906,24 +916,24 @@ class _AccountSection extends ConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: ChompdColors.border,
+                  color: c.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 24),
               if (isAnonymous) ...[
-                const Icon(
+                Icon(
                   Icons.cloud_upload_outlined,
                   size: 40,
-                  color: ChompdColors.blue,
+                  color: c.blue,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   context.l10n.signInToBackUp,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: ChompdColors.text,
+                    color: c.text,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -948,27 +958,27 @@ class _AccountSection extends ConsumerWidget {
                   },
                 ),
               ] else ...[
-                const Icon(
+                Icon(
                   Icons.cloud_done_outlined,
                   size: 40,
-                  color: ChompdColors.mint,
+                  color: c.mint,
                 ),
                 const SizedBox(height: 12),
                 Text(
                   context.l10n.accountBackedUp,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
-                    color: ChompdColors.text,
+                    color: c.text,
                   ),
                 ),
                 if (AuthService.instance.email != null) ...[
                   const SizedBox(height: 4),
                   Text(
                     AuthService.instance.email!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ],
@@ -982,19 +992,19 @@ class _AccountSection extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: ChompdColors.red.withValues(alpha: 0.1),
+                      color: c.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: ChompdColors.red.withValues(alpha: 0.3),
+                        color: c.red.withValues(alpha: 0.3),
                       ),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       context.l10n.signOut,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.red,
+                        color: c.red,
                       ),
                     ),
                   ),
@@ -1009,26 +1019,27 @@ class _AccountSection extends ConsumerWidget {
   }
 
   void _confirmSignOut(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: ChompdColors.bgCard,
+        backgroundColor: c.bgCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: ChompdColors.border),
+          side: BorderSide(color: c.border),
         ),
         title: Text(
           context.l10n.signOut,
-          style: const TextStyle(
-            color: ChompdColors.text,
+          style: TextStyle(
+            color: c.text,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
         ),
         content: Text(
           context.l10n.signOutConfirm,
-          style: const TextStyle(
-            color: ChompdColors.textMid,
+          style: TextStyle(
+            color: c.textMid,
             fontSize: 13,
           ),
         ),
@@ -1037,7 +1048,7 @@ class _AccountSection extends ConsumerWidget {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               context.l10n.cancel,
-              style: const TextStyle(color: ChompdColors.textDim),
+              style: TextStyle(color: c.textDim),
             ),
           ),
           TextButton(
@@ -1048,7 +1059,7 @@ class _AccountSection extends ConsumerWidget {
             },
             child: Text(
               context.l10n.signOut,
-              style: const TextStyle(color: ChompdColors.red),
+              style: TextStyle(color: c.red),
             ),
           ),
         ],
@@ -1070,27 +1081,28 @@ class _SignInButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: ChompdColors.bgElevated,
+          color: c.bgElevated,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 20, color: ChompdColors.text),
+            Icon(icon, size: 20, color: c.text),
             const SizedBox(width: 10),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: ChompdColors.text,
+                color: c.text,
               ),
             ),
           ],
@@ -1126,17 +1138,18 @@ class _SettingsToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = accentColor ?? ChompdColors.mint;
+    final c = context.colors;
+    final accent = accentColor ?? c.mint;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: value
               ? accent.withValues(alpha: 0.2)
-              : ChompdColors.border,
+              : c.border,
         ),
       ),
       child: Row(
@@ -1144,7 +1157,7 @@ class _SettingsToggle extends StatelessWidget {
           Icon(
             icon,
             size: 20,
-            color: value ? accent : ChompdColors.textDim,
+            color: value ? accent : c.textDim,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -1157,16 +1170,16 @@ class _SettingsToggle extends StatelessWidget {
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                     color: value
-                        ? ChompdColors.text
-                        : ChompdColors.textMid,
+                        ? c.text
+                        : c.textMid,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10.5,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                 ),
               ],
@@ -1195,16 +1208,17 @@ class _ToggleSwitch extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
       width: 40,
       height: 22,
       padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
-        color: value ? color : ChompdColors.bgElevated,
+        color: value ? color : c.bgElevated,
         borderRadius: BorderRadius.circular(11),
         border: value
             ? null
-            : Border.all(color: ChompdColors.border),
+            : Border.all(color: c.border),
       ),
       child: AnimatedAlign(
         duration: const Duration(milliseconds: 200),
@@ -1215,7 +1229,7 @@ class _ToggleSwitch extends StatelessWidget {
           width: 18,
           height: 18,
           decoration: BoxDecoration(
-            color: value ? Colors.white : ChompdColors.textDim,
+            color: value ? Colors.white : c.textDim,
             borderRadius: BorderRadius.circular(9),
           ),
         ),
@@ -1236,12 +1250,13 @@ class _ReminderScheduleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         children: [
@@ -1297,33 +1312,33 @@ class _ReminderScheduleCard extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: ChompdColors.purple.withValues(alpha: 0.08),
+                  color: c.purple.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: ChompdColors.purple.withValues(alpha: 0.2),
+                    color: c.purple.withValues(alpha: 0.2),
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.lock_outline_rounded,
                       size: 14,
-                      color: ChompdColors.purple,
+                      color: c.purple,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         context.l10n.upgradeProReminders,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11,
-                          color: ChompdColors.purple,
+                          color: c.purple,
                         ),
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 10,
-                      color: ChompdColors.purple,
+                      color: c.purple,
                     ),
                   ],
                 ),
@@ -1352,6 +1367,7 @@ class _TimelineDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Column(
       children: [
         Container(
@@ -1359,27 +1375,27 @@ class _TimelineDot extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             color: isActive
-                ? ChompdColors.mint.withValues(alpha: 0.15)
-                : ChompdColors.bgElevated,
+                ? c.mint.withValues(alpha: 0.15)
+                : c.bgElevated,
             shape: BoxShape.circle,
             border: Border.all(
               color: isActive
-                  ? ChompdColors.mint
-                  : ChompdColors.border,
+                  ? c.mint
+                  : c.border,
               width: isActive ? 2 : 1,
             ),
           ),
           alignment: Alignment.center,
           child: isActive
-              ? const Icon(
+              ? Icon(
                   Icons.notifications_active_rounded,
                   size: 12,
-                  color: ChompdColors.mint,
+                  color: c.mint,
                 )
               : Icon(
                   isPro ? Icons.lock_outline_rounded : Icons.check_rounded,
                   size: 10,
-                  color: ChompdColors.textDim,
+                  color: c.textDim,
                 ),
         ),
         const SizedBox(height: 4),
@@ -1389,8 +1405,8 @@ class _TimelineDot extends StatelessWidget {
             fontSize: 9,
             fontWeight: FontWeight.w600,
             color: isActive
-                ? ChompdColors.mint
-                : ChompdColors.textDim,
+                ? c.mint
+                : c.textDim,
           ),
         ),
       ],
@@ -1405,14 +1421,15 @@ class _TimelineConnector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Expanded(
       child: Container(
         height: 2,
         margin: const EdgeInsets.only(bottom: 18),
         decoration: BoxDecoration(
           color: isActive
-              ? ChompdColors.mint.withValues(alpha: 0.3)
-              : ChompdColors.border,
+              ? c.mint.withValues(alpha: 0.3)
+              : c.border,
           borderRadius: BorderRadius.circular(1),
         ),
       ),
@@ -1427,22 +1444,23 @@ class _UpcomingNotificationsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final upcoming = ref.watch(upcomingNotificationsProvider);
 
     if (upcoming.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         child: Center(
           child: Text(
             context.l10n.noUpcomingNotifications,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: ChompdColors.textDim,
+              color: c.textDim,
             ),
           ),
         ),
@@ -1451,9 +1469,9 @@ class _UpcomingNotificationsCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         children: upcoming
@@ -1472,6 +1490,7 @@ class _NotificationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final isRenewal = notification.channelId ==
         NotificationChannels.renewalReminder;
     final isTrial = notification.channelId ==
@@ -1482,10 +1501,10 @@ class _NotificationRow extends StatelessWidget {
             ? Icons.event_repeat_outlined
             : Icons.wb_sunny_outlined;
     final color = isTrial
-        ? ChompdColors.amber
+        ? c.amber
         : isRenewal
-            ? ChompdColors.mint
-            : ChompdColors.blue;
+            ? c.mint
+            : c.blue;
 
     final daysAway = notification.scheduledAt
         .difference(DateTime.now())
@@ -1508,19 +1527,19 @@ class _NotificationRow extends StatelessWidget {
               children: [
                 Text(
                   notification.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: ChompdColors.text,
+                    color: c.text,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   notification.body,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1568,14 +1587,15 @@ class _ExportButtonState extends State<_ExportButton> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: _exporting ? null : () => _export(context),
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
@@ -1583,23 +1603,23 @@ class _ExportButtonState extends State<_ExportButton> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: ChompdColors.purple.withValues(alpha: 0.1),
+                color: c.purple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,
               child: _exporting
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: ChompdColors.purple,
+                        color: c.purple,
                       ),
                     )
-                  : const Icon(
+                  : Icon(
                       Icons.table_chart_outlined,
                       size: 20,
-                      color: ChompdColors.purple,
+                      color: c.purple,
                     ),
             ),
             const SizedBox(width: 12),
@@ -1609,10 +1629,10 @@ class _ExportButtonState extends State<_ExportButton> {
                 children: [
                   Text(
                     context.l10n.exportToCsv,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1623,8 +1643,8 @@ class _ExportButtonState extends State<_ExportButton> {
                     style: TextStyle(
                       fontSize: 10.5,
                       color: _lastPath != null
-                          ? ChompdColors.mint
-                          : ChompdColors.textDim,
+                          ? c.mint
+                          : c.textDim,
                     ),
                   ),
                 ],
@@ -1636,8 +1656,8 @@ class _ExportButtonState extends State<_ExportButton> {
                   : Icons.arrow_forward_ios_rounded,
               size: 16,
               color: _lastPath != null
-                  ? ChompdColors.mint
-                  : ChompdColors.purple,
+                  ? c.mint
+                  : c.purple,
             ),
           ],
         ),
@@ -1646,6 +1666,7 @@ class _ExportButtonState extends State<_ExportButton> {
   }
 
   Future<void> _export(BuildContext context) async {
+    final c = context.colors;
     setState(() => _exporting = true);
     try {
       final allSubs = widget.ref.read(subscriptionsProvider);
@@ -1658,11 +1679,11 @@ class _ExportButtonState extends State<_ExportButton> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: ChompdColors.bgElevated,
+            backgroundColor: c.bgElevated,
             content: Text(
               context.l10n.exportSuccess(allSubs.length),
-              style: const TextStyle(
-                color: ChompdColors.text,
+              style: TextStyle(
+                color: c.text,
                 fontSize: 12,
               ),
             ),
@@ -1678,7 +1699,7 @@ class _ExportButtonState extends State<_ExportButton> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: ChompdColors.red.withValues(alpha: 0.9),
+            backgroundColor: c.red.withValues(alpha: 0.9),
             content: Text(
               context.l10n.exportFailed(e.toString()),
               style: const TextStyle(color: Colors.white, fontSize: 12),
@@ -1703,25 +1724,26 @@ class _BudgetSetting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final budget = ref.watch(budgetProvider);
     final currency = ref.watch(currencyProvider);
 
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.account_balance_wallet_outlined,
                 size: 18,
-                color: ChompdColors.mint,
+                color: c.mint,
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1730,18 +1752,18 @@ class _BudgetSetting extends StatelessWidget {
                   children: [
                     Text(
                       context.l10n.monthlySpendingTarget,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       context.l10n.budgetHint,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10.5,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                     ),
                   ],
@@ -1756,10 +1778,10 @@ class _BudgetSetting extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: ChompdColors.mint.withValues(alpha: 0.1),
+                    color: c.mint.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
-                      color: ChompdColors.mint.withValues(alpha: 0.3),
+                      color: c.mint.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Text(
@@ -1767,7 +1789,7 @@ class _BudgetSetting extends StatelessWidget {
                     style: ChompdTypography.mono(
                       size: 14,
                       weight: FontWeight.w700,
-                      color: ChompdColors.mint,
+                      color: c.mint,
                     ),
                   ),
                 ),
@@ -1793,13 +1815,13 @@ class _BudgetSetting extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? ChompdColors.mint.withValues(alpha: 0.15)
-                        : ChompdColors.bgElevated,
+                        ? c.mint.withValues(alpha: 0.15)
+                        : c.bgElevated,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: isSelected
-                          ? ChompdColors.mint.withValues(alpha: 0.4)
-                          : ChompdColors.border,
+                          ? c.mint.withValues(alpha: 0.4)
+                          : c.border,
                     ),
                   ),
                   child: Text(
@@ -1808,8 +1830,8 @@ class _BudgetSetting extends StatelessWidget {
                       size: 12,
                       weight: FontWeight.w700,
                       color: isSelected
-                          ? ChompdColors.mint
-                          : ChompdColors.textMid,
+                          ? c.mint
+                          : c.textMid,
                     ),
                   ),
                 ),
@@ -1822,6 +1844,7 @@ class _BudgetSetting extends StatelessWidget {
   }
 
   void _showCustomBudgetDialog(BuildContext context) {
+    final c = context.colors;
     final controller = TextEditingController(
       text: ref.read(budgetProvider).toStringAsFixed(0),
     );
@@ -1833,10 +1856,10 @@ class _BudgetSetting extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: ChompdColors.bgCard,
+        backgroundColor: c.bgCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: ChompdColors.border),
+          side: BorderSide(color: c.border),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -1846,18 +1869,18 @@ class _BudgetSetting extends StatelessWidget {
             children: [
               Text(
                 context.l10n.setBudgetTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: ChompdColors.text,
+                  color: c.text,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 context.l10n.setBudgetSubtitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: ChompdColors.textDim,
+                  color: c.textDim,
                 ),
               ),
               const SizedBox(height: 16),
@@ -1869,7 +1892,7 @@ class _BudgetSetting extends StatelessWidget {
                 style: ChompdTypography.mono(
                   size: 20,
                   weight: FontWeight.w700,
-                  color: ChompdColors.text,
+                  color: c.text,
                 ),
                 decoration: InputDecoration(
                   prefixText: Subscription.isSymbolSuffix(ref.read(currencyProvider))
@@ -1878,7 +1901,7 @@ class _BudgetSetting extends StatelessWidget {
                   prefixStyle: ChompdTypography.mono(
                     size: 20,
                     weight: FontWeight.w700,
-                    color: ChompdColors.mint,
+                    color: c.mint,
                   ),
                   suffixText: Subscription.isSymbolSuffix(ref.read(currencyProvider))
                       ? ' ${Subscription.currencySymbol(ref.read(currencyProvider))}'
@@ -1886,22 +1909,22 @@ class _BudgetSetting extends StatelessWidget {
                   suffixStyle: ChompdTypography.mono(
                     size: 20,
                     weight: FontWeight.w700,
-                    color: ChompdColors.mint,
+                    color: c.mint,
                   ),
                   filled: true,
-                  fillColor: ChompdColors.bgElevated,
+                  fillColor: c.bgElevated,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: ChompdColors.border),
+                    borderSide: BorderSide(color: c.border),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: ChompdColors.border),
+                    borderSide: BorderSide(color: c.border),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide:
-                        const BorderSide(color: ChompdColors.mint, width: 2),
+                        BorderSide(color: c.mint, width: 2),
                   ),
                 ),
               ),
@@ -1913,7 +1936,7 @@ class _BudgetSetting extends StatelessWidget {
                     onPressed: () => Navigator.of(ctx).pop(),
                     child: Text(
                       context.l10n.cancel,
-                      style: const TextStyle(color: ChompdColors.textDim),
+                      style: TextStyle(color: c.textDim),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1932,15 +1955,15 @@ class _BudgetSetting extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: ChompdColors.mint,
+                        color: c.mint,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         context.l10n.save,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w700,
-                          color: ChompdColors.bg,
+                          color: c.bg,
                         ),
                       ),
                     ),
@@ -1962,32 +1985,33 @@ class _CurrencySetting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final current = ref.watch(currencyProvider);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Display currency',
             style: TextStyle(
               fontSize: 12,
-              color: ChompdColors.textDim,
+              color: c.textDim,
             ),
           ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 6,
             runSpacing: 6,
-            children: supportedCurrencies.map((c) {
-              final code = c['code'] as String;
-              final symbol = c['symbol'] as String;
+            children: supportedCurrencies.map((cur) {
+              final code = cur['code'] as String;
+              final symbol = cur['symbol'] as String;
               final isSelected = current == code;
               return GestureDetector(
                 onTap: () {
@@ -2001,13 +2025,13 @@ class _CurrencySetting extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? ChompdColors.mint.withValues(alpha: 0.12)
-                        : ChompdColors.bgElevated,
+                        ? c.mint.withValues(alpha: 0.12)
+                        : c.bgElevated,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
                       color: isSelected
-                          ? ChompdColors.mint.withValues(alpha: 0.5)
-                          : ChompdColors.border,
+                          ? c.mint.withValues(alpha: 0.5)
+                          : c.border,
                     ),
                   ),
                   child: Text(
@@ -2016,8 +2040,8 @@ class _CurrencySetting extends StatelessWidget {
                       size: 12,
                       weight: isSelected ? FontWeight.w700 : FontWeight.w400,
                       color: isSelected
-                          ? ChompdColors.mint
-                          : ChompdColors.textMid,
+                          ? c.mint
+                          : c.textMid,
                     ),
                   ),
                 ),
@@ -2037,6 +2061,7 @@ class _LanguageSetting extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final currentLocale = ref.watch(localeProvider);
 
     return Wrap(
@@ -2055,13 +2080,13 @@ class _LanguageSetting extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
               color: isSelected
-                  ? ChompdColors.mint.withValues(alpha: 0.12)
-                  : ChompdColors.bgElevated,
+                  ? c.mint.withValues(alpha: 0.12)
+                  : c.bgElevated,
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isSelected
-                    ? ChompdColors.mint.withValues(alpha: 0.4)
-                    : ChompdColors.border,
+                    ? c.mint.withValues(alpha: 0.4)
+                    : c.border,
               ),
             ),
             child: Text(
@@ -2069,7 +2094,7 @@ class _LanguageSetting extends StatelessWidget {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? ChompdColors.mint : ChompdColors.textMid,
+                color: isSelected ? c.mint : c.textMid,
               ),
             ),
           ),
@@ -2093,14 +2118,15 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 12,
-            color: ChompdColors.textDim,
+            color: c.textDim,
           ),
         ),
         Text(
@@ -2108,7 +2134,7 @@ class _InfoRow extends StatelessWidget {
           style: ChompdTypography.mono(
             size: 11,
             weight: FontWeight.w700,
-            color: valueColor ?? ChompdColors.textMid,
+            color: valueColor ?? c.textMid,
           ),
         ),
       ],

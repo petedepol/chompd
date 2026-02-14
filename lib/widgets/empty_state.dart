@@ -17,7 +17,7 @@ class EmptyState extends StatelessWidget {
   final String? imagePath;
   final String? _title;
   final String? _subtitle;
-  final Color accentColor;
+  final Color? _accentColorOverride;
   final _EmptyStateType _type;
 
   const EmptyState({
@@ -25,10 +25,11 @@ class EmptyState extends StatelessWidget {
     required this.icon,
     required String title,
     required String subtitle,
-    this.accentColor = ChompdColors.mint,
+    Color? accentColor,
     this.imagePath,
   })  : _title = title,
         _subtitle = subtitle,
+        _accentColorOverride = accentColor,
         _type = _EmptyStateType.custom;
 
   /// Empty state for no subscriptions tracked yet.
@@ -38,7 +39,7 @@ class EmptyState extends StatelessWidget {
         imagePath = 'piranha_sleeping.png',
         _title = null,
         _subtitle = null,
-        accentColor = ChompdColors.mint,
+        _accentColorOverride = null,
         _type = _EmptyStateType.noSubscriptions;
 
   /// Empty state for no active trials.
@@ -47,7 +48,7 @@ class EmptyState extends StatelessWidget {
         imagePath = null,
         _title = null,
         _subtitle = null,
-        accentColor = ChompdColors.amber,
+        _accentColorOverride = null,
         _type = _EmptyStateType.noTrials;
 
   /// Empty state for no cancelled subs (savings).
@@ -56,7 +57,7 @@ class EmptyState extends StatelessWidget {
         imagePath = null,
         _title = null,
         _subtitle = null,
-        accentColor = ChompdColors.mint,
+        _accentColorOverride = null,
         _type = _EmptyStateType.noSavings;
 
   String _resolveTitle(BuildContext context) {
@@ -87,10 +88,23 @@ class EmptyState extends StatelessWidget {
     }
   }
 
+  Color _resolveAccentColor(BuildContext context) {
+    if (_accentColorOverride != null) return _accentColorOverride;
+    final c = context.colors;
+    switch (_type) {
+      case _EmptyStateType.noTrials:
+        return c.amber;
+      default:
+        return c.mint;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final title = _resolveTitle(context);
     final subtitle = _resolveSubtitle(context);
+    final accentColor = _resolveAccentColor(context);
 
     return Center(
       child: Padding(
@@ -122,19 +136,19 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: ChompdColors.textMid,
+                color: c.textMid,
               ),
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: ChompdColors.textDim,
+                color: c.textDim,
                 height: 1.5,
               ),
             ),

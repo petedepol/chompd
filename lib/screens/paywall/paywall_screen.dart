@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/constants.dart';
 import '../../config/theme.dart';
+import '../../models/subscription.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../services/purchase_service.dart';
@@ -70,6 +71,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final purchaseState = ref.watch(purchaseProvider);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
 
@@ -91,7 +93,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(
-                color: ChompdColors.bg.withValues(alpha: 0.85),
+                color: c.bg.withValues(alpha: 0.85),
               ),
             ),
           ),
@@ -111,16 +113,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         width: 32,
                         height: 32,
                         decoration: BoxDecoration(
-                          color: ChompdColors.bgElevated,
+                          color: c.bgElevated,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                              color: ChompdColors.border),
+                              color: c.border),
                         ),
                         alignment: Alignment.center,
-                        child: const Icon(
+                        child: Icon(
                           Icons.close_rounded,
                           size: 16,
-                          color: ChompdColors.textMid,
+                          color: c.textMid,
                         ),
                       ),
                     ),
@@ -141,27 +143,27 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                           height: 72,
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(22),
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                ChompdColors.mintDark,
-                                ChompdColors.mint,
+                                c.mintDark,
+                                c.mint,
                               ],
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: ChompdColors.mint.withValues(alpha: 0.3),
+                                color: c.mint.withValues(alpha: 0.3),
                                 blurRadius: 32,
                                 offset: const Offset(0, 8),
                               ),
                             ],
                           ),
                           alignment: Alignment.center,
-                          child: const Icon(
+                          child: Icon(
                             Icons.auto_awesome,
                             size: 32,
-                            color: ChompdColors.bg,
+                            color: c.bg,
                           ),
                         ),
 
@@ -170,10 +172,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         // ─── Title ───
                         Text(
                           context.l10n.chompdPro,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
-                            color: ChompdColors.text,
+                            color: c.text,
                             letterSpacing: -0.5,
                           ),
                         ),
@@ -183,10 +185,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         // ─── Tagline ───
                         Text(
                           context.l10n.paywallTagline,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontStyle: FontStyle.italic,
-                            color: ChompdColors.textMid,
+                            color: c.textMid,
                           ),
                         ),
 
@@ -195,9 +197,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                         // Trigger-specific message
                         Text(
                           _triggerMessage(context),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: ChompdColors.textDim,
+                            color: c.textDim,
                           ),
                         ),
 
@@ -256,19 +258,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                               vertical: 10,
                             ),
                             decoration: BoxDecoration(
-                              color: ChompdColors.mint.withValues(alpha: 0.06),
+                              color: c.mint.withValues(alpha: 0.06),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: ChompdColors.mint.withValues(alpha: 0.12),
+                                color: c.mint.withValues(alpha: 0.12),
                               ),
                             ),
                             child: Text(
                               context.l10n.paywallContext,
                               textAlign: TextAlign.center,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
                                 fontStyle: FontStyle.italic,
-                                color: ChompdColors.mint,
+                                color: c.mint,
                               ),
                             ),
                           ),
@@ -286,16 +288,16 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                   vertical: 16,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: ChompdColors.bgCard,
+                                  color: c.bgCard,
                                   borderRadius: BorderRadius.circular(18),
                                   border: Border.all(
-                                    color: ChompdColors.mint.withValues(alpha:
+                                    color: c.mint.withValues(alpha:
                                       0.2 + _glowController.value * 0.15,
                                     ),
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: ChompdColors.mint.withValues(alpha:
+                                      color: c.mint.withValues(alpha:
                                         0.08 + _glowController.value * 0.08,
                                       ),
                                       blurRadius:
@@ -313,19 +315,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          '\u00A3${AppConstants.proPrice.toStringAsFixed(2)}',
+                                          Subscription.formatPrice(AppConstants.proPrice, AppConstants.proCurrency),
                                           style: ChompdTypography.mono(
                                             size: 28,
                                             weight: FontWeight.w700,
-                                            color: ChompdColors.mint,
+                                            color: c.mint,
                                           ),
                                         ),
                                         const SizedBox(height: 2),
                                         Text(
                                           context.l10n.oneTimePayment,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 12,
-                                            color: ChompdColors.textDim,
+                                            color: c.textDim,
                                           ),
                                         ),
                                       ],
@@ -337,15 +339,15 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                       ),
                                       decoration: BoxDecoration(
                                         color:
-                                            ChompdColors.mint.withValues(alpha: 0.12),
+                                            c.mint.withValues(alpha: 0.12),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
                                         context.l10n.lifetime,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 10,
                                           fontWeight: FontWeight.w700,
-                                          color: ChompdColors.mint,
+                                          color: c.mint,
                                           letterSpacing: 0.8,
                                         ),
                                       ),
@@ -374,19 +376,19 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                 gradient: LinearGradient(
                                   colors: _purchasing
                                       ? [
-                                          ChompdColors.mintDark
+                                          c.mintDark
                                               .withValues(alpha: 0.5),
-                                          ChompdColors.mint.withValues(alpha: 0.5),
+                                          c.mint.withValues(alpha: 0.5),
                                         ]
                                       : [
-                                          ChompdColors.mintDark,
-                                          ChompdColors.mint,
+                                          c.mintDark,
+                                          c.mint,
                                         ],
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color:
-                                        ChompdColors.mint.withValues(alpha: 0.27),
+                                        c.mint.withValues(alpha: 0.27),
                                     blurRadius: 20,
                                     offset: const Offset(0, 4),
                                   ),
@@ -394,23 +396,23 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                               ),
                               alignment: Alignment.center,
                               child: _purchasing
-                                  ? const SizedBox(
+                                  ? SizedBox(
                                       width: 20,
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                          ChompdColors.bg,
+                                          c.bg,
                                         ),
                                       ),
                                     )
                                   : Text(
                                       context.l10n.unlockChompdPro,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
-                                        color: ChompdColors.bg,
+                                        color: c.bg,
                                       ),
                                     ),
                             ),
@@ -426,9 +428,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                             _restoring
                                 ? context.l10n.restoring
                                 : context.l10n.restorePurchase,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: ChompdColors.textDim,
+                              color: c.textDim,
                             ),
                           ),
                         ),
@@ -438,9 +440,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                           const SizedBox(height: 8),
                           Text(
                             _errorMessage!,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: ChompdColors.red,
+                              color: c.red,
                             ),
                           ),
                         ],
@@ -503,29 +505,30 @@ class _FeatureRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Row(
       children: [
         Container(
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: ChompdColors.mint.withValues(alpha: 0.1),
+            color: c.mint.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           alignment: Alignment.center,
           child: Icon(
             icon,
             size: 14,
-            color: ChompdColors.mint,
+            color: c.mint,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
             text,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: ChompdColors.text,
+              color: c.text,
             ),
           ),
         ),

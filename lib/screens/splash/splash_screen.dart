@@ -84,8 +84,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) => Center(
@@ -119,7 +120,7 @@ class _SplashScreenState extends State<SplashScreen>
                   style: ChompdTypography.mono(
                     size: 28,
                     weight: FontWeight.w700,
-                    color: ChompdColors.text,
+                    color: c.text,
                   ).copyWith(
                     letterSpacing: -0.5,
                   ),
@@ -133,7 +134,7 @@ class _SplashScreenState extends State<SplashScreen>
                   context.l10n.tagline,
                   style: ChompdTypography.mono(
                     size: 12,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ).copyWith(
                     letterSpacing: 2.0,
                   ),

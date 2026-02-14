@@ -77,8 +77,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       body: Stack(
         children: [
           PageView(
@@ -105,6 +106,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   // ─── Page 1: Welcome ───
   Widget _buildWelcomePage() {
+    final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Padding(
@@ -126,7 +128,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            ChompdColors.mint.withValues(alpha: 0.08),
+                            c.mint.withValues(alpha: 0.08),
                             Colors.transparent,
                           ],
                         ),
@@ -146,7 +148,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                   textAlign: TextAlign.center,
                 ),
@@ -154,10 +156,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 // Subtitle
                 Text(
                   context.l10n.onboardingSubtitle1,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
-                    color: ChompdColors.textMid,
+                    color: c.textMid,
                     height: 1.5,
                   ),
                   textAlign: TextAlign.center,
@@ -170,9 +172,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     vertical: 12,
                   ),
                   decoration: BoxDecoration(
-                    color: ChompdColors.bgCard,
+                    color: c.bgCard,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: ChompdColors.border),
+                    border: Border.all(color: c.border),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -182,9 +184,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       Flexible(
                         child: Text(
                           context.l10n.onboardingStatWaste(Subscription.formatPrice(240, ref.watch(currencyProvider), decimals: 0)),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: ChompdColors.textMid,
+                            color: c.textMid,
                             height: 1.4,
                           ),
                         ),
@@ -202,6 +204,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   // ─── Page 2: How It Works ───
   Widget _buildHowItWorksPage() {
+    final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Padding(
@@ -221,7 +224,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 _buildStep(
                   number: 1,
                   icon: Icons.camera_alt,
-                  iconColor: ChompdColors.mint,
+                  iconColor: c.mint,
                   title: context.l10n.onboardingStep1Title,
                   subtitle: context.l10n.onboardingStep1Subtitle,
                   isLast: false,
@@ -229,7 +232,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 _buildStep(
                   number: 2,
                   icon: Icons.auto_awesome,
-                  iconColor: ChompdColors.purple,
+                  iconColor: c.purple,
                   title: context.l10n.onboardingStep2Title,
                   subtitle: context.l10n.onboardingStep2Subtitle,
                   isLast: false,
@@ -237,7 +240,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 _buildStep(
                   number: 3,
                   icon: Icons.check_circle,
-                  iconColor: ChompdColors.mint,
+                  iconColor: c.mint,
                   title: context.l10n.onboardingStep3Title,
                   subtitle: context.l10n.onboardingStep3Subtitle,
                   isLast: true,
@@ -258,6 +261,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     String? subtitle,
     required bool isLast,
   }) {
+    final c = context.colors;
     return Column(
       children: [
         Row(
@@ -267,7 +271,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: ChompdColors.bgElevated,
+                color: c.bgElevated,
                 border: Border.all(
                   color: iconColor,
                   width: 2,
@@ -288,19 +292,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                   if (subtitle != null) ...[
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                     ),
                   ],
@@ -323,7 +327,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   child: Container(
                     width: 2,
                     height: 4,
-                    color: ChompdColors.border,
+                    color: c.border,
                   ),
                 ),
               ),
@@ -338,6 +342,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   // ─── Page 3: Notifications ───
   Widget _buildNotificationsPage() {
+    final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Padding(
@@ -364,7 +369,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                             Theme.of(context).textTheme.titleLarge?.copyWith(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
-                                  color: ChompdColors.text,
+                                  color: c.text,
                                 ),
                         textAlign: TextAlign.center,
                       ),
@@ -372,10 +377,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       // Subtitle
                       Text(
                         context.l10n.onboardingSubtitle3,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
-                          color: ChompdColors.textMid,
+                          color: c.textMid,
                           height: 1.5,
                         ),
                         textAlign: TextAlign.center,
@@ -408,8 +413,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       _nextPage();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: ChompdColors.mint,
-                      foregroundColor: ChompdColors.bg,
+                      backgroundColor: c.mint,
+                      foregroundColor: c.bg,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -429,10 +434,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   onPressed: _nextPage,
                   child: Text(
                     context.l10n.maybeLater,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ),
@@ -447,6 +452,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   // ─── Page 4: Get Started ───
   Widget _buildGetStartedPage() {
+    final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
       child: Padding(
@@ -473,7 +479,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                             Theme.of(context).textTheme.titleLarge?.copyWith(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w700,
-                                  color: ChompdColors.text,
+                                  color: c.text,
                                 ),
                         textAlign: TextAlign.center,
                       ),
@@ -481,10 +487,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       // Subtitle — more urgency
                       Text(
                         context.l10n.onboardingSubtitle4,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
-                          color: ChompdColors.textMid,
+                          color: c.textMid,
                           height: 1.5,
                         ),
                         textAlign: TextAlign.center,
@@ -505,8 +511,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          ChompdColors.mint,
-                          ChompdColors.mintDark,
+                          c.mint,
+                          c.mintDark,
                         ],
                       ),
                       borderRadius: BorderRadius.circular(14),
@@ -515,7 +521,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       onPressed: () => _completeOnboarding(openScan: true),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
-                        foregroundColor: ChompdColors.bg,
+                        foregroundColor: c.bg,
                         elevation: 0,
                         shadowColor: Colors.transparent,
                         padding: const EdgeInsets.symmetric(vertical: 14),
@@ -546,9 +552,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   child: OutlinedButton(
                     onPressed: () => _completeOnboarding(openManualAdd: true),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: ChompdColors.textMid,
-                      side: const BorderSide(
-                        color: ChompdColors.border,
+                      foregroundColor: c.textMid,
+                      side: BorderSide(
+                        color: c.border,
                         width: 1,
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -570,10 +576,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   onPressed: _completeOnboarding,
                   child: Text(
                     context.l10n.skipForNow,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ),
@@ -587,21 +593,22 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   Widget _notifFeature(String text) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: ChompdColors.amber.withValues(alpha: 0.08),
+        color: c.amber.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: ChompdColors.amber.withValues(alpha: 0.2),
+          color: c.amber.withValues(alpha: 0.2),
         ),
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: ChompdColors.amber,
+          color: c.amber,
         ),
       ),
     );
@@ -609,6 +616,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   // ─── Bottom Navigation ───
   Widget _buildBottomNavigation() {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.only(
         left: 24,
@@ -630,8 +638,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 height: 6,
                 decoration: BoxDecoration(
                   color: _currentPage == index
-                      ? ChompdColors.mint
-                      : ChompdColors.border,
+                      ? c.mint
+                      : c.border,
                   borderRadius: BorderRadius.circular(3),
                 ),
               );
@@ -649,17 +657,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   children: [
                     Text(
                       context.l10n.next,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward,
                       size: 18,
-                      color: ChompdColors.mint,
+                      color: c.mint,
                     ),
                   ],
                 ),

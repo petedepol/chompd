@@ -61,10 +61,11 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
     final email = buildDisputeEmail(sub);
     await Clipboard.setData(ClipboardData(text: email));
     if (!mounted) return;
+    final c = context.colors;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(context.l10n.emailCopied),
-        backgroundColor: ChompdColors.mint,
+        backgroundColor: c.mint,
         duration: const Duration(milliseconds: 1500),
       ),
     );
@@ -80,8 +81,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       body: _showConfirmation
           ? _buildConfirmation()
           : _selectedTemplate != null
@@ -93,6 +95,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
   // ─── Phase 1: Path Selector ───
 
   Widget _buildPathSelector() {
+    final c = context.colors;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -111,10 +114,10 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                 Expanded(
                   child: Text(
                     context.l10n.refundRescue,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                 ),
@@ -132,17 +135,17 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: ChompdColors.purple.withValues(alpha: 0.1),
+                color: c.purple.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(
-                  color: ChompdColors.purple.withValues(alpha: 0.25),
+                  color: c.purple.withValues(alpha: 0.25),
                 ),
               ),
               child: Text(
                 context.l10n.refundIntro,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: ChompdColors.text,
+                  color: c.text,
                   height: 1.5,
                 ),
                 textAlign: TextAlign.center,
@@ -159,10 +162,10 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Text(
               context.l10n.chargedYou(sub.name, Subscription.formatPrice(sub.price, sub.currency)),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: ChompdColors.textMid,
+                color: c.textMid,
               ),
             ),
           ),
@@ -213,6 +216,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
   // ─── Phase 2: Steps View ───
 
   Widget _buildStepsView() {
+    final c = context.colors;
     final template = _selectedTemplate!;
     final isDirectBilling = template.path == RefundPath.directBilling;
 
@@ -239,10 +243,10 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   Expanded(
                     child: Text(
                       template.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                   ),
@@ -263,7 +267,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: ChompdColors.mint.withValues(alpha: 0.12),
+                      color: c.mint.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -271,7 +275,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                       style: ChompdTypography.mono(
                         size: 11,
                         weight: FontWeight.w600,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                     ),
                   ),
@@ -279,9 +283,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   Flexible(
                     child: Text(
                       template.timeframe,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -325,16 +329,16 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: ChompdColors.mint,
+                      color: c.mint,
                       borderRadius: BorderRadius.circular(14),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       context.l10n.copyDisputeEmail,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.bg,
+                        color: c.bg,
                       ),
                     ),
                   ),
@@ -362,10 +366,10 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: ChompdColors.mint.withValues(alpha: 0.12),
+                      color: c.mint.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: ChompdColors.mint.withValues(alpha: 0.3),
+                        color: c.mint.withValues(alpha: 0.3),
                       ),
                     ),
                     alignment: Alignment.center,
@@ -374,17 +378,17 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                       children: [
                         Text(
                           context.l10n.openRefundPage,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: ChompdColors.mint,
+                            color: c.mint,
                           ),
                         ),
                         const SizedBox(width: 6),
                         Icon(
                           Icons.open_in_new_rounded,
                           size: 14,
-                          color: ChompdColors.mint,
+                          color: c.mint,
                         ),
                       ],
                     ),
@@ -407,15 +411,15 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: ChompdColors.border),
+                    border: Border.all(color: c.border),
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     context.l10n.iveSubmittedRequest,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                 ),
@@ -436,6 +440,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
   // ─── Confirmation ───
 
   Widget _buildConfirmation() {
+    final c = context.colors;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -446,32 +451,32 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: ChompdColors.mint.withValues(alpha: 0.15),
+                color: c.mint.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(32),
               ),
               alignment: Alignment.center,
-              child: const Icon(
+              child: Icon(
                 Icons.check_rounded,
                 size: 32,
-                color: ChompdColors.mint,
+                color: c.mint,
               ),
             ),
             const SizedBox(height: 24),
             Text(
               context.l10n.requestSubmitted,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: ChompdColors.text,
+                color: c.text,
               ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 10),
             Text(
               context.l10n.requestSubmittedMessage,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: ChompdColors.textMid,
+                color: c.textMid,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -491,21 +496,22 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: ChompdColors.bgElevated,
+          color: c.bgElevated,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.arrow_back_rounded,
           size: 16,
-          color: ChompdColors.textMid,
+          color: c.textMid,
         ),
       ),
     );
@@ -520,14 +526,15 @@ class _PathCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
@@ -542,10 +549,10 @@ class _PathCard extends StatelessWidget {
                 children: [
                   Text(
                     template.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -553,7 +560,7 @@ class _PathCard extends StatelessWidget {
                     template.successRate,
                     style: ChompdTypography.mono(
                       size: 11,
-                      color: ChompdColors.mint,
+                      color: c.mint,
                     ),
                   ),
                 ],
@@ -561,16 +568,16 @@ class _PathCard extends StatelessWidget {
             ),
             Text(
               template.timeframe,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: ChompdColors.textDim,
+                color: c.textDim,
               ),
             ),
             const SizedBox(width: 6),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 18,
-              color: ChompdColors.textDim,
+              color: c.textDim,
             ),
           ],
         ),
@@ -594,17 +601,18 @@ class _StepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onToggle,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: checked
-                ? ChompdColors.mint.withValues(alpha: 0.3)
-                : ChompdColors.border,
+                ? c.mint.withValues(alpha: 0.3)
+                : c.border,
           ),
         ),
         child: Row(
@@ -618,25 +626,25 @@ class _StepCard extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: checked
-                    ? ChompdColors.mint.withValues(alpha: 0.15)
+                    ? c.mint.withValues(alpha: 0.15)
                     : Colors.transparent,
                 border: Border.all(
                   color: checked
-                      ? ChompdColors.mint
-                      : ChompdColors.textDim,
+                      ? c.mint
+                      : c.textDim,
                   width: 2,
                 ),
               ),
               alignment: Alignment.center,
               child: checked
-                  ? const Icon(Icons.check_rounded,
-                      size: 14, color: ChompdColors.mint)
+                  ? Icon(Icons.check_rounded,
+                      size: 14, color: c.mint)
                   : Text(
                       '${index + 1}',
                       style: ChompdTypography.mono(
                         size: 10,
                         weight: FontWeight.w700,
-                        color: ChompdColors.textDim,
+                        color: c.textDim,
                       ),
                     ),
             ),
@@ -650,7 +658,7 @@ class _StepCard extends StatelessWidget {
                     style: ChompdTypography.mono(
                       size: 9,
                       weight: FontWeight.w700,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -659,8 +667,8 @@ class _StepCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       color: checked
-                          ? ChompdColors.textDim
-                          : ChompdColors.text,
+                          ? c.textDim
+                          : c.text,
                       decoration:
                           checked ? TextDecoration.lineThrough : null,
                       height: 1.4,

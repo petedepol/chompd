@@ -34,6 +34,7 @@ class DetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     // Watch for live updates
     final subs = ref.watch(subscriptionsProvider);
     final liveSub = subs.where((s) => s.uid == subscription.uid).firstOrNull;
@@ -41,12 +42,12 @@ class DetailScreen extends ConsumerWidget {
 
     final color = sub.brandColor != null
         ? _parseHex(sub.brandColor!)
-        : ChompdColors.textDim;
+        : c.textDim;
     final daysLeft = sub.daysUntilRenewal;
     final renewalPct = (1 - (daysLeft / sub.cycle.approximateDays)).clamp(0.0, 1.0);
 
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       body: CustomScrollView(
         slivers: [
           // Safe area
@@ -65,10 +66,10 @@ class DetailScreen extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       context.l10n.subscriptionDetail,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                   ),
@@ -95,7 +96,7 @@ class DetailScreen extends ConsumerWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       color.withValues(alpha: 0.13),
-                      ChompdColors.bgCard,
+                      c.bgCard,
                     ],
                   ),
                   borderRadius: BorderRadius.circular(20),
@@ -136,10 +137,10 @@ class DetailScreen extends ConsumerWidget {
                     const SizedBox(height: 14),
                     Text(
                       sub.name,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -151,14 +152,14 @@ class DetailScreen extends ConsumerWidget {
                             style: ChompdTypography.mono(
                               size: 28,
                               weight: FontWeight.w700,
-                              color: ChompdColors.mint,
+                              color: c.mint,
                             ),
                           ),
                           TextSpan(
                             text: '/${sub.cycle.localShortLabel(context.l10n)}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: ChompdColors.textDim,
+                              color: c.textDim,
                             ),
                           ),
                         ],
@@ -173,12 +174,12 @@ class DetailScreen extends ConsumerWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: ChompdColors.bgElevated,
+                          color: c.bgElevated,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: sub.yearlyEquivalent > 100
-                                ? ChompdColors.amber.withValues(alpha: 0.2)
-                                : ChompdColors.border,
+                                ? c.amber.withValues(alpha: 0.2)
+                                : c.border,
                           ),
                         ),
                         child: Text(
@@ -187,8 +188,8 @@ class DetailScreen extends ConsumerWidget {
                             size: 12,
                             weight: FontWeight.w600,
                             color: sub.yearlyEquivalent > 100
-                                ? ChompdColors.amber
-                                : ChompdColors.textMid,
+                                ? c.amber
+                                : c.textMid,
                           ),
                         ),
                       ),
@@ -196,10 +197,10 @@ class DetailScreen extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(
                         context.l10n.overThreeYears(Subscription.formatPrice(sub.yearlyEquivalent * 3, sub.currency, decimals: 0)),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontStyle: FontStyle.italic,
-                          color: ChompdColors.textDim,
+                          color: c.textDim,
                         ),
                       ),
                     ],
@@ -211,20 +212,20 @@ class DetailScreen extends ConsumerWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: ChompdColors.amberGlow,
+                          color: c.amberGlow,
                           borderRadius: BorderRadius.circular(100),
                           border: Border.all(
-                            color: ChompdColors.amber.withValues(alpha: 0.27),
+                            color: c.amber.withValues(alpha: 0.27),
                           ),
                         ),
                         child: Text(
                           sub.trialDaysRemaining! <= 0
                               ? context.l10n.trialExpired
                               : context.l10n.trialDaysRemaining(sub.trialDaysRemaining!),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
-                            color: ChompdColors.amber,
+                            color: c.amber,
                           ),
                         ),
                       ),
@@ -263,10 +264,10 @@ class DetailScreen extends ConsumerWidget {
                       children: [
                         Text(
                           DateHelpers.shortDate(sub.nextRenewal),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: ChompdColors.text,
+                            color: c.text,
                           ),
                         ),
                         Text(
@@ -281,10 +282,10 @@ class DetailScreen extends ConsumerWidget {
                             size: 12,
                             weight: FontWeight.w700,
                             color: daysLeft <= 3
-                                ? ChompdColors.red
+                                ? c.red
                                 : daysLeft <= 7
-                                    ? ChompdColors.amber
-                                    : ChompdColors.mint,
+                                    ? c.amber
+                                    : c.mint,
                           ),
                         ),
                       ],
@@ -295,13 +296,13 @@ class DetailScreen extends ConsumerWidget {
                       child: LinearProgressIndicator(
                         value: renewalPct,
                         minHeight: 6,
-                        backgroundColor: ChompdColors.bgElevated,
+                        backgroundColor: c.bgElevated,
                         valueColor: AlwaysStoppedAnimation<Color>(
                           daysLeft <= 3
-                              ? ChompdColors.red
+                              ? c.red
                               : daysLeft <= 7
-                                  ? ChompdColors.amber
-                                  : ChompdColors.mint,
+                                  ? c.amber
+                                  : c.mint,
                         ),
                       ),
                     ),
@@ -331,7 +332,7 @@ class DetailScreen extends ConsumerWidget {
                 label: context.l10n.sectionPaymentHistory,
                 child: Column(
                   children: [
-                    ..._buildPaymentHistory(sub),
+                    ..._buildPaymentHistory(sub, context),
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
                       child: Row(
@@ -339,10 +340,10 @@ class DetailScreen extends ConsumerWidget {
                         children: [
                           Text(
                             context.l10n.totalPaid,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
-                              color: ChompdColors.textMid,
+                              color: c.textMid,
                             ),
                           ),
                           Text(
@@ -350,7 +351,7 @@ class DetailScreen extends ConsumerWidget {
                             style: ChompdTypography.mono(
                               size: 13,
                               weight: FontWeight.w700,
-                              color: ChompdColors.mint,
+                              color: c.mint,
                             ),
                           ),
                         ],
@@ -373,11 +374,11 @@ class DetailScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     _DetailRow(label: context.l10n.detailCategory, value: AppConstants.localisedCategory(sub.category, context.l10n)),
-                    _divider(),
+                    _divider(context),
                     _DetailRow(label: context.l10n.detailCurrency, value: sub.currency),
-                    _divider(),
+                    _divider(context),
                     _DetailRow(label: context.l10n.detailBillingCycle, value: sub.cycle.localLabel(context.l10n)),
-                    _divider(),
+                    _divider(context),
                     _DetailRow(
                       label: context.l10n.detailAdded,
                       value: context.l10n.addedVia(
@@ -409,15 +410,15 @@ class DetailScreen extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: ChompdColors.border),
+                    border: Border.all(color: c.border),
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     context.l10n.delete,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ),
@@ -436,19 +437,19 @@ class DetailScreen extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: ChompdColors.redGlow,
+                      color: c.redGlow,
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: ChompdColors.red.withValues(alpha: 0.2),
+                        color: c.red.withValues(alpha: 0.2),
                       ),
                     ),
                     alignment: Alignment.center,
                     child: Text(
                       context.l10n.cancelSubscription,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.red,
+                        color: c.red,
                       ),
                     ),
                   ),
@@ -466,7 +467,8 @@ class DetailScreen extends ConsumerWidget {
     );
   }
 
-  List<Widget> _buildPaymentHistory(Subscription sub) {
+  List<Widget> _buildPaymentHistory(Subscription sub, BuildContext context) {
+    final c = context.colors;
     // Calculate real payment dates from createdAt → now based on billing cycle.
     final payments = <DateTime>[];
     final now = DateTime.now();
@@ -488,18 +490,16 @@ class DetailScreen extends ConsumerWidget {
     // If no payments yet (e.g. new trial), show a hint.
     if (payments.isEmpty) {
       return [
-        Builder(builder: (context) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Text(
-              context.l10n.noPaymentsYet(DateHelpers.shortDate(start)),
-              style: const TextStyle(
-                fontSize: 12,
-                color: ChompdColors.textDim,
-              ),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            context.l10n.noPaymentsYet(DateHelpers.shortDate(start)),
+            style: TextStyle(
+              fontSize: 12,
+              color: c.textDim,
             ),
-          );
-        }),
+          ),
+        ),
       ];
     }
 
@@ -515,22 +515,22 @@ class DetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   DateHelpers.shortDate(date),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: ChompdColors.textMid,
+                    color: c.textMid,
                   ),
                 ),
                 Text(
                   Subscription.formatPrice(sub.price, sub.currency),
                   style: ChompdTypography.mono(
                     size: 12,
-                    color: ChompdColors.text,
+                    color: c.text,
                   ),
                 ),
               ],
             ),
           ),
-          if (!isLast) _divider(),
+          if (!isLast) _divider(context),
         ],
       );
     }).toList();
@@ -561,6 +561,7 @@ class DetailScreen extends ConsumerWidget {
   /// Navigates to the cancel guide for this service.
   /// Falls back to generic platform guide if no specific match found.
   void _navigateToCancelGuide(BuildContext context, Subscription sub) {
+    final c = context.colors;
     final guide = findGuideForSubscription(sub.name);
     if (guide != null) {
       Navigator.of(context).push(
@@ -577,7 +578,7 @@ class DetailScreen extends ConsumerWidget {
             context.l10n.noGuideYet(sub.name),
             style: const TextStyle(fontSize: 12),
           ),
-          backgroundColor: ChompdColors.bgElevated,
+          backgroundColor: c.bgElevated,
           duration: const Duration(seconds: 4),
         ),
       );
@@ -586,13 +587,14 @@ class DetailScreen extends ConsumerWidget {
 
   void _showDeleteDialog(
       BuildContext context, WidgetRef ref, Subscription sub) {
+    final c = context.colors;
     showDialog(
       context: context,
       builder: (ctx) => _ConfirmDialog(
         title: context.l10n.deleteNameTitle(sub.name),
         message: context.l10n.deleteNameMessage,
         confirmLabel: context.l10n.delete,
-        confirmColor: ChompdColors.red,
+        confirmColor: c.red,
         onConfirm: () {
           ref.read(subscriptionsProvider.notifier).remove(sub.uid);
           NotificationService.instance.cancelReminders(sub.uid);
@@ -603,11 +605,12 @@ class DetailScreen extends ConsumerWidget {
     );
   }
 
-  static Widget _divider() {
-    return const Divider(
+  static Widget _divider(BuildContext context) {
+    final c = context.colors;
+    return Divider(
       height: 1,
       thickness: 1,
-      color: ChompdColors.border,
+      color: c.border,
     );
   }
 }
@@ -620,21 +623,22 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: ChompdColors.bgElevated,
+          color: c.bgElevated,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.arrow_back_rounded,
           size: 16,
-          color: ChompdColors.textMid,
+          color: c.textMid,
         ),
       ),
     );
@@ -648,18 +652,19 @@ class _IconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: ChompdColors.bgElevated,
+          color: c.bgElevated,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         alignment: Alignment.center,
-        child: Icon(icon, size: 16, color: ChompdColors.textMid),
+        child: Icon(icon, size: 16, color: c.textMid),
       ),
     );
   }
@@ -672,12 +677,13 @@ class _InfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -704,6 +710,7 @@ class _RemindersCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final prefs = ref.watch(notificationPrefsProvider);
     final subs = ref.watch(subscriptionsProvider);
     final sub = subs.where((s) => s.uid == subscriptionUid).firstOrNull;
@@ -734,17 +741,17 @@ class _RemindersCard extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.schedule_outlined,
                     size: 13,
-                    color: ChompdColors.mint,
+                    color: c.mint,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     context.l10n.remindersScheduled(scheduled.length),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10.5,
-                      color: ChompdColors.mint,
+                      color: c.mint,
                     ),
                   ),
                 ],
@@ -761,7 +768,7 @@ class _RemindersCard extends StatelessWidget {
               HapticService.instance.selection();
             } : null,
           ),
-          const Divider(height: 1, color: ChompdColors.border),
+          Divider(height: 1, color: c.border),
           _ReminderRow(
             label: context.l10n.reminderDaysBefore3,
             enabled: isDayEnabled(3),
@@ -772,7 +779,7 @@ class _RemindersCard extends StatelessWidget {
               HapticService.instance.selection();
             } : null,
           ),
-          const Divider(height: 1, color: ChompdColors.border),
+          Divider(height: 1, color: c.border),
           _ReminderRow(
             label: context.l10n.reminderDaysBefore1,
             enabled: isDayEnabled(1),
@@ -783,7 +790,7 @@ class _RemindersCard extends StatelessWidget {
               HapticService.instance.selection();
             } : null,
           ),
-          const Divider(height: 1, color: ChompdColors.border),
+          Divider(height: 1, color: c.border),
           _ReminderRow(
             label: context.l10n.reminderMorningOf,
             enabled: isDayEnabled(0),
@@ -808,30 +815,30 @@ class _RemindersCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: ChompdColors.purple.withValues(alpha: 0.08),
+                  color: c.purple.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.lock_outline_rounded,
                       size: 12,
-                      color: ChompdColors.purple,
+                      color: c.purple,
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         context.l10n.upgradeForReminders,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
-                          color: ChompdColors.purple,
+                          color: c.purple,
                         ),
                       ),
                     ),
-                    const Icon(
+                    Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 10,
-                      color: ChompdColors.purple,
+                      color: c.purple,
                     ),
                   ],
                 ),
@@ -860,6 +867,7 @@ class _ReminderRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: isLocked ? null : () => onChanged?.call(!enabled),
       child: Padding(
@@ -871,7 +879,7 @@ class _ReminderRow extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 12.5,
-                  color: enabled ? ChompdColors.text : ChompdColors.textDim,
+                  color: enabled ? c.text : c.textDim,
                 ),
               ),
             ),
@@ -880,7 +888,7 @@ class _ReminderRow extends StatelessWidget {
                 margin: const EdgeInsets.only(right: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
-                  color: ChompdColors.mint.withValues(alpha: 0.09),
+                  color: c.mint.withValues(alpha: 0.09),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
@@ -888,15 +896,15 @@ class _ReminderRow extends StatelessWidget {
                   style: ChompdTypography.mono(
                     size: 7,
                     weight: FontWeight.w700,
-                    color: ChompdColors.mint,
+                    color: c.mint,
                   ),
                 ),
               ),
             if (isLocked)
-              const Icon(
+              Icon(
                 Icons.lock_outline_rounded,
                 size: 14,
-                color: ChompdColors.textDim,
+                color: c.textDim,
               )
             else
               Container(
@@ -904,7 +912,7 @@ class _ReminderRow extends StatelessWidget {
                 height: 20,
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
-                  color: enabled ? ChompdColors.mint : ChompdColors.bgElevated,
+                  color: enabled ? c.mint : c.bgElevated,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: AnimatedAlign(
@@ -942,6 +950,7 @@ class _DetailRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
@@ -949,15 +958,15 @@ class _DetailRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 12, color: ChompdColors.textDim),
+            style: TextStyle(fontSize: 12, color: c.textDim),
           ),
           Flexible(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: ChompdColors.text,
+                color: c.text,
               ),
               textAlign: TextAlign.right,
             ),
@@ -985,8 +994,9 @@ class _ConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Dialog(
-      backgroundColor: ChompdColors.bgElevated,
+      backgroundColor: c.bgElevated,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -995,18 +1005,18 @@ class _ConfirmDialog extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: ChompdColors.text,
+                color: c.text,
               ),
             ),
             const SizedBox(height: 8),
             Text(
               message,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
-                color: ChompdColors.textMid,
+                color: c.textMid,
                 height: 1.5,
               ),
               textAlign: TextAlign.center,
@@ -1021,15 +1031,15 @@ class _ConfirmDialog extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: ChompdColors.border),
+                        border: Border.all(color: c.border),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         context.l10n.keep,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: ChompdColors.textMid,
+                          color: c.textMid,
                         ),
                       ),
                     ),
@@ -1097,8 +1107,9 @@ class _TrapInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final isHigh = subscription.trapSeverity == 'high';
-    final warningColor = isHigh ? ChompdColors.red : ChompdColors.amber;
+    final warningColor = isHigh ? c.red : c.amber;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1156,7 +1167,7 @@ class _TrapInfoCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: ChompdColors.purple.withValues(alpha: 0.12),
+                  color: c.purple.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Text(
@@ -1164,7 +1175,7 @@ class _TrapInfoCard extends StatelessWidget {
                   style: ChompdTypography.mono(
                     size: 10,
                     weight: FontWeight.w600,
-                    color: ChompdColors.purple,
+                    color: c.purple,
                   ),
                 ),
               ),
@@ -1173,9 +1184,9 @@ class _TrapInfoCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   _severityExplanation(context),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -1189,19 +1200,19 @@ class _TrapInfoCard extends StatelessWidget {
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.only(left: 12),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(
                   left: BorderSide(
-                    color: ChompdColors.mintGlow,
+                    color: c.mintGlow,
                     width: 3,
                   ),
                 ),
               ),
               child: Text(
                 subscription.trapWarningMessage!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: ChompdColors.textMid,
+                  color: c.textMid,
                   height: 1.5,
                 ),
               ),
@@ -1219,7 +1230,7 @@ class _TrapInfoCard extends StatelessWidget {
                   Subscription.formatPrice(subscription.trialPrice!, subscription.currency),
                   style: ChompdTypography.mono(
                     size: 16,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ).copyWith(decoration: TextDecoration.lineThrough),
                 ),
                 const SizedBox(width: 8),
@@ -1250,9 +1261,9 @@ class _TrapInfoCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               context.l10n.realAnnualCost(Subscription.formatPrice(subscription.realAnnualCost!, subscription.currency)),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
-                color: ChompdColors.textDim,
+                color: c.textDim,
               ),
             ),
           ],

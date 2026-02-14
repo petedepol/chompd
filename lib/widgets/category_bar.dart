@@ -21,6 +21,7 @@ class CategoryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     if (subscriptions.isEmpty) return const SizedBox.shrink();
 
     // Aggregate monthly spend per category (converted to display currency)
@@ -81,9 +82,9 @@ class CategoryBar extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   AppConstants.localisedCategory(entry.key, context.l10n),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: ChompdColors.textMid,
+                    color: c.textMid,
                   ),
                 ),
                 const SizedBox(width: 3),
@@ -91,7 +92,7 @@ class CategoryBar extends StatelessWidget {
                   Subscription.formatPrice(entry.value, currencyCode, decimals: 0),
                   style: ChompdTypography.mono(
                     size: 10,
-                    color: ChompdColors.textMid,
+                    color: c.textMid,
                   ),
                 ),
               ],

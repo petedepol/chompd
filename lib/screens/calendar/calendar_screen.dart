@@ -31,11 +31,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final calendar = ref.watch(renewalCalendarProvider);
     ref.watch(currencyProvider); // Rebuild when currency changes
 
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       body: CustomScrollView(
         slivers: [
           // Safe area
@@ -56,10 +57,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Expanded(
                     child: Text(
                       context.l10n.renewalCalendar,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                   ),
@@ -107,11 +108,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Widget _buildCalendar(Map<DateTime, List<Subscription>> calendar) {
+    final c = context.colors;
     return Container(
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: TableCalendar<Subscription>(
         firstDay: DateTime.now().subtract(const Duration(days: 30)),
@@ -147,28 +149,28 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         headerStyle: HeaderStyle(
           formatButtonVisible: false,
           titleCentered: true,
-          leftChevronIcon: const Icon(
+          leftChevronIcon: Icon(
             Icons.chevron_left_rounded,
-            color: ChompdColors.textMid,
+            color: c.textMid,
           ),
-          rightChevronIcon: const Icon(
+          rightChevronIcon: Icon(
             Icons.chevron_right_rounded,
-            color: ChompdColors.textMid,
+            color: c.textMid,
           ),
           titleTextStyle: ChompdTypography.mono(
             size: 14,
             weight: FontWeight.w700,
-            color: ChompdColors.text,
+            color: c.text,
           ),
         ),
         daysOfWeekStyle: DaysOfWeekStyle(
           weekdayStyle: ChompdTypography.mono(
             size: 10,
-            color: ChompdColors.textDim,
+            color: c.textDim,
           ),
           weekendStyle: ChompdTypography.mono(
             size: 10,
-            color: ChompdColors.textDim,
+            color: c.textDim,
           ),
         ),
         calendarStyle: CalendarStyle(
@@ -176,47 +178,47 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           cellMargin: const EdgeInsets.all(3),
 
           // Default day
-          defaultTextStyle: const TextStyle(
+          defaultTextStyle: TextStyle(
             fontSize: 13,
-            color: ChompdColors.text,
+            color: c.text,
           ),
 
           // Weekend
-          weekendTextStyle: const TextStyle(
+          weekendTextStyle: TextStyle(
             fontSize: 13,
-            color: ChompdColors.textMid,
+            color: c.textMid,
           ),
 
           // Today
           todayDecoration: BoxDecoration(
-            color: ChompdColors.mintGlow,
+            color: c.mintGlow,
             shape: BoxShape.circle,
             border: Border.all(
-              color: ChompdColors.mint.withValues(alpha: 0.4),
+              color: c.mint.withValues(alpha: 0.4),
             ),
           ),
-          todayTextStyle: const TextStyle(
+          todayTextStyle: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: ChompdColors.mint,
+            color: c.mint,
           ),
 
           // Selected
-          selectedDecoration: const BoxDecoration(
-            color: ChompdColors.mint,
+          selectedDecoration: BoxDecoration(
+            color: c.mint,
             shape: BoxShape.circle,
           ),
-          selectedTextStyle: const TextStyle(
+          selectedTextStyle: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w700,
-            color: ChompdColors.bg,
+            color: c.bg,
           ),
 
           // Markers (the coloured dots)
           markersMaxCount: 4,
           markerSize: 5,
-          markerDecoration: const BoxDecoration(
-            color: ChompdColors.mint,
+          markerDecoration: BoxDecoration(
+            color: c.mint,
             shape: BoxShape.circle,
           ),
         ),
@@ -225,6 +227,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         calendarBuilders: CalendarBuilders(
           // Tweak 2: Bold renewal dates, dim empty dates
           defaultBuilder: (context, day, focusedDay) {
+            final cc = context.colors;
             final key = DateTime(day.year, day.month, day.day);
             final daySubs = calendar[key] ?? [];
             final hasRenewal = daySubs.isNotEmpty;
@@ -234,9 +237,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             // High-cost day glow: ≥£50 red, ≥£30 amber
             Color? glowColor;
             if (daySpend >= 50) {
-              glowColor = ChompdColors.red;
+              glowColor = c.red;
             } else if (daySpend >= 30) {
-              glowColor = ChompdColors.amber;
+              glowColor = c.amber;
             }
 
             return Container(
@@ -260,8 +263,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     fontWeight:
                         hasRenewal ? FontWeight.w600 : FontWeight.w400,
                     color: glowColor ?? (hasRenewal
-                        ? ChompdColors.text
-                        : ChompdColors.textDim),
+                        ? c.text
+                        : c.textDim),
                   ),
                 ),
               ),
@@ -285,12 +288,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   /// Up to 3 dots shown individually; 4+ shows 2 dots + "+N" count.
   /// Uses brand colour per sub, falling back to category colour.
   Widget _buildDayDots(List<Subscription> renewals) {
+    final c = context.colors;
     if (renewals.isEmpty) return const SizedBox.shrink();
 
     // Unique colours — brand with category fallback, deduplicated
     final colors = renewals.map((s) {
       final brand = _brandColor(s);
-      return brand == ChompdColors.textDim
+      return brand == c.textDim
           ? CategoryColors.forCategory(s.category)
           : brand;
     }).toSet().toList();
@@ -299,17 +303,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: colors
-            .map((c) => Padding(
+            .map((color) => Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 1),
                   child: Container(
                     width: 6,
                     height: 6,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: c,
+                      color: color,
                       boxShadow: [
                         BoxShadow(
-                          color: c.withValues(alpha: 0.4),
+                          color: color.withValues(alpha: 0.4),
                           blurRadius: 4,
                           spreadRadius: 1,
                         ),
@@ -324,17 +328,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ...colors.take(2).map((c) => Padding(
+          ...colors.take(2).map((color) => Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 1),
                 child: Container(
                   width: 6,
                   height: 6,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: c,
+                    color: color,
                     boxShadow: [
                       BoxShadow(
-                        color: c.withValues(alpha: 0.4),
+                        color: color.withValues(alpha: 0.4),
                         blurRadius: 3,
                         spreadRadius: 0.5,
                       ),
@@ -346,7 +350,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             '+${colors.length - 2}',
             style: ChompdTypography.mono(
               size: 7,
-              color: ChompdColors.textDim,
+              color: c.textDim,
             ),
           ),
         ],
@@ -356,6 +360,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   /// Detail panel for the selected day.
   Widget _buildDayDetail(Map<DateTime, List<Subscription>> calendar) {
+    final c = context.colors;
     final key = DateTime(
       _selectedDay!.year,
       _selectedDay!.month,
@@ -373,10 +378,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           children: [
             Text(
               DateHelpers.shortDate(_selectedDay!),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: ChompdColors.text,
+                color: c.text,
               ),
             ),
             if (isToday) ...[
@@ -387,7 +392,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   vertical: 2,
                 ),
                 decoration: BoxDecoration(
-                  color: ChompdColors.mintGlow,
+                  color: c.mintGlow,
                   borderRadius: BorderRadius.circular(100),
                 ),
                 child: Text(
@@ -395,7 +400,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   style: ChompdTypography.mono(
                     size: 9,
                     weight: FontWeight.w700,
-                    color: ChompdColors.mint,
+                    color: c.mint,
                   ),
                 ),
               ),
@@ -407,7 +412,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 style: ChompdTypography.mono(
                   size: 16,
                   weight: FontWeight.w700,
-                  color: ChompdColors.mint,
+                  color: c.mint,
                 ),
               ),
           ],
@@ -419,23 +424,23 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 24),
             decoration: BoxDecoration(
-              color: ChompdColors.bgCard,
+              color: c.bgCard,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: ChompdColors.border),
+              border: Border.all(color: c.border),
             ),
             child: Column(
               children: [
                 Icon(
                   Icons.check_circle_outline_rounded,
                   size: 28,
-                  color: ChompdColors.mint.withValues(alpha: 0.5),
+                  color: c.mint.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   context.l10n.noRenewalsThisDay,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                 ),
               ],
@@ -449,6 +454,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   /// Row for a single subscription in the day detail.
   Widget _buildSubRow(Subscription sub) {
+    final c = context.colors;
     final color = _brandColor(sub);
     return GestureDetector(
       onTap: () {
@@ -463,9 +469,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         margin: const EdgeInsets.only(bottom: 6),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
@@ -496,17 +502,17 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 children: [
                   Text(
                     sub.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.text,
+                      color: c.text,
                     ),
                   ),
                   Text(
                     sub.cycle.localLabel(context.l10n),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ],
@@ -519,14 +525,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               style: ChompdTypography.mono(
                 size: 13,
                 weight: FontWeight.w700,
-                color: ChompdColors.text,
+                color: c.text,
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 16,
-              color: ChompdColors.textDim,
+              color: c.textDim,
             ),
           ],
         ),
@@ -536,6 +542,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   /// Monthly summary: busiest days and total.
   Widget _buildMonthlySummary(Map<DateTime, List<Subscription>> calendar) {
+    final c = context.colors;
     // Filter to focused month
     final monthStart = DateTime(_focusedDay.year, _focusedDay.month, 1);
     final monthEnd = DateTime(_focusedDay.year, _focusedDay.month + 1, 0);
@@ -573,9 +580,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -589,13 +596,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               _StatPill(
                 label: context.l10n.renewals,
                 value: '$totalRenewals',
-                color: ChompdColors.mint,
+                color: c.mint,
               ),
               const SizedBox(width: 10),
               _StatPill(
                 label: context.l10n.total,
                 value: Subscription.formatPrice(totalSpend, _currencyCode),
-                color: ChompdColors.mint,
+                color: c.mint,
               ),
             ],
           ),
@@ -608,18 +615,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 vertical: 8,
               ),
               decoration: BoxDecoration(
-                color: ChompdColors.amberGlow,
+                color: c.amberGlow,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: ChompdColors.amber.withValues(alpha: 0.2),
+                  color: c.amber.withValues(alpha: 0.2),
                 ),
               ),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.info_outline_rounded,
                     size: 14,
-                    color: ChompdColors.amber,
+                    color: c.amber,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -629,9 +636,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                         DateHelpers.shortDate(busiest.key),
                         Subscription.formatPrice(busiest.value.fold(0.0, (s, sub) => s + sub.priceIn(_currencyCode)), _currencyCode),
                       ),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: ChompdColors.amber,
+                        color: c.amber,
                       ),
                     ),
                   ),
@@ -650,13 +657,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ),
               decoration: BoxDecoration(
                 color: priciestSpend >= 50
-                    ? ChompdColors.red.withValues(alpha: 0.08)
-                    : ChompdColors.amberGlow,
+                    ? c.red.withValues(alpha: 0.08)
+                    : c.amberGlow,
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: priciestSpend >= 50
-                      ? ChompdColors.red.withValues(alpha: 0.2)
-                      : ChompdColors.amber.withValues(alpha: 0.2),
+                      ? c.red.withValues(alpha: 0.2)
+                      : c.amber.withValues(alpha: 0.2),
                 ),
               ),
               child: Row(
@@ -665,8 +672,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     Icons.local_fire_department_rounded,
                     size: 14,
                     color: priciestSpend >= 50
-                        ? ChompdColors.red
-                        : ChompdColors.amber,
+                        ? c.red
+                        : c.amber,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -678,8 +685,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       style: TextStyle(
                         fontSize: 11,
                         color: priciestSpend >= 50
-                            ? ChompdColors.red
-                            : ChompdColors.amber,
+                            ? c.red
+                            : c.amber,
                       ),
                     ),
                   ),
@@ -691,9 +698,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           const SizedBox(height: 10),
           Text(
             context.l10n.tapDayToSee,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: ChompdColors.textDim,
+              color: c.textDim,
             ),
           ),
         ],
@@ -703,7 +710,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   /// Parses brand colour from hex string.
   Color _brandColor(Subscription sub) {
-    if (sub.brandColor == null) return ChompdColors.textDim;
+    final c = context.colors;
+    if (sub.brandColor == null) return c.textDim;
     final hex = sub.brandColor!.replaceFirst('#', '');
     return Color(int.parse('FF$hex', radix: 16));
   }
@@ -717,21 +725,22 @@ class _BackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
-          color: ChompdColors.bgElevated,
+          color: c.bgElevated,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: ChompdColors.border),
+          border: Border.all(color: c.border),
         ),
         alignment: Alignment.center,
-        child: const Icon(
+        child: Icon(
           Icons.arrow_back_rounded,
           size: 16,
-          color: ChompdColors.textMid,
+          color: c.textMid,
         ),
       ),
     );
@@ -751,11 +760,12 @@ class _StatPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: ChompdColors.bgElevated,
+          color: c.bgElevated,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
@@ -771,9 +781,9 @@ class _StatPill extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: ChompdColors.textDim,
+                color: c.textDim,
               ),
             ),
           ],

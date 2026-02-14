@@ -27,30 +27,29 @@ class _InsightCardState extends State<InsightCard> {
     HapticService.instance.light();
   }
 
-  Color _colorForType(InsightType type) {
-    switch (type) {
-      case InsightType.saving:
-        return ChompdColors.mint;
-      case InsightType.warning:
-        return ChompdColors.amber;
-      case InsightType.info:
-        return ChompdColors.blue;
-      case InsightType.celebration:
-        return ChompdColors.mint;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final insight = widget.insights[_currentIndex];
-    final color = _colorForType(insight.type);
+
+    final Color color;
+    switch (insight.type) {
+      case InsightType.saving:
+        color = c.mint;
+      case InsightType.warning:
+        color = c.amber;
+      case InsightType.info:
+        color = c.blue;
+      case InsightType.celebration:
+        color = c.mint;
+    }
 
     return GestureDetector(
       onTap: widget.insights.length > 1 ? _next : null,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: color.withValues(alpha: 0.12),
@@ -72,10 +71,10 @@ class _InsightCardState extends State<InsightCard> {
                       child: Text(
                         insight.headline,
                         key: ValueKey('h_$_currentIndex'),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: ChompdColors.text,
+                          color: c.text,
                         ),
                       ),
                     ),
@@ -111,7 +110,7 @@ class _InsightCardState extends State<InsightCard> {
                       decoration: BoxDecoration(
                         color: i == _currentIndex
                             ? color
-                            : ChompdColors.textDim,
+                            : c.textDim,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -119,9 +118,9 @@ class _InsightCardState extends State<InsightCard> {
                   const Spacer(),
                   Text(
                     context.l10n.tapForMore,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: ChompdColors.textMid,
+                      color: c.textMid,
                     ),
                   ),
                 ],
@@ -141,6 +140,7 @@ class _RichBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final spans = <InlineSpan>[];
     final parts = text.split('**');
 
@@ -152,7 +152,7 @@ class _RichBody extends StatelessWidget {
           fontSize: 13,
           height: 1.5,
           fontWeight: i.isOdd ? FontWeight.w700 : FontWeight.w400,
-          color: i.isOdd ? ChompdColors.text : ChompdColors.textMid,
+          color: i.isOdd ? c.text : c.textMid,
         ),
       ));
     }

@@ -9,7 +9,7 @@ enum AppThemeMode { system, dark, light }
 class ThemeModeNotifier extends StateNotifier<AppThemeMode> {
   static const _key = 'chompd_theme_mode';
 
-  ThemeModeNotifier() : super(AppThemeMode.dark) {
+  ThemeModeNotifier() : super(AppThemeMode.light) {
     _load();
   }
 
@@ -23,7 +23,7 @@ class ThemeModeNotifier extends StateNotifier<AppThemeMode> {
     } else if (value == 'system') {
       state = AppThemeMode.system;
     }
-    // Default stays dark (v1 is dark-only — light theme in v1.1)
+    // Default stays light (v2 theme — light mode is the new default)
   }
 
   Future<void> setMode(AppThemeMode mode) async {

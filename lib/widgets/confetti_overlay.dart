@@ -23,32 +23,23 @@ class _ConfettiOverlayState extends State<ConfettiOverlay>
   late List<_Particle> _particles;
   final _random = math.Random();
 
-  static const _colors = [
-    ChompdColors.mint,
-    ChompdColors.amber,
-    ChompdColors.purple,
-    ChompdColors.blue,
-    ChompdColors.pink,
-    Color(0xFFF87171),
-    Color(0xFF34D399),
-    Color(0xFF818CF8),
-  ];
+  List<Color> get _colors {
+    final c = context.colors;
+    return [
+      c.mint,
+      c.amber,
+      c.purple,
+      c.blue,
+      c.pink,
+      const Color(0xFFF87171),
+      const Color(0xFF34D399),
+      const Color(0xFF818CF8),
+    ];
+  }
 
   @override
   void initState() {
     super.initState();
-
-    _particles = List.generate(60, (_) => _Particle(
-      x: _random.nextDouble(),
-      y: -0.1 - _random.nextDouble() * 0.3,
-      vx: (_random.nextDouble() - 0.5) * 0.012,
-      vy: _random.nextDouble() * 0.008 + 0.003,
-      rotation: _random.nextDouble() * math.pi * 2,
-      rotationSpeed: (_random.nextDouble() - 0.5) * 0.15,
-      size: _random.nextDouble() * 6 + 3,
-      color: _colors[_random.nextInt(_colors.length)],
-      shape: _random.nextInt(3), // 0 = rect, 1 = circle, 2 = strip
-    ));
 
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2500),
@@ -60,8 +51,27 @@ class _ConfettiOverlayState extends State<ConfettiOverlay>
         widget.onComplete?.call();
       }
     });
+  }
 
-    _controller.forward();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Generate particles here where context is available
+    if (!_controller.isAnimating && _controller.value == 0) {
+      final colors = _colors;
+      _particles = List.generate(60, (_) => _Particle(
+        x: _random.nextDouble(),
+        y: -0.1 - _random.nextDouble() * 0.3,
+        vx: (_random.nextDouble() - 0.5) * 0.012,
+        vy: _random.nextDouble() * 0.008 + 0.003,
+        rotation: _random.nextDouble() * math.pi * 2,
+        rotationSpeed: (_random.nextDouble() - 0.5) * 0.15,
+        size: _random.nextDouble() * 6 + 3,
+        color: colors[_random.nextInt(colors.length)],
+        shape: _random.nextInt(3), // 0 = rect, 1 = circle, 2 = strip
+      ));
+      _controller.forward();
+    }
   }
 
   @override

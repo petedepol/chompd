@@ -63,6 +63,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final remainingSubs = ref.read(remainingSubsProvider);
     final remainingScans = ref.read(remainingScansProvider);
     final isPro = ref.read(isProProvider);
+    final c = context.colors;
 
     showModalBottomSheet(
       context: context,
@@ -76,7 +77,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           20, 20, 20, MediaQuery.of(ctx).padding.bottom + 20,
         ),
         decoration: BoxDecoration(
-          color: ChompdColors.bgElevated.withValues(alpha: 0.85),
+          color: c.bgElevated.withValues(alpha: 0.85),
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -86,7 +87,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Container(
                 width: 36, height: 4,
                 decoration: BoxDecoration(
-                  color: ChompdColors.border,
+                  color: c.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -98,18 +99,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: ChompdColors.bgCard,
+                    color: c.bgCard,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: ChompdColors.border),
+                    border: Border.all(color: c.border),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       _LimitBadge(label: ctx.l10n.subsLeft, count: remainingSubs,
-                        color: canAdd ? ChompdColors.mint : ChompdColors.red),
-                      Container(width: 1, height: 20, color: ChompdColors.border),
+                        color: canAdd ? c.mint : c.red),
+                      Container(width: 1, height: 20, color: c.border),
                       _LimitBadge(label: ctx.l10n.scansLeft, count: remainingScans,
-                        color: canScan ? ChompdColors.purple : ChompdColors.red),
+                        color: canScan ? c.purple : c.red),
                     ],
                   ),
                 ),
@@ -134,13 +135,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   borderRadius: BorderRadius.circular(14),
                   gradient: LinearGradient(
                     colors: canScan
-                        ? [ChompdColors.purple, const Color(0xFF8B5CF6)]
-                        : [ChompdColors.purple.withValues(alpha: 0.4),
-                           const Color(0xFF8B5CF6).withValues(alpha: 0.4)],
+                        ? [c.purple, c.purple]
+                        : [c.purple.withValues(alpha: 0.4),
+                           c.purple.withValues(alpha: 0.4)],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: ChompdColors.purple.withValues(alpha: 0.27),
+                      color: c.purple.withValues(alpha: 0.27),
                       blurRadius: 20, offset: const Offset(0, 4),
                     ),
                   ],
@@ -176,19 +177,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   borderRadius: BorderRadius.circular(14),
                   gradient: LinearGradient(
                     colors: canAdd
-                        ? [ChompdColors.mintDark, ChompdColors.mint]
-                        : [ChompdColors.mintDark.withValues(alpha: 0.4),
-                           ChompdColors.mint.withValues(alpha: 0.4)],
+                        ? [c.mintDark, c.mint]
+                        : [c.mintDark.withValues(alpha: 0.4),
+                           c.mint.withValues(alpha: 0.4)],
                   ),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(canAdd ? Icons.add_rounded : Icons.lock_outline_rounded,
-                      size: 16, color: ChompdColors.bg),
+                      size: 16, color: c.bg),
                     const SizedBox(width: 8),
                     Text(canAdd ? ctx.l10n.quickAddManual : ctx.l10n.addSubUpgradeToPro,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: ChompdColors.bg)),
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: c.bg)),
                   ],
                 ),
               ),
@@ -203,6 +204,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final subscriptions = ref.watch(subscriptionsProvider);
     final cancelledSubs = ref.watch(cancelledSubsProvider);
     final expiringTrials = ref.watch(expiringTrialsProvider);
@@ -212,7 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       body: Stack(
         children: [
           // ─── Scrollable Content ───
@@ -236,8 +238,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           RichText(
-                            text: const TextSpan(
-                              style: TextStyle(
+                            text: TextSpan(
+                              style: const TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: -0.3,
@@ -246,13 +248,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 TextSpan(
                                   text: 'Chomp',
                                   style: TextStyle(
-                                    color: ChompdColors.text,
+                                    color: c.text,
                                   ),
                                 ),
                                 TextSpan(
                                   text: 'd',
                                   style: TextStyle(
-                                    color: ChompdColors.mint,
+                                    color: c.mint,
                                   ),
                                 ),
                               ],
@@ -261,9 +263,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           const SizedBox(height: 2),
                           Text(
                             context.l10n.homeStatusLine(activeSubs.length, cancelledSubs.length),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: ChompdColors.textMid,
+                              color: c.textMid,
                             ),
                           ),
                         ],
@@ -277,17 +279,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: ChompdColors.mint.withValues(alpha: 0.12),
+                                color: c.mint.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: ChompdColors.mint.withValues(alpha: 0.25),
+                                  color: c.mint.withValues(alpha: 0.25),
                                 ),
                               ),
                               alignment: Alignment.center,
-                              child: const Icon(
+                              child: Icon(
                                 Icons.camera_alt_rounded,
                                 size: 18,
-                                color: ChompdColors.mint,
+                                color: c.mint,
                               ),
                             ),
                           ),
@@ -306,15 +308,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: ChompdColors.bgElevated,
+                                color: c.bgElevated,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: ChompdColors.border),
+                                border: Border.all(color: c.border),
                               ),
                               alignment: Alignment.center,
-                              child: const Icon(
+                              child: Icon(
                                 Icons.calendar_month_outlined,
                                 size: 18,
-                                color: ChompdColors.textMid,
+                                color: c.textMid,
                               ),
                             ),
                           ),
@@ -333,15 +335,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: ChompdColors.bgElevated,
+                                color: c.bgElevated,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: ChompdColors.border),
+                                border: Border.all(color: c.border),
                               ),
                               alignment: Alignment.center,
-                              child: const Icon(
+                              child: Icon(
                                 Icons.settings_outlined,
                                 size: 18,
-                                color: ChompdColors.textMid,
+                                color: c.textMid,
                               ),
                             ),
                           ),
@@ -364,6 +366,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       // Budget mood indicator
                       Consumer(
                         builder: (context, ref, _) {
+                          final c = context.colors;
                           final spend = ref.watch(monthlySpendProvider);
                           final budget = ref.watch(budgetProvider);
                           final pct = budget > 0 ? spend / budget : 0.0;
@@ -380,7 +383,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                       shape: BoxShape.circle,
                                       boxShadow: [
                                         BoxShadow(
-                                          color: ChompdColors.red
+                                          color: c.red
                                               .withValues(alpha: 0.15),
                                           blurRadius: 24,
                                           spreadRadius: 4,
@@ -398,7 +401,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w500,
-                                      color: ChompdColors.red
+                                      color: c.red
                                           .withValues(alpha: 0.9),
                                     ),
                                   ),
@@ -421,7 +424,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                     context.l10n.underBudgetMood,
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: ChompdColors.mint
+                                      color: c.mint
                                           .withValues(alpha: 0.8),
                                     ),
                                   ),
@@ -468,6 +471,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // ─── Smart Insights ───
               Builder(builder: (context) {
+                final c = context.colors;
                 final insights = ref.watch(insightsProvider);
                 if (insights.isEmpty || _dismissedCards.contains('insights')) {
                   return const SliverToBoxAdapter(child: SizedBox.shrink());
@@ -485,12 +489,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       background: Container(
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.only(left: 20),
-                        child: const Icon(Icons.close_rounded, color: ChompdColors.textDim, size: 20),
+                        child: Icon(Icons.close_rounded, color: c.textDim, size: 20),
                       ),
                       secondaryBackground: Container(
                         alignment: Alignment.centerRight,
                         padding: const EdgeInsets.only(right: 20),
-                        child: const Icon(Icons.close_rounded, color: ChompdColors.textDim, size: 20),
+                        child: Icon(Icons.close_rounded, color: c.textDim, size: 20),
                       ),
                       child: InsightCard(insights: insights),
                     ),
@@ -511,12 +515,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     background: Container(
                       alignment: Alignment.centerLeft,
                       padding: const EdgeInsets.only(left: 20),
-                      child: const Icon(Icons.close_rounded, color: ChompdColors.textDim, size: 20),
+                      child: Icon(Icons.close_rounded, color: c.textDim, size: 20),
                     ),
                     secondaryBackground: Container(
                       alignment: Alignment.centerRight,
                       padding: const EdgeInsets.only(right: 20),
-                      child: const Icon(Icons.close_rounded, color: ChompdColors.textDim, size: 20),
+                      child: Icon(Icons.close_rounded, color: c.textDim, size: 20),
                     ),
                     child: const TrapStatsCard(),
                   ),
@@ -565,9 +569,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       Text(
                         '${activeSubs.length}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
-                          color: ChompdColors.textMid,
+                          color: c.textMid,
                         ),
                       ),
                     ],
@@ -678,7 +682,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               Text(
                                 context.l10n.sectionMilestones,
                                 style: ChompdTypography.sectionLabel.copyWith(
-                                  color: ChompdColors.mint,
+                                  color: c.mint,
                                 ),
                               ),
                             ],
@@ -718,10 +722,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _showDeleteDialog(BuildContext context, dynamic sub) {
     HapticService.instance.warning();
+    final c = context.colors;
     showDialog(
       context: context,
       builder: (ctx) => Dialog(
-        backgroundColor: ChompdColors.bgElevated,
+        backgroundColor: c.bgElevated,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
@@ -732,18 +737,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             children: [
               Text(
                 ctx.l10n.deleteSubscriptionTitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: ChompdColors.text,
+                  color: c.text,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 ctx.l10n.deleteSubscriptionMessage(sub.name),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
-                  color: ChompdColors.textMid,
+                  color: c.textMid,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -757,15 +762,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: ChompdColors.border),
+                          border: Border.all(color: c.border),
                         ),
                         alignment: Alignment.center,
                         child: Text(
                           ctx.l10n.keep,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: ChompdColors.textMid,
+                            color: c.textMid,
                           ),
                         ),
                       ),
@@ -784,19 +789,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: ChompdColors.red.withValues(alpha: 0.15),
+                          color: c.red.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: ChompdColors.red.withValues(alpha: 0.3),
+                            color: c.red.withValues(alpha: 0.3),
                           ),
                         ),
                         alignment: Alignment.center,
                         child: Text(
                           ctx.l10n.delete,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: ChompdColors.red,
+                            color: c.red,
                           ),
                         ),
                       ),
@@ -820,6 +825,7 @@ class _TrialAlertBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final urgentTrials = trials
         .where(
             (t) => t.trialDaysRemaining != null && t.trialDaysRemaining! <= 3)
@@ -828,10 +834,10 @@ class _TrialAlertBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: ChompdColors.amberGlow,
+        color: c.amberGlow,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: ChompdColors.amber.withValues(alpha: 0.2),
+          color: c.amber.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -847,19 +853,19 @@ class _TrialAlertBanner extends StatelessWidget {
               children: [
                 Text(
                   context.l10n.trialsExpiringSoon(trials.length),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: ChompdColors.amber,
+                    color: c.amber,
                   ),
                 ),
                 if (urgentTrials.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
                     context.l10n.trialDaysLeft(urgentTrials.map((t) => t.name).join(', '), urgentTrials.first.trialDaysRemaining),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10.5,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ],
@@ -878,12 +884,6 @@ class _CancelledCard extends StatelessWidget {
 
   const _CancelledCard({required this.cancelled});
 
-  Color get _brandColor {
-    if (cancelled.brandColor == null) return ChompdColors.textDim;
-    final hex = cancelled.brandColor!.replaceFirst('#', '');
-    return Color(int.parse('FF$hex', radix: 16));
-  }
-
   int get _monthsSinceCancelled {
     if (cancelled.cancelledDate == null) return 0;
     return DateTime.now().difference(cancelled.cancelledDate!).inDays ~/ 30;
@@ -893,12 +893,20 @@ class _CancelledCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
+    final brandColor = () {
+      if (cancelled.brandColor == null) return c.textDim;
+      final hex = cancelled.brandColor!.replaceFirst('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    }();
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: Opacity(
         opacity: 0.7,
@@ -909,7 +917,7 @@ class _CancelledCard extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: _brandColor.withValues(alpha: 0.13),
+                color: brandColor.withValues(alpha: 0.13),
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
@@ -918,7 +926,7 @@ class _CancelledCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
-                  color: _brandColor,
+                  color: brandColor,
                 ),
               ),
             ),
@@ -931,10 +939,10 @@ class _CancelledCard extends StatelessWidget {
                 children: [
                   Text(
                     cancelled.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w600,
-                      color: ChompdColors.textMid,
+                      color: c.textMid,
                       decoration: TextDecoration.lineThrough,
                     ),
                   ),
@@ -942,9 +950,9 @@ class _CancelledCard extends StatelessWidget {
                     _monthsSinceCancelled > 0
                         ? context.l10n.cancelledMonthsAgo(_monthsSinceCancelled)
                         : context.l10n.justCancelled,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 10,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ],
@@ -957,7 +965,7 @@ class _CancelledCard extends StatelessWidget {
               style: ChompdTypography.mono(
                 size: 13,
                 weight: FontWeight.w700,
-                color: ChompdColors.mint,
+                color: c.mint,
               ),
             ),
           ],
@@ -981,6 +989,7 @@ class _LimitBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -995,9 +1004,9 @@ class _LimitBadge extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 10,
-            color: ChompdColors.textDim,
+            color: c.textDim,
           ),
         ),
       ],
@@ -1005,7 +1014,7 @@ class _LimitBadge extends StatelessWidget {
   }
 }
 
-/// "Your subscriptions cost you £X,XXX/year" — the confronting truth.
+/// "Your subscriptions cost you \u00a3X,XXX/year" \u2014 the confronting truth.
 ///
 /// Tappable share button. Shows monthly + daily breakdowns.
 class _YearlyBurnBanner extends StatelessWidget {
@@ -1025,6 +1034,7 @@ class _YearlyBurnBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final monthlyAvg = yearlyTotal / 12;
 
     return Container(
@@ -1034,13 +1044,13 @@ class _YearlyBurnBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            ChompdColors.purple.withValues(alpha: 0.08),
-            ChompdColors.bgCard,
+            c.purple.withValues(alpha: 0.08),
+            c.bgCard,
           ],
         ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: ChompdColors.purple.withValues(alpha: 0.15),
+          color: c.purple.withValues(alpha: 0.15),
         ),
       ),
       child: Column(
@@ -1051,7 +1061,7 @@ class _YearlyBurnBanner extends StatelessWidget {
               Text(
                 context.l10n.sectionYearlyBurn,
                 style: ChompdTypography.sectionLabel.copyWith(
-                  color: ChompdColors.purple,
+                  color: c.purple,
                 ),
               ),
               const Spacer(),
@@ -1064,6 +1074,7 @@ class _YearlyBurnBanner extends StatelessWidget {
                     subCount: subCount,
                     totalSaved: totalSaved,
                     cancelledCount: cancelledCount,
+                    currencySymbol: Subscription.currencySymbol(currencyCode),
                   );
                 },
                 child: Container(
@@ -1072,24 +1083,24 @@ class _YearlyBurnBanner extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: ChompdColors.purple.withValues(alpha: 0.1),
+                    color: c.purple.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.share_outlined,
                         size: 12,
-                        color: ChompdColors.purple,
+                        color: c.purple,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         context.l10n.share,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w600,
-                          color: ChompdColors.purple,
+                          color: c.purple,
                         ),
                       ),
                     ],
@@ -1106,7 +1117,7 @@ class _YearlyBurnBanner extends StatelessWidget {
             style: ChompdTypography.mono(
               size: 36,
               weight: FontWeight.w700,
-              color: ChompdColors.text,
+              color: c.text,
             ),
           ),
           const SizedBox(height: 4),
@@ -1114,9 +1125,9 @@ class _YearlyBurnBanner extends StatelessWidget {
           // Context line
           Text(
             context.l10n.perYearAcrossSubs(subCount),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: ChompdColors.textDim,
+              color: c.textDim,
             ),
           ),
           const SizedBox(height: 8),
@@ -1148,10 +1159,11 @@ class _BurnChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: ChompdColors.bgElevated,
+        color: c.bgElevated,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1162,15 +1174,15 @@ class _BurnChip extends StatelessWidget {
             style: ChompdTypography.mono(
               size: 12,
               weight: FontWeight.w700,
-              color: ChompdColors.purple,
+              color: c.purple,
             ),
           ),
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: ChompdColors.textMid,
+              color: c.textMid,
             ),
           ),
         ],
@@ -1181,7 +1193,7 @@ class _BurnChip extends StatelessWidget {
 
 /// Compact savings banner — sits below Yearly Burn when cancelled subs exist.
 ///
-/// "SAVED WITH CHOMPD — zł247 from 3 cancelled"
+/// "SAVED WITH CHOMPD \u2014 z\u0142247 from 3 cancelled"
 class _CompactSavings extends StatelessWidget {
   final double totalSaved;
   final int cancelledCount;
@@ -1195,13 +1207,14 @@ class _CompactSavings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: ChompdColors.mint.withValues(alpha: 0.06),
+        color: c.mint.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: ChompdColors.mint.withValues(alpha: 0.12),
+          color: c.mint.withValues(alpha: 0.12),
         ),
       ),
       child: Row(
@@ -1209,27 +1222,27 @@ class _CompactSavings extends StatelessWidget {
           Text(
             context.l10n.sectionSavedWithChompd,
             style: ChompdTypography.sectionLabel.copyWith(
-              color: ChompdColors.mint,
+              color: c.mint,
               fontSize: 9,
             ),
           ),
           const SizedBox(width: 8),
-          Container(width: 1, height: 12, color: ChompdColors.mint.withValues(alpha: 0.2)),
+          Container(width: 1, height: 12, color: c.mint.withValues(alpha: 0.2)),
           const SizedBox(width: 8),
           Text(
             Subscription.formatPrice(totalSaved, currencyCode, decimals: 0),
             style: ChompdTypography.mono(
               size: 14,
               weight: FontWeight.w700,
-              color: ChompdColors.mint,
+              color: c.mint,
             ),
           ),
           const SizedBox(width: 6),
           Text(
             context.l10n.fromCancelled(cancelledCount),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: ChompdColors.textDim,
+              color: c.textDim,
             ),
           ),
         ],
@@ -1237,4 +1250,3 @@ class _CompactSavings extends StatelessWidget {
     );
   }
 }
-

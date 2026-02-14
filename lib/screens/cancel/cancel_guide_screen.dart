@@ -35,13 +35,14 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Color _getDifficultyColor(int index) {
+    final c = context.colors;
     final difficulty = widget.guide.difficultyRating;
     if (difficulty <= 2) {
-      return ChompdColors.mint;
+      return c.mint;
     } else if (difficulty <= 4) {
-      return ChompdColors.amber;
+      return c.amber;
     } else {
-      return ChompdColors.red;
+      return c.red;
     }
   }
 
@@ -58,6 +59,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   void _showCancelReasonSheet() {
+    final c = context.colors;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -65,8 +67,8 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
         padding: EdgeInsets.fromLTRB(
           20, 20, 20, MediaQuery.of(ctx).padding.bottom + 20,
         ),
-        decoration: const BoxDecoration(
-          color: ChompdColors.bgElevated,
+        decoration: BoxDecoration(
+          color: c.bgElevated,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: Column(
@@ -78,7 +80,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: ChompdColors.border,
+                  color: c.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -87,18 +89,18 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
 
             Text(
               context.l10n.whyCancelling,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: ChompdColors.text,
+                color: c.text,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               context.l10n.whyCancellingHint,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: ChompdColors.textDim,
+                color: c.textDim,
               ),
             ),
             const SizedBox(height: 16),
@@ -117,9 +119,9 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: ChompdColors.bgCard,
+                        color: c.bgCard,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: ChompdColors.border),
+                        border: Border.all(color: c.border),
                       ),
                       child: Row(
                         children: [
@@ -131,16 +133,16 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                           Expanded(
                             child: Text(
                               reason.label,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: ChompdColors.text,
+                                color: c.text,
                               ),
                             ),
                           ),
-                          const Icon(
+                          Icon(
                             Icons.chevron_right_rounded,
                             size: 18,
-                            color: ChompdColors.textDim,
+                            color: c.textDim,
                           ),
                         ],
                       ),
@@ -159,9 +161,9 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     context.l10n.skip,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                     ),
                   ),
                 ),
@@ -224,20 +226,21 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       appBar: AppBar(
-        backgroundColor: ChompdColors.bg,
+        backgroundColor: c.bg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          color: ChompdColors.text,
+          color: c.text,
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           context.l10n.cancelGuideTitle(widget.subscription.name),
-          style: const TextStyle(
-            color: ChompdColors.text,
+          style: TextStyle(
+            color: c.text,
             fontSize: 18,
             fontWeight: FontWeight.w600,
           ),
@@ -280,10 +283,6 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
 
             // Request Refund Button
             _buildRequestRefundButton(),
-            const SizedBox(height: 16),
-
-            // Refund Help Link
-            _buildRefundHelpLink(),
             const SizedBox(height: 32),
           ],
         ),
@@ -292,16 +291,17 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Widget _buildDifficultyCard() {
+    final c = context.colors;
     final difficulty = widget.guide.difficultyRating;
     final color = _getDifficultyColor(0);
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: ChompdColors.border.withValues(alpha: 0.2),
+          color: c.border.withValues(alpha: 0.2),
         ),
       ),
       child: Column(
@@ -309,8 +309,8 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
         children: [
           Text(
             context.l10n.difficultyLevel,
-            style: const TextStyle(
-              color: ChompdColors.textDim,
+            style: TextStyle(
+              color: c.textDim,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -327,7 +327,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                   decoration: BoxDecoration(
                     color: index < difficulty
                         ? color
-                        : ChompdColors.bgCard,
+                        : c.bgCard,
                     border: Border.all(
                       color: color.withValues(alpha: 0.3),
                       width: 1.5,
@@ -342,7 +342,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
           Text(
             widget.guide.difficultyLabel,
             style: TextStyle(
-              color: ChompdColors.text,
+              color: c.text,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
@@ -353,13 +353,14 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Widget _buildStepsList() {
+    final c = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           context.l10n.cancellationSteps,
           style: ChompdTypography.sectionLabel.copyWith(
-            color: ChompdColors.text,
+            color: c.text,
           ),
         ),
         const SizedBox(height: 12),
@@ -379,16 +380,17 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Widget _buildStepCard(int index) {
+    final c = context.colors;
     final isCompleted = _completed[index];
     final step = widget.guide.steps[index];
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: ChompdColors.border.withValues(alpha: 0.2),
+          color: c.border.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
@@ -402,9 +404,9 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
               margin: const EdgeInsets.only(right: 12, top: 2),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isCompleted ? ChompdColors.mint : Colors.transparent,
+                color: isCompleted ? c.mint : Colors.transparent,
                 border: Border.all(
-                  color: ChompdColors.mint,
+                  color: c.mint,
                   width: 2,
                 ),
               ),
@@ -425,14 +427,14 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                   context.l10n.stepNumber(index + 1),
                   style: ChompdTypography.mono(
                     size: 11,
-                    color: ChompdColors.textDim,
+                    color: c.textDim,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   step,
                   style: TextStyle(
-                    color: ChompdColors.text,
+                    color: c.text,
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -446,13 +448,14 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Widget _buildNotesCard() {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ChompdColors.amber.withValues(alpha: 0.1),
+        color: c.amber.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: ChompdColors.amber.withValues(alpha: 0.3),
+          color: c.amber.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
@@ -462,7 +465,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
             padding: const EdgeInsets.only(right: 12, top: 2),
             child: Icon(
               Icons.info_outline,
-              color: ChompdColors.amber,
+              color: c.amber,
               size: 20,
             ),
           ),
@@ -470,7 +473,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
             child: Text(
               widget.guide.notes!,
               style: TextStyle(
-                color: ChompdColors.text,
+                color: c.text,
                 fontSize: 14,
                 height: 1.5,
               ),
@@ -482,12 +485,13 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Widget _buildOpenCancelPageButton() {
+    final c = context.colors;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _handleOpenCancelPage,
         style: ElevatedButton.styleFrom(
-          backgroundColor: ChompdColors.mint,
+          backgroundColor: c.mint,
           foregroundColor: Colors.black,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
@@ -507,14 +511,15 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Widget _buildCancelledButton() {
+    final c = context.colors;
     return SizedBox(
       width: double.infinity,
       child: OutlinedButton(
         onPressed: _handleCancelSubscription,
         style: OutlinedButton.styleFrom(
-          foregroundColor: ChompdColors.mint,
+          foregroundColor: c.mint,
           side: BorderSide(
-            color: ChompdColors.mint,
+            color: c.mint,
             width: 1.5,
           ),
           padding: const EdgeInsets.symmetric(vertical: 14),
@@ -534,22 +539,23 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Widget _buildRefundTipCard() {
+    final c = context.colors;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: ChompdColors.purple.withValues(alpha: 0.08),
+        color: c.purple.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: ChompdColors.purple.withValues(alpha: 0.2),
+          color: c.purple.withValues(alpha: 0.2),
         ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.lightbulb_outline_rounded,
             size: 18,
-            color: ChompdColors.purple,
+            color: c.purple,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -558,18 +564,18 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
               children: [
                 Text(
                   context.l10n.refundTipTitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: ChompdColors.text,
+                    color: c.text,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   context.l10n.refundTipBody,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: ChompdColors.textMid,
+                    color: c.textMid,
                     height: 1.4,
                   ),
                 ),
@@ -582,6 +588,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   Widget _buildRequestRefundButton() {
+    final c = context.colors;
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -592,40 +599,25 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: ChompdColors.purple.withValues(alpha: 0.08),
+          color: c.purple.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: ChompdColors.purple.withValues(alpha: 0.2),
+            color: c.purple.withValues(alpha: 0.2),
           ),
         ),
         alignment: Alignment.center,
         child: Text(
           context.l10n.requestRefund,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: ChompdColors.purple,
+            color: c.purple,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildRefundHelpLink() {
-    return GestureDetector(
-      onTap: _navigateToRefundRescue,
-      child: Text(
-        context.l10n.couldntCancelRefund,
-        style: TextStyle(
-          color: ChompdColors.mint,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          decoration: TextDecoration.underline,
-          decorationColor: ChompdColors.mint,
-        ),
-      ),
-    );
-  }
 }
 
 class _CancelReason {

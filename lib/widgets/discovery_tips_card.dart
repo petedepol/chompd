@@ -56,15 +56,16 @@ class _DiscoveryTipsCardState extends State<DiscoveryTipsCard>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final l10n = context.l10n;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: ChompdColors.border,
+          color: c.border,
           width: 1,
         ),
       ),
@@ -83,12 +84,12 @@ class _DiscoveryTipsCardState extends State<DiscoveryTipsCard>
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: ChompdColors.purple.withValues(alpha: 0.12),
+                      color: c.purple.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.lightbulb_outline,
-                      color: ChompdColors.purple,
+                      color: c.purple,
                       size: 18,
                     ),
                   ),
@@ -96,18 +97,18 @@ class _DiscoveryTipsCardState extends State<DiscoveryTipsCard>
                   Expanded(
                     child: Text(
                       l10n.discoveryTipsTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                   ),
                   RotationTransition(
                     turns: _rotationAnimation,
-                    child: const Icon(
+                    child: Icon(
                       Icons.keyboard_arrow_down,
-                      color: ChompdColors.textDim,
+                      color: c.textDim,
                       size: 22,
                     ),
                   ),
@@ -124,7 +125,7 @@ class _DiscoveryTipsCardState extends State<DiscoveryTipsCard>
               children: [
                 Container(
                   height: 1,
-                  color: ChompdColors.border,
+                  color: c.border,
                 ),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -132,28 +133,28 @@ class _DiscoveryTipsCardState extends State<DiscoveryTipsCard>
                     children: [
                       _TipRow(
                         icon: Icons.account_balance,
-                        iconColor: ChompdColors.mint,
+                        iconColor: c.mint,
                         title: l10n.discoveryTipBank,
                         subtitle: l10n.discoveryTipBankDesc,
                       ),
                       const SizedBox(height: 12),
                       _TipRow(
                         icon: Icons.email_outlined,
-                        iconColor: ChompdColors.blue,
+                        iconColor: c.blue,
                         title: l10n.discoveryTipEmail,
                         subtitle: l10n.discoveryTipEmailDesc,
                       ),
                       const SizedBox(height: 12),
                       _TipRow(
                         icon: Icons.phone_iphone,
-                        iconColor: ChompdColors.amber,
+                        iconColor: c.amber,
                         title: l10n.discoveryTipAppStore,
                         subtitle: l10n.discoveryTipAppStoreDesc,
                       ),
                       const SizedBox(height: 12),
                       _TipRow(
                         icon: Icons.payment,
-                        iconColor: ChompdColors.purple,
+                        iconColor: c.purple,
                         title: l10n.discoveryTipPaypal,
                         subtitle: l10n.discoveryTipPaypalDesc,
                       ),
@@ -184,6 +185,7 @@ class _TipRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -207,18 +209,18 @@ class _TipRow extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
-                  color: ChompdColors.text,
+                  color: c.text,
                 ),
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: ChompdColors.textDim,
+                  color: c.textDim,
                   height: 1.4,
                 ),
               ),

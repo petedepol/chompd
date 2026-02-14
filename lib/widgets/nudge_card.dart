@@ -32,6 +32,7 @@ class NudgeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     return Dismissible(
       key: Key('nudge_${nudge.sub.uid}'),
       direction: DismissDirection.horizontal,
@@ -40,10 +41,10 @@ class NudgeCard extends ConsumerWidget {
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: ChompdColors.bgCard,
+          color: c.bgCard,
           borderRadius: BorderRadius.circular(16),
-          border: const Border(
-            left: BorderSide(color: ChompdColors.purple, width: 4),
+          border: Border(
+            left: BorderSide(color: c.purple, width: 4),
           ),
         ),
         child: Column(
@@ -62,9 +63,9 @@ class NudgeCard extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     nudge.message,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: ChompdColors.textMid,
+                      color: c.textMid,
                       height: 1.4,
                     ),
                   ),
@@ -79,7 +80,7 @@ class NudgeCard extends ConsumerWidget {
               nudge.sub.name,
               style: ChompdTypography.mono(
                 size: 12,
-                color: ChompdColors.textDim,
+                color: c.textDim,
               ),
             ),
 
@@ -103,16 +104,16 @@ class NudgeCard extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: ChompdColors.mint.withValues(alpha: 0.5),
+                          color: c.mint.withValues(alpha: 0.5),
                         ),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         context.l10n.nudgeReview,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: ChompdColors.mint,
+                          color: c.mint,
                         ),
                       ),
                     ),
@@ -127,16 +128,16 @@ class NudgeCard extends ConsumerWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: ChompdColors.border,
+                          color: c.border,
                         ),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         context.l10n.nudgeKeepIt,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: ChompdColors.textDim,
+                          color: c.textDim,
                         ),
                       ),
                     ),

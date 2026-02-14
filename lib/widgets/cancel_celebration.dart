@@ -68,13 +68,14 @@ class _CancelCelebrationState extends State<CancelCelebration>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     final yearly = widget.subscription.yearlyEquivalent;
     final currency = widget.subscription.currency;
 
     return GestureDetector(
       onTap: widget.onDismiss,
       child: Container(
-        color: ChompdColors.bg.withValues(alpha: 0.92),
+        color: c.bg.withValues(alpha: 0.92),
         child: Stack(
           children: [
             // Confetti
@@ -108,10 +109,10 @@ class _CancelCelebrationState extends State<CancelCelebration>
                     // Headline
                     Text(
                       context.l10n.celebrationTitle,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w700,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -122,16 +123,16 @@ class _CancelCelebrationState extends State<CancelCelebration>
                       style: ChompdTypography.mono(
                         size: 24,
                         weight: FontWeight.w700,
-                        color: ChompdColors.mint,
+                        color: c.mint,
                       ),
                     ),
                     const SizedBox(height: 4),
 
                     Text(
                       context.l10n.celebrationByDropping(widget.subscription.name),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: ChompdColors.textMid,
+                        color: c.textMid,
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -141,7 +142,7 @@ class _CancelCelebrationState extends State<CancelCelebration>
                       context.l10n.tapAnywhereToContinue,
                       style: TextStyle(
                         fontSize: 11,
-                        color: ChompdColors.textDim.withValues(alpha: 0.5),
+                        color: c.textDim.withValues(alpha: 0.5),
                       ),
                     ),
                   ],

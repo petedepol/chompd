@@ -56,6 +56,7 @@ class _ScanShimmerState extends State<ScanShimmer>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return Stack(
       children: [
         widget.child,
@@ -73,9 +74,9 @@ class _ScanShimmerState extends State<ScanShimmer>
                       end: Alignment(-0.5 + 2.0 * position, 0),
                       colors: [
                         Colors.transparent,
-                        ChompdColors.purple.withValues(alpha: 0.08),
-                        ChompdColors.mint.withValues(alpha: 0.12),
-                        ChompdColors.purple.withValues(alpha: 0.08),
+                        c.purple.withValues(alpha: 0.08),
+                        c.mint.withValues(alpha: 0.12),
+                        c.purple.withValues(alpha: 0.08),
                         Colors.transparent,
                       ],
                       stops: const [0.0, 0.3, 0.5, 0.7, 1.0],
@@ -127,6 +128,7 @@ class _TypingDotsState extends State<TypingDots>
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, child) {
@@ -139,7 +141,7 @@ class _TypingDotsState extends State<TypingDots>
               height: 6,
               margin: const EdgeInsets.symmetric(horizontal: 2),
               decoration: BoxDecoration(
-                color: ChompdColors.purple.withValues(alpha: 
+                color: c.purple.withValues(alpha:
                   i == activeDot ? 1.0 : 0.3,
                 ),
                 shape: BoxShape.circle,

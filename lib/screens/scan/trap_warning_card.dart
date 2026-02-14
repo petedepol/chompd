@@ -33,11 +33,12 @@ class TrapWarningCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
     final isHigh = trap.severity == TrapSeverity.high;
-    final warningColor = isHigh ? ChompdColors.red : ChompdColors.amber;
+    final warningColor = isHigh ? c.red : c.amber;
 
     return Container(
-      color: ChompdColors.bg.withValues(alpha: 0.95),
+      color: c.bg.withValues(alpha: 0.95),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: SafeArea(
@@ -54,10 +55,10 @@ class TrapWarningCard extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         context.l10n.trapDetected,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: ChompdColors.text,
+                          color: c.text,
                         ),
                       ),
                     ),
@@ -81,9 +82,9 @@ class TrapWarningCard extends ConsumerWidget {
                 // ─── Service name ───
                 Text(
                   context.l10n.trapOfferActually(trap.serviceName ?? subscription.serviceName),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: ChompdColors.textMid,
+                    color: c.textMid,
                   ),
                 ),
 
@@ -97,19 +98,19 @@ class TrapWarningCard extends ConsumerWidget {
                 // ─── AI warning message ───
                 Container(
                   padding: const EdgeInsets.only(left: 12),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     border: Border(
                       left: BorderSide(
-                        color: ChompdColors.mintGlow,
+                        color: c.mintGlow,
                         width: 4,
                       ),
                     ),
                   ),
                   child: Text(
                     trap.warningMessage,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: ChompdColors.textMid,
+                      color: c.textMid,
                       fontStyle: FontStyle.italic,
                       height: 1.5,
                     ),
@@ -127,8 +128,8 @@ class TrapWarningCard extends ConsumerWidget {
                     width: double.infinity,
                     height: 56,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [ChompdColors.mint, ChompdColors.mintDark],
+                      gradient: LinearGradient(
+                        colors: [c.mint, c.mintDark],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -137,10 +138,10 @@ class TrapWarningCard extends ConsumerWidget {
                     alignment: Alignment.center,
                     child: Text(
                       context.l10n.skipItSave(Subscription.formatPrice(trap.savingsAmount, subscription.currency)),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: ChompdColors.bg,
+                        color: c.bg,
                       ),
                     ),
                   ),
@@ -192,17 +193,17 @@ class TrapWarningCard extends ConsumerWidget {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      border: Border.all(color: ChompdColors.border),
+                      border: Border.all(color: c.border),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Column(
                       children: [
                         Text(
                           context.l10n.trackTrialAnyway,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: ChompdColors.textDim,
+                            color: c.textDim,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -210,14 +211,14 @@ class TrapWarningCard extends ConsumerWidget {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.notifications_active,
-                                size: 12, color: ChompdColors.textDim,),
+                            Icon(Icons.notifications_active,
+                                size: 12, color: c.textDim,),
                             const SizedBox(width: 4),
                             Text(
                               context.l10n.trapReminder,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 11,
-                                color: ChompdColors.textDim,
+                                color: c.textDim,
                               ),
                             ),
                           ],

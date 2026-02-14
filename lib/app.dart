@@ -27,7 +27,13 @@ class ChompdApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
-    final themeNotifier = ref.watch(themeModeProvider.notifier);
+    // Watch the state value so the widget rebuilds on theme changes.
+    final appThemeMode = ref.watch(themeModeProvider);
+    final themeMode = switch (appThemeMode) {
+      AppThemeMode.dark => ThemeMode.dark,
+      AppThemeMode.light => ThemeMode.light,
+      AppThemeMode.system => ThemeMode.system,
+    };
 
     return MaterialApp(
       title: 'Chompd',
@@ -35,7 +41,7 @@ class ChompdApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: ChompdTheme.light,
       darkTheme: ChompdTheme.dark,
-      themeMode: themeNotifier.flutterThemeMode,
+      themeMode: themeMode,
       locale: locale,
       localizationsDelegates: const [
         S.delegate,

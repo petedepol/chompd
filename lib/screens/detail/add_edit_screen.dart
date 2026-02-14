@@ -65,8 +65,10 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: c.bg,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -85,15 +87,15 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: ChompdColors.bgElevated,
+                        color: c.bgElevated,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: ChompdColors.border),
+                        border: Border.all(color: c.border),
                       ),
                       alignment: Alignment.center,
-                      child: const Icon(
+                      child: Icon(
                         Icons.close_rounded,
                         size: 16,
-                        color: ChompdColors.textMid,
+                        color: c.textMid,
                       ),
                     ),
                   ),
@@ -101,10 +103,10 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                   Expanded(
                     child: Text(
                       _isEditing ? context.l10n.editSubscription : context.l10n.addSubscription,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: ChompdColors.text,
+                        color: c.text,
                       ),
                     ),
                   ),
@@ -180,8 +182,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                               const SizedBox(height: 6),
                               _buildDropdown<String>(
                                 value: _currency,
-                                items: supportedCurrencies.map((c) => c['code'] as String).toList(),
-                                labels: supportedCurrencies.map((c) => '${c['symbol']} ${c['code']}').toList(),
+                                items: supportedCurrencies.map((cur) => cur['code'] as String).toList(),
+                                labels: supportedCurrencies.map((cur) => '${cur['symbol']} ${cur['code']}').toList(),
                                 onChanged: (v) => setState(() => _currency = v!),
                               ),
                             ],
@@ -206,13 +208,13 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               decoration: BoxDecoration(
                                 color: selected
-                                    ? ChompdColors.mint.withValues(alpha: 0.12)
-                                    : ChompdColors.bgCard,
+                                    ? c.mint.withValues(alpha: 0.12)
+                                    : c.bgCard,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: selected
-                                      ? ChompdColors.mint.withValues(alpha: 0.4)
-                                      : ChompdColors.border,
+                                      ? c.mint.withValues(alpha: 0.4)
+                                      : c.border,
                                 ),
                               ),
                               alignment: Alignment.center,
@@ -222,8 +224,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                   color: selected
-                                      ? ChompdColors.mint
-                                      : ChompdColors.textDim,
+                                      ? c.mint
+                                      : c.textDim,
                                 ),
                               ),
                             ),
@@ -253,12 +255,12 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                             decoration: BoxDecoration(
                               color: selected
                                   ? catColor.withValues(alpha: 0.15)
-                                  : ChompdColors.bgCard,
+                                  : c.bgCard,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
                                 color: selected
                                     ? catColor.withValues(alpha: 0.5)
-                                    : ChompdColors.border,
+                                    : c.border,
                               ),
                             ),
                             child: Row(
@@ -279,8 +281,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w500,
                                     color: selected
-                                        ? ChompdColors.text
-                                        : ChompdColors.textDim,
+                                        ? c.text
+                                        : c.textDim,
                                   ),
                                 ),
                               ],
@@ -304,23 +306,23 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                           vertical: 14,
                         ),
                         decoration: BoxDecoration(
-                          color: ChompdColors.bgCard,
+                          color: c.bgCard,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: ChompdColors.border),
+                          border: Border.all(color: c.border),
                         ),
                         child: Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.calendar_today_outlined,
                               size: 16,
-                              color: ChompdColors.textMid,
+                              color: c.textMid,
                             ),
                             const SizedBox(width: 10),
                             Text(
                               '${_nextRenewal.day}/${_nextRenewal.month}/${_nextRenewal.year}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 14,
-                                color: ChompdColors.text,
+                                color: c.text,
                               ),
                             ),
                           ],
@@ -346,13 +348,13 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: _isTrial
-                              ? ChompdColors.amberGlow
-                              : ChompdColors.bgCard,
+                              ? c.amberGlow
+                              : c.bgCard,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: _isTrial
-                                ? ChompdColors.amber.withValues(alpha: 0.3)
-                                : ChompdColors.border,
+                                ? c.amber.withValues(alpha: 0.3)
+                                : c.border,
                           ),
                         ),
                         child: Row(
@@ -363,8 +365,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                                   : Icons.timer_outlined,
                               size: 18,
                               color: _isTrial
-                                  ? ChompdColors.amber
-                                  : ChompdColors.textDim,
+                                  ? c.amber
+                                  : c.textDim,
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -374,8 +376,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                                   fontSize: 13,
                                   fontWeight: FontWeight.w500,
                                   color: _isTrial
-                                      ? ChompdColors.amber
-                                      : ChompdColors.textMid,
+                                      ? c.amber
+                                      : c.textMid,
                                 ),
                               ),
                             ),
@@ -385,8 +387,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                               padding: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
                                 color: _isTrial
-                                    ? ChompdColors.amber
-                                    : ChompdColors.bgElevated,
+                                    ? c.amber
+                                    : c.bgElevated,
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: AnimatedAlign(
@@ -422,27 +424,27 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                             vertical: 14,
                           ),
                           decoration: BoxDecoration(
-                            color: ChompdColors.bgCard,
+                            color: c.bgCard,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: ChompdColors.amber.withValues(alpha: 0.3),
+                              color: c.amber.withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
                             children: [
-                              const Icon(
+                              Icon(
                                 Icons.event_outlined,
                                 size: 16,
-                                color: ChompdColors.amber,
+                                color: c.amber,
                               ),
                               const SizedBox(width: 10),
                               Text(
                                 _trialEndDate != null
                                     ? '${_trialEndDate!.day}/${_trialEndDate!.month}/${_trialEndDate!.year}'
                                     : context.l10n.selectDate,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
-                                  color: ChompdColors.text,
+                                  color: c.text,
                                 ),
                               ),
                             ],
@@ -461,12 +463,12 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
-                          gradient: const LinearGradient(
-                            colors: [ChompdColors.mintDark, ChompdColors.mint],
+                          gradient: LinearGradient(
+                            colors: [c.mintDark, c.mint],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: ChompdColors.mint.withValues(alpha: 0.27),
+                              color: c.mint.withValues(alpha: 0.27),
                               blurRadius: 20,
                               offset: const Offset(0, 4),
                             ),
@@ -475,10 +477,10 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           _isEditing ? context.l10n.saveChanges : context.l10n.addSubscription,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
-                            color: ChompdColors.bg,
+                            color: c.bg,
                           ),
                         ),
                       ),
@@ -508,33 +510,35 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
+    final c = context.colors;
+
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       validator: validator,
-      style: const TextStyle(fontSize: 14, color: ChompdColors.text),
+      style: TextStyle(fontSize: 14, color: c.text),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: const TextStyle(color: ChompdColors.textDim),
+        hintStyle: TextStyle(color: c.textDim),
         filled: true,
-        fillColor: ChompdColors.bgCard,
+        fillColor: c.bgCard,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: ChompdColors.border),
+          borderSide: BorderSide(color: c.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: ChompdColors.border),
+          borderSide: BorderSide(color: c.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: ChompdColors.mint, width: 1.5),
+          borderSide: BorderSide(color: c.mint, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: ChompdColors.red),
+          borderSide: BorderSide(color: c.red),
         ),
       ),
     );
@@ -546,23 +550,25 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     required List<String> labels,
     required ValueChanged<T?> onChanged,
   }) {
+    final c = context.colors;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: ChompdColors.bgCard,
+        color: c.bgCard,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ChompdColors.border),
+        border: Border.all(color: c.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
           isExpanded: true,
-          dropdownColor: ChompdColors.bgElevated,
-          style: const TextStyle(fontSize: 13, color: ChompdColors.text),
-          icon: const Icon(
+          dropdownColor: c.bgElevated,
+          style: TextStyle(fontSize: 13, color: c.text),
+          icon: Icon(
             Icons.keyboard_arrow_down_rounded,
             size: 18,
-            color: ChompdColors.textDim,
+            color: c.textDim,
           ),
           items: items.asMap().entries.map((e) {
             return DropdownMenuItem<T>(
@@ -577,17 +583,26 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
   }
 
   Future<void> _pickRenewalDate() async {
+    final c = context.colors;
+    final baseTheme = context.isDarkMode ? ChompdTheme.dark : ChompdTheme.light;
+
     final picked = await showDatePicker(
       context: context,
       initialDate: _nextRenewal,
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 730)),
       builder: (ctx, child) => Theme(
-        data: ChompdTheme.dark.copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: ChompdColors.mint,
-            surface: ChompdColors.bgElevated,
-            onSurface: ChompdColors.text,
+        data: baseTheme.copyWith(
+          colorScheme: ColorScheme(
+            brightness: context.isDarkMode ? Brightness.dark : Brightness.light,
+            primary: c.mint,
+            onPrimary: c.bg,
+            secondary: c.mint,
+            onSecondary: c.bg,
+            surface: c.bgElevated,
+            onSurface: c.text,
+            error: c.red,
+            onError: c.text,
           ),
         ),
         child: child!,
@@ -597,17 +612,26 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
   }
 
   Future<void> _pickTrialEndDate() async {
+    final c = context.colors;
+    final baseTheme = context.isDarkMode ? ChompdTheme.dark : ChompdTheme.light;
+
     final picked = await showDatePicker(
       context: context,
       initialDate: _trialEndDate ?? DateTime.now().add(const Duration(days: 14)),
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (ctx, child) => Theme(
-        data: ChompdTheme.dark.copyWith(
-          colorScheme: const ColorScheme.dark(
-            primary: ChompdColors.amber,
-            surface: ChompdColors.bgElevated,
-            onSurface: ChompdColors.text,
+        data: baseTheme.copyWith(
+          colorScheme: ColorScheme(
+            brightness: context.isDarkMode ? Brightness.dark : Brightness.light,
+            primary: c.amber,
+            onPrimary: c.bg,
+            secondary: c.amber,
+            onSecondary: c.bg,
+            surface: c.bgElevated,
+            onSurface: c.text,
+            error: c.red,
+            onError: c.text,
           ),
         ),
         child: child!,
