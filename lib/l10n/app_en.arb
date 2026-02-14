@@ -676,18 +676,24 @@
   "cycleQuarterlyShort": "qtr",
   "cycleYearlyShort": "yr",
 
-  "categoryEntertainment": "Entertainment",
+  "categoryStreaming": "Streaming",
   "categoryMusic": "Music",
-  "categoryDesign": "Design",
-  "categoryFitness": "Fitness",
+  "categoryAi": "AI",
   "categoryProductivity": "Productivity",
   "categoryStorage": "Storage",
-  "categoryNews": "News",
+  "categoryFitness": "Fitness",
   "categoryGaming": "Gaming",
+  "categoryReading": "Reading",
+  "categoryCommunication": "Communication",
+  "categoryNews": "News",
   "categoryFinance": "Finance",
   "categoryEducation": "Education",
-  "categoryHealth": "Health",
+  "categoryVpn": "VPN",
+  "categoryDeveloper": "Developer",
+  "categoryBundle": "Bundle",
   "categoryOther": "Other",
+
+  "paymentsTrackedHint": "Payments will be tracked after each renewal",
 
   "renewsToday": "Renews today",
   "renewsTomorrow": "Renews tomorrow",
@@ -736,5 +742,26 @@
   "signInWithGoogle": "Sign in with Google",
   "signInWithEmail": "Sign in with Email",
   "signOut": "Sign Out",
-  "signOutConfirm": "Are you sure you want to sign out? Your data will stay on this device."
+  "signOutConfirm": "Are you sure you want to sign out? Your data will stay on this device.",
+
+  "annualSavingsTitle": "SWITCH TO ANNUAL",
+  "annualSavingsSubtitle": "potential savings by switching to yearly plans",
+  "annualSavingsCoverage": "Based on {matched} of {total} subscriptions",
+  "@annualSavingsCoverage": {
+    "placeholders": { "matched": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "seeAll": "See all",
+  "allSavingsTitle": "Annual Savings",
+  "allSavingsSubtitle": "Switch these monthly plans to yearly to save",
+  "annualPlanLabel": "ANNUAL PLAN",
+  "annualPlanAvailable": "Annual plan available \u2014 save {amount}/yr",
+  "@annualPlanAvailable": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "noAnnualPlan": "No annual plan available for this service",
+  "monthlyVsAnnual": "{monthly}/mo \u2192 {annual}/yr",
+  "@monthlyVsAnnual": {
+    "placeholders": { "monthly": {"type": "String"}, "annual": {"type": "String"} }
+  },
+  "perYear": "/yr"
 }

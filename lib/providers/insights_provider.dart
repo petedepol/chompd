@@ -60,25 +60,7 @@ final insightsProvider = Provider<List<Insight>>((ref) {
     ));
   }
 
-  // 2. Monthly subscriptions that would save money as yearly
-  // (Assumes ~17% saving for yearly vs monthly — industry standard)
-  final monthlyThreshold = fx.convert(5, 'GBP', currency);
-  final monthlySubs = active
-      .where((s) => s.cycle == BillingCycle.monthly && s.monthlyEquivalentIn(currency) > monthlyThreshold)
-      .toList();
-  if (monthlySubs.length >= 2) {
-    final potentialSaving =
-        monthlySubs.fold(0.0, (sum, s) => sum + (s.yearlyEquivalentIn(currency) * 0.17));
-    insights.add(Insight(
-      emoji: '\uD83D\uDCA1',
-      headline: l.insightAnnualSavingsHeadline,
-      message: l.insightAnnualSavingsMessage(
-        monthlySubs.length,
-        Subscription.formatPrice(potentialSaving, currency, decimals: 0),
-      ),
-      type: InsightType.saving,
-    ));
-  }
+  // 2. (Removed — replaced by real data-backed AnnualSavingsCard)
 
   // 3. Subscription count reality check
   if (active.length >= 8) {

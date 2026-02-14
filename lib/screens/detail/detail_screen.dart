@@ -7,14 +7,16 @@ import '../../models/subscription.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/subscriptions_provider.dart';
-import '../../data/cancel_guides_data.dart';
+import '../../providers/service_cache_provider.dart';
 import '../../services/haptic_service.dart';
 import '../../services/notification_service.dart';
 import '../../utils/date_helpers.dart';
 import '../../utils/l10n_extension.dart';
+import '../../data/generic_cancel_guides.dart';
 import '../../widgets/mascot_image.dart';
 import '../cancel/cancel_guide_screen.dart';
 import '../paywall/paywall_screen.dart';
+import '../refund/refund_rescue_screen.dart';
 import 'add_edit_screen.dart';
 
 /// Subscription detail screen — matches the visual design prototype.
@@ -174,11 +176,13 @@ class DetailScreen extends ConsumerWidget {
                           vertical: 6,
                         ),
                         decoration: BoxDecoration(
-                          color: c.bgElevated,
+                          color: sub.yearlyEquivalent > 100
+                              ? c.amber.withValues(alpha: 0.15)
+                              : c.bgElevated,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: sub.yearlyEquivalent > 100
-                                ? c.amber.withValues(alpha: 0.2)
+                                ? c.amber.withValues(alpha: 0.3)
                                 : c.border,
                           ),
                         ),
@@ -198,9 +202,9 @@ class DetailScreen extends ConsumerWidget {
                       Text(
                         context.l10n.overThreeYears(Subscription.formatPrice(sub.yearlyEquivalent * 3, sub.currency, decimals: 0)),
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 11,
                           fontStyle: FontStyle.italic,
-                          color: c.textDim,
+                          color: c.textMid.withValues(alpha: 0.7),
                         ),
                       ),
                     ],
@@ -248,6 +252,19 @@ class DetailScreen extends ConsumerWidget {
                   bottom: 12,
                 ),
                 child: _TrapInfoCard(subscription: sub),
+              ),
+            ),
+
+          // ─── Unmatched Service Banner ───
+          if (!sub.isMatched)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  right: 20,
+                  bottom: 12,
+                ),
+                child: _UnmatchedInfoBanner(),
               ),
             ),
 
@@ -396,6 +413,79 @@ class DetailScreen extends ConsumerWidget {
             ),
           ),
 
+          // ─── Annual Plan Info ───
+          Consumer(builder: (context, ref, _) {
+            final cacheNotifier = ref.watch(serviceCacheProvider.notifier);
+            final service = cacheNotifier.findByName(sub.name);
+            if (service == null) {
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            }
+
+            // Skip if already on yearly billing
+            if (sub.cycle == BillingCycle.yearly) {
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            }
+
+            final tier = cacheNotifier.findBestTier(sub, service, sub.currency);
+            if (tier == null) {
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            }
+
+            final pair = cacheNotifier.resolvePricePair(tier, service, sub.currency);
+
+            if (pair == null) {
+              // Service exists in DB but no annual plan
+              return SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                  child: _InfoCard(
+                    label: context.l10n.annualPlanLabel,
+                    child: Text(
+                      context.l10n.noAnnualPlan,
+                      style: TextStyle(fontSize: 12, color: c.textDim),
+                    ),
+                  ),
+                ),
+              );
+            }
+
+            final savings = (pair.monthly * 12) - pair.annual;
+            if (savings <= 0) {
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            }
+
+            return SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                child: _InfoCard(
+                  label: context.l10n.annualPlanLabel,
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.savings_outlined,
+                        size: 16,
+                        color: Color(0xFF1B8F6A),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          context.l10n.annualPlanAvailable(
+                            Subscription.formatPrice(savings, sub.currency),
+                          ),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: Color(0xFF1B8F6A),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
 
           // ─── Delete Button ───
@@ -432,15 +522,15 @@ class DetailScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: GestureDetector(
-                  onTap: () => _navigateToCancelGuide(context, sub),
+                  onTap: () => _navigateToCancelGuide(context, ref, sub),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: BoxDecoration(
-                      color: c.redGlow,
+                      color: c.red.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: c.red.withValues(alpha: 0.2),
+                        color: c.red.withValues(alpha: 0.3),
                       ),
                     ),
                     alignment: Alignment.center,
@@ -456,6 +546,40 @@ class DetailScreen extends ConsumerWidget {
                 ),
               ),
             ),
+
+          // ─── Refund Rescue Button ───
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RefundRescueScreen(subscription: sub),
+                  ),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: c.purple.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: c.purple.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    context.l10n.requestRefund,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: c.purple,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
 
           SliverToBoxAdapter(
             child: SizedBox(
@@ -487,17 +611,67 @@ class DetailScreen extends ConsumerWidget {
       cursor = _subtractCycle(cursor, sub.cycle);
     }
 
-    // If no payments yet (e.g. new trial), show a hint.
+    // If no payments yet (e.g. new trial), show a richer empty state.
     if (payments.isEmpty) {
       return [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: Text(
-            context.l10n.noPaymentsYet(DateHelpers.shortDate(start)),
-            style: TextStyle(
-              fontSize: 12,
-              color: c.textDim,
-            ),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              Icon(
+                Icons.receipt_long_outlined,
+                size: 32,
+                color: c.textDim.withValues(alpha: 0.5),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                context.l10n.noPaymentsYet(DateHelpers.shortDate(start)),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: c.textDim,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                context.l10n.paymentsTrackedHint,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: c.textDim.withValues(alpha: 0.7),
+                ),
+              ),
+              const SizedBox(height: 12),
+              // Upcoming payment preview
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: c.bgElevated.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: c.border.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      DateHelpers.shortDate(sub.nextRenewal),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: c.textDim,
+                      ),
+                    ),
+                    Text(
+                      Subscription.formatPrice(sub.price, sub.currency),
+                      style: ChompdTypography.mono(
+                        size: 12,
+                        weight: FontWeight.w600,
+                        color: c.textDim,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ];
@@ -560,28 +734,40 @@ class DetailScreen extends ConsumerWidget {
 
   /// Navigates to the cancel guide for this service.
   /// Falls back to generic platform guide if no specific match found.
-  void _navigateToCancelGuide(BuildContext context, Subscription sub) {
-    final c = context.colors;
-    final guide = findGuideForSubscription(sub.name);
+  void _navigateToCancelGuide(
+    BuildContext context,
+    WidgetRef ref,
+    Subscription sub,
+  ) {
+    final cacheNotifier = ref.read(serviceCacheProvider.notifier);
+    final guide = cacheNotifier.findCancelGuide(sub.name);
+    final difficulty = cacheNotifier.getCancelDifficulty(sub.name);
+
     if (guide != null) {
       Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) =>
-              CancelGuideScreen(subscription: sub, guide: guide),
+          builder: (_) => CancelGuideScreen(
+            subscription: sub,
+            guideData: guide,
+            cancelDifficulty: difficulty,
+          ),
         ),
       );
     } else {
-      // Fallback: show generic advice
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            context.l10n.noGuideYet(sub.name),
-            style: const TextStyle(fontSize: 12),
+      // Fallback: show generic platform-based cancel guide
+      final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+      final genericGuide = findGenericCancelGuide(isIOS: isIOS);
+      if (genericGuide != null) {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => CancelGuideScreen(
+              subscription: sub,
+              guideData: genericGuide,
+              cancelDifficulty: null, // No difficulty score for generic
+            ),
           ),
-          backgroundColor: c.bgElevated,
-          duration: const Duration(seconds: 4),
-        ),
-      );
+        );
+      }
     }
   }
 
@@ -1267,6 +1453,47 @@ class _TrapInfoCard extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Subtle info banner shown on the detail screen for unmatched services.
+///
+/// Non-alarming, helpful tone — explains that generic guides are shown.
+class _UnmatchedInfoBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: c.blue.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: c.blue.withValues(alpha: 0.15),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: c.blue,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'We don\'t have specific data for this service yet. Cancel and refund guides show general steps for your platform.',
+              style: TextStyle(
+                fontSize: 12,
+                color: c.textMid,
+                height: 1.4,
+              ),
+            ),
+          ),
         ],
       ),
     );

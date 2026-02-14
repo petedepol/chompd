@@ -1011,65 +1011,96 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
       final service = AiScanService();
 
-      // Try multi-extraction first (handles both single and multi results)
-      List<ScanOutput> outputs = await service.analyseScreenshotMulti(
+      // ── Stage 1: Try single-subscription prompt first (fast, focused) ──
+      // This is the prompt that works well for emails, receipts, iOS screens.
+      // It's neutral about what the image is and returns a single focused result.
+      final singleOutput = await service.analyseScreenshotWithTrap(
         imageBytes: imageBytes,
         mimeType: mimeType,
       );
 
-      // Filter out empty/unknown results
-      outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
+      final result = singleOutput.subscription;
 
-      // If Haiku found nothing, escalate to Sonnet
-      if (outputs.isEmpty) {
+      // Check if we need to escalate to Sonnet (low confidence)
+      ScanOutput bestOutput = singleOutput;
+      if (_shouldEscalate(result)) {
         _addSystemMessage('Taking a closer look\u2026');
-        outputs = await service.analyseScreenshotMulti(
+        bestOutput = await service.analyseScreenshotWithTrap(
           imageBytes: imageBytes,
           mimeType: mimeType,
           modelOverride: AppConstants.aiModelFallback,
         );
-        outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
-      }
-      // If Haiku found one result but it's low confidence, escalate
-      else if (outputs.length == 1 && _shouldEscalate(outputs.first.subscription)) {
-        _addSystemMessage('Taking a closer look\u2026');
-        outputs = await service.analyseScreenshotMulti(
-          imageBytes: imageBytes,
-          mimeType: mimeType,
-          modelOverride: AppConstants.aiModelFallback,
-        );
-        outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
-      }
-      // For complex multi-sub screenshots (5+ items), use Sonnet for higher accuracy
-      else if (outputs.length >= 5) {
-        _addSystemMessage('Found many subscriptions, taking a closer look\u2026');
-        outputs = await service.analyseScreenshotMulti(
-          imageBytes: imageBytes,
-          mimeType: mimeType,
-          modelOverride: AppConstants.aiModelFallback,
-        );
-        outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
       }
 
-      if (outputs.isEmpty) {
-        await _handleNotFound(ScanResult(
-          serviceName: 'Unknown',
-          currency: 'GBP',
-          confidence: {},
-          overallConfidence: 0,
-          tier: 3,
-        ));
+      // ── Stage 2: If multi-sub source detected → switch to multi ──
+      // Single sources (one sub per screenshot): email confirmations, receipts
+      // Everything else (app_store, bank_statement, billing_page, etc.) → multi
+      final isSingleSource = bestOutput.subscription.sourceType == 'email' ||
+          bestOutput.subscription.sourceType == 'receipt';
+      final mentionsMultiple = bestOutput.subscription.extractionNotes
+              ?.toLowerCase()
+              .contains('multiple') ??
+          false;
+
+      if (!isSingleSource || mentionsMultiple) {
+        // Re-scan with multi-extraction prompt for thorough extraction
+        _addSystemMessage('Checking for more subscriptions\u2026');
+        List<ScanOutput> outputs = await service.analyseScreenshotMulti(
+          imageBytes: imageBytes,
+          mimeType: mimeType,
+        );
+        outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
+
+        // Escalate multi to Sonnet if poor results
+        if (outputs.isEmpty ||
+            (outputs.length == 1 &&
+                _shouldEscalate(outputs.first.subscription))) {
+          _addSystemMessage('Taking a closer look\u2026');
+          outputs = await service.analyseScreenshotMulti(
+            imageBytes: imageBytes,
+            mimeType: mimeType,
+            modelOverride: AppConstants.aiModelFallback,
+          );
+          outputs =
+              outputs.where((o) => !o.subscription.isNotFound).toList();
+        } else if (outputs.length >= 5) {
+          _addSystemMessage(
+              'Found many subscriptions, taking a closer look\u2026');
+          outputs = await service.analyseScreenshotMulti(
+            imageBytes: imageBytes,
+            mimeType: mimeType,
+            modelOverride: AppConstants.aiModelFallback,
+          );
+          outputs =
+              outputs.where((o) => !o.subscription.isNotFound).toList();
+        }
+
+        if (outputs.isEmpty) {
+          await _handleNotFound(ScanResult(
+            serviceName: 'Unknown',
+            currency: 'GBP',
+            confidence: {},
+            overallConfidence: 0,
+            tier: 3,
+          ));
+          return;
+        }
+
+        if (outputs.length == 1) {
+          await _handleSingleScanOutput(outputs.first);
+        } else {
+          await _handleMultiScan(outputs: outputs);
+        }
         return;
       }
 
-      // Route based on result count
-      if (outputs.length == 1) {
-        // Single subscription → standard flow with trap detection
-        await _handleSingleScanOutput(outputs.first);
-      } else {
-        // Multiple subscriptions → one-by-one review flow
-        await _handleMultiScan(outputs: outputs);
+      // ── Single subscription — use the single result directly ──
+      if (bestOutput.subscription.isNotFound) {
+        await _handleNotFound(bestOutput.subscription);
+        return;
       }
+
+      await _handleSingleScanOutput(bestOutput);
     } on ScanLimitReachedException catch (e) {
       state = state.copyWith(
         phase: ScanPhase.error,

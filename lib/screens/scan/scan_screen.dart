@@ -11,8 +11,10 @@ import '../../models/trap_result.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/scan_provider.dart';
+import '../../providers/service_cache_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/merchant_db.dart';
+import '../../services/unmatched_service_logger.dart';
 import '../../utils/l10n_extension.dart';
 import '../../widgets/mascot_image.dart';
 import '../../widgets/scan_shimmer.dart';
@@ -714,6 +716,20 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         sub.cancelledDate = now;
       }
 
+      // Try to match against the service database
+      final matchedId = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+      sub.matchedServiceId = matchedId;
+
+      // Log unmatched services for future database expansion
+      if (matchedId == null) {
+        UnmatchedServiceLogger.instance.log(
+          name: sub.name,
+          category: sub.category,
+          price: sub.price,
+          currency: sub.currency,
+        );
+      }
+
       ref.read(subscriptionsProvider.notifier).add(sub);
       addedCount++;
     }
@@ -783,6 +799,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       ..source = SubscriptionSource.aiScan
       ..createdAt = now;
 
+    // Match against service database
+    final matchedIdSingle = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+    sub.matchedServiceId = matchedIdSingle;
+    if (matchedIdSingle == null) {
+      UnmatchedServiceLogger.instance.log(
+        name: sub.name,
+        category: sub.category,
+        price: sub.price,
+        currency: sub.currency,
+      );
+    }
+
     ref.read(subscriptionsProvider.notifier).add(sub);
 
     // Show toast
@@ -840,6 +868,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         ..isActive = true
         ..source = SubscriptionSource.aiScan
         ..createdAt = now;
+
+      // Match against service database
+      final matchedIdAll = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+      sub.matchedServiceId = matchedIdAll;
+      if (matchedIdAll == null) {
+        UnmatchedServiceLogger.instance.log(
+          name: sub.name,
+          category: sub.category,
+          price: sub.price,
+          currency: sub.currency,
+        );
+      }
 
       ref.read(subscriptionsProvider.notifier).add(sub);
     }

@@ -1399,16 +1399,13 @@ class SEn extends S {
   String get cycleYearlyShort => 'yr';
 
   @override
-  String get categoryEntertainment => 'Entertainment';
+  String get categoryStreaming => 'Streaming';
 
   @override
   String get categoryMusic => 'Music';
 
   @override
-  String get categoryDesign => 'Design';
-
-  @override
-  String get categoryFitness => 'Fitness';
+  String get categoryAi => 'AI';
 
   @override
   String get categoryProductivity => 'Productivity';
@@ -1417,10 +1414,19 @@ class SEn extends S {
   String get categoryStorage => 'Storage';
 
   @override
-  String get categoryNews => 'News';
+  String get categoryFitness => 'Fitness';
 
   @override
   String get categoryGaming => 'Gaming';
+
+  @override
+  String get categoryReading => 'Reading';
+
+  @override
+  String get categoryCommunication => 'Communication';
+
+  @override
+  String get categoryNews => 'News';
 
   @override
   String get categoryFinance => 'Finance';
@@ -1429,10 +1435,20 @@ class SEn extends S {
   String get categoryEducation => 'Education';
 
   @override
-  String get categoryHealth => 'Health';
+  String get categoryVpn => 'VPN';
+
+  @override
+  String get categoryDeveloper => 'Developer';
+
+  @override
+  String get categoryBundle => 'Bundle';
 
   @override
   String get categoryOther => 'Other';
+
+  @override
+  String get paymentsTrackedHint =>
+      'Payments will be tracked after each renewal';
 
   @override
   String get renewsToday => 'Renews today';
@@ -1541,4 +1557,45 @@ class SEn extends S {
   @override
   String get signOutConfirm =>
       'Are you sure you want to sign out? Your data will stay on this device.';
+
+  @override
+  String get annualSavingsTitle => 'SWITCH TO ANNUAL';
+
+  @override
+  String get annualSavingsSubtitle =>
+      'potential savings by switching to yearly plans';
+
+  @override
+  String annualSavingsCoverage(int matched, int total) {
+    return 'Based on $matched of $total subscriptions';
+  }
+
+  @override
+  String get seeAll => 'See all';
+
+  @override
+  String get allSavingsTitle => 'Annual Savings';
+
+  @override
+  String get allSavingsSubtitle =>
+      'Switch these monthly plans to yearly to save';
+
+  @override
+  String get annualPlanLabel => 'ANNUAL PLAN';
+
+  @override
+  String annualPlanAvailable(String amount) {
+    return 'Annual plan available — save $amount/yr';
+  }
+
+  @override
+  String get noAnnualPlan => 'No annual plan available for this service';
+
+  @override
+  String monthlyVsAnnual(String monthly, String annual) {
+    return '$monthly/mo → $annual/yr';
+  }
+
+  @override
+  String get perYear => '/yr';
 }

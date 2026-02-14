@@ -8,11 +8,13 @@ import '../config/theme.dart';
 import '../models/subscription.dart';
 import '../providers/currency_provider.dart';
 import '../providers/purchase_provider.dart';
+import '../providers/service_cache_provider.dart';
 import '../providers/subscriptions_provider.dart';
 import '../screens/detail/add_edit_screen.dart';
 import '../screens/paywall/paywall_screen.dart';
 import '../services/exchange_rate_service.dart';
 import '../services/haptic_service.dart';
+import '../services/unmatched_service_logger.dart';
 import '../utils/l10n_extension.dart';
 
 /// Pre-loaded popular service templates for quick-add.
@@ -37,26 +39,26 @@ class ServiceTemplate {
 }
 
 const _templates = [
-  ServiceTemplate(name: 'Netflix', price: 15.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Entertainment', icon: 'N', brandColor: '#E50914'),
-  ServiceTemplate(name: 'Spotify', price: 10.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Music', icon: 'S', brandColor: '#1DB954'),
-  ServiceTemplate(name: 'Disney+', price: 7.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Entertainment', icon: 'D', brandColor: '#113CCF'),
-  ServiceTemplate(name: 'Apple Music', price: 10.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Music', icon: '\u266B', brandColor: '#FC3C44'),
-  ServiceTemplate(name: 'YouTube Premium', price: 12.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Entertainment', icon: '\u25B6', brandColor: '#FF0000'),
-  ServiceTemplate(name: 'Amazon Prime', price: 8.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Entertainment', icon: 'A', brandColor: '#FF9900'),
-  ServiceTemplate(name: 'iCloud+', price: 2.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Storage', icon: '\u2601', brandColor: '#4285F4'),
-  ServiceTemplate(name: 'ChatGPT Plus', price: 20.00, currency: 'USD', cycle: BillingCycle.monthly, category: 'Productivity', icon: 'G', brandColor: '#10A37F'),
-  ServiceTemplate(name: 'Claude Pro', price: 20.00, currency: 'USD', cycle: BillingCycle.monthly, category: 'Productivity', icon: 'C', brandColor: '#D97757'),
-  ServiceTemplate(name: 'Xbox Game Pass', price: 10.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Gaming', icon: 'X', brandColor: '#107C10'),
-  ServiceTemplate(name: 'PlayStation Plus', price: 6.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Gaming', icon: 'P', brandColor: '#003087'),
-  ServiceTemplate(name: 'Adobe CC', price: 54.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Design', icon: 'Ai', brandColor: '#FF0000'),
-  ServiceTemplate(name: 'Figma', price: 12.00, currency: 'USD', cycle: BillingCycle.monthly, category: 'Design', icon: 'F', brandColor: '#A259FF'),
-  ServiceTemplate(name: 'Notion', price: 10.00, currency: 'USD', cycle: BillingCycle.monthly, category: 'Productivity', icon: 'N', brandColor: '#000000'),
-  ServiceTemplate(name: 'Strava', price: 6.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Fitness', icon: '\u25B2', brandColor: '#FC4C02'),
-  ServiceTemplate(name: 'Zwift', price: 17.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Fitness', icon: 'Z', brandColor: '#FC6719'),
-  ServiceTemplate(name: 'NordVPN', price: 3.49, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Productivity', icon: 'N', brandColor: '#4687FF'),
-  ServiceTemplate(name: 'Dropbox', price: 9.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Storage', icon: 'D', brandColor: '#0061FE'),
-  ServiceTemplate(name: 'Microsoft 365', price: 5.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'Productivity', icon: 'M', brandColor: '#00A4EF'),
-  ServiceTemplate(name: 'The Athletic', price: 7.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'News', icon: 'A', brandColor: '#1DA1F2'),
+  ServiceTemplate(name: 'Netflix', price: 15.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'streaming', icon: 'N', brandColor: '#E50914'),
+  ServiceTemplate(name: 'Spotify', price: 10.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'music', icon: 'S', brandColor: '#1DB954'),
+  ServiceTemplate(name: 'Disney+', price: 7.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'streaming', icon: 'D', brandColor: '#113CCF'),
+  ServiceTemplate(name: 'Apple Music', price: 10.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'music', icon: '\u266B', brandColor: '#FC3C44'),
+  ServiceTemplate(name: 'YouTube Premium', price: 12.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'streaming', icon: '\u25B6', brandColor: '#FF0000'),
+  ServiceTemplate(name: 'Amazon Prime', price: 8.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'streaming', icon: 'A', brandColor: '#FF9900'),
+  ServiceTemplate(name: 'iCloud+', price: 2.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'storage', icon: '\u2601', brandColor: '#4285F4'),
+  ServiceTemplate(name: 'ChatGPT Plus', price: 20.00, currency: 'USD', cycle: BillingCycle.monthly, category: 'ai', icon: 'G', brandColor: '#10A37F'),
+  ServiceTemplate(name: 'Claude Pro', price: 20.00, currency: 'USD', cycle: BillingCycle.monthly, category: 'ai', icon: 'C', brandColor: '#D97757'),
+  ServiceTemplate(name: 'Xbox Game Pass', price: 10.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'gaming', icon: 'X', brandColor: '#107C10'),
+  ServiceTemplate(name: 'PlayStation Plus', price: 6.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'gaming', icon: 'P', brandColor: '#003087'),
+  ServiceTemplate(name: 'Adobe CC', price: 54.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'developer', icon: 'Ai', brandColor: '#FF0000'),
+  ServiceTemplate(name: 'Figma', price: 12.00, currency: 'USD', cycle: BillingCycle.monthly, category: 'developer', icon: 'F', brandColor: '#A259FF'),
+  ServiceTemplate(name: 'Notion', price: 10.00, currency: 'USD', cycle: BillingCycle.monthly, category: 'productivity', icon: 'N', brandColor: '#000000'),
+  ServiceTemplate(name: 'Strava', price: 6.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'fitness', icon: '\u25B2', brandColor: '#FC4C02'),
+  ServiceTemplate(name: 'Zwift', price: 17.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'fitness', icon: 'Z', brandColor: '#FC6719'),
+  ServiceTemplate(name: 'NordVPN', price: 3.49, currency: 'GBP', cycle: BillingCycle.monthly, category: 'vpn', icon: 'N', brandColor: '#4687FF'),
+  ServiceTemplate(name: 'Dropbox', price: 9.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'storage', icon: 'D', brandColor: '#0061FE'),
+  ServiceTemplate(name: 'Microsoft 365', price: 5.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'productivity', icon: 'M', brandColor: '#00A4EF'),
+  ServiceTemplate(name: 'The Athletic', price: 7.99, currency: 'GBP', cycle: BillingCycle.monthly, category: 'news', icon: 'A', brandColor: '#1DA1F2'),
 ];
 
 /// Shows the quick-add bottom sheet with popular services + manual add.
@@ -443,6 +445,18 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
       ..trialExpiresAt = trialEnd
       ..source = SubscriptionSource.quickAdd
       ..createdAt = now;
+
+    // Match against service database
+    final matchedId = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+    sub.matchedServiceId = matchedId;
+    if (matchedId == null) {
+      UnmatchedServiceLogger.instance.log(
+        name: sub.name,
+        category: tpl.category,
+        price: sub.price,
+        currency: sub.currency,
+      );
+    }
 
     HapticService.instance.success();
     ref.read(subscriptionsProvider.notifier).add(sub);

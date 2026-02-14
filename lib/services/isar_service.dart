@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 
 import '../models/dodged_trap.dart';
 import '../models/merchant.dart';
+import '../models/service_cache.dart';
 import '../models/subscription.dart';
 
 /// Isar database initialisation and access.
@@ -21,7 +22,13 @@ class IsarService {
     if (_initialised) return;
     final dir = await getApplicationDocumentsDirectory();
     _isar = await Isar.open(
-      [SubscriptionSchema, MerchantSchema, DodgedTrapSchema],
+      [
+        SubscriptionSchema,
+        MerchantSchema,
+        DodgedTrapSchema,
+        ServiceCacheSchema,
+        SyncStateSchema,
+      ],
       directory: dir.path,
     );
     _initialised = true;

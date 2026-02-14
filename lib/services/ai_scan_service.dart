@@ -161,13 +161,7 @@ class AiScanService {
     );
     final rawText = textBlock['text'] as String;
 
-    // Claude may wrap JSON in markdown fences — strip them
-    final cleanedJson = rawText
-        .replaceAll(RegExp(r'^```json?\s*', multiLine: true), '')
-        .replaceAll(RegExp(r'^```\s*$', multiLine: true), '')
-        .trim();
-
-    final decoded = jsonDecode(cleanedJson);
+    final decoded = _extractJson(rawText);
 
     // Claude may return a JSON array when it detects multiple subscriptions
     // (e.g. bank statements). Handle both single object and array responses.
@@ -228,12 +222,7 @@ class AiScanService {
     );
     final rawText = textBlock['text'] as String;
 
-    final cleanedJson = rawText
-        .replaceAll(RegExp(r'^```json?\s*', multiLine: true), '')
-        .replaceAll(RegExp(r'^```\s*$', multiLine: true), '')
-        .trim();
-
-    final decoded = jsonDecode(cleanedJson);
+    final decoded = _extractJson(rawText);
 
     if (decoded is List) {
       return decoded
@@ -281,7 +270,7 @@ class AiScanService {
           currency: 'GBP',
           billingCycle: 'monthly',
           nextRenewal: DateTime.now().add(const Duration(days: 28)),
-          category: 'Entertainment',
+          category: 'streaming',
           iconName: 'N',
           brandColor: '#E50914',
           confidence: {
@@ -301,7 +290,7 @@ class AiScanService {
           price: 7.99,
           currency: 'GBP',
           billingCycle: 'monthly',
-          category: 'Entertainment',
+          category: 'streaming',
           iconName: 'K',
           brandColor: '#FF9900',
           confidence: {
@@ -321,7 +310,7 @@ class AiScanService {
           price: 10.99,
           currency: 'GBP',
           billingCycle: 'monthly',
-          category: 'Gaming',
+          category: 'gaming',
           iconName: 'M',
           brandColor: '#00A4EF',
           confidence: {
@@ -343,7 +332,7 @@ class AiScanService {
           billingCycle: 'monthly',
           isTrial: true,
           trialEndDate: DateTime.now().add(const Duration(days: 14)),
-          category: 'Design',
+          category: 'developer',
           iconName: 'F',
           brandColor: '#A259FF',
           confidence: {
@@ -366,7 +355,7 @@ class AiScanService {
           price: 10.99,
           currency: 'GBP',
           billingCycle: 'monthly',
-          category: 'Music',
+          category: 'music',
           iconName: 'S',
           brandColor: '#1DB954',
           confidence: {
@@ -395,7 +384,7 @@ class AiScanService {
         price: 10.99,
         currency: 'GBP',
         billingCycle: 'monthly',
-        category: 'Music',
+        category: 'music',
         iconName: 'S',
         brandColor: '#1DB954',
         confidence: {
@@ -413,7 +402,7 @@ class AiScanService {
         price: 17.99,
         currency: 'GBP',
         billingCycle: 'monthly',
-        category: 'Fitness',
+        category: 'fitness',
         iconName: 'Z',
         brandColor: '#FC6719',
         confidence: {
@@ -431,7 +420,7 @@ class AiScanService {
         price: 1.99,
         currency: 'GBP',
         billingCycle: 'monthly',
-        category: 'Productivity',
+        category: 'productivity',
         iconName: 'G',
         brandColor: '#4285F4',
         confidence: {
@@ -449,7 +438,7 @@ class AiScanService {
         price: 9.99,
         currency: 'GBP',
         billingCycle: 'monthly',
-        category: 'Health',
+        category: 'fitness',
         iconName: 'H',
         brandColor: '#F47D31',
         confidence: {
@@ -488,7 +477,7 @@ class AiScanService {
             billingCycle: 'yearly',
             isTrial: true,
             trialEndDate: DateTime.now().add(const Duration(days: 3)),
-            category: 'Entertainment',
+            category: 'streaming',
             iconName: 'S',
             brandColor: '#6B21A8',
             confidence: {'name': 0.95, 'price': 0.99, 'cycle': 0.92, 'currency': 0.99},
@@ -518,7 +507,7 @@ class AiScanService {
             price: 1.92,
             currency: 'GBP',
             billingCycle: 'weekly',
-            category: 'Fitness',
+            category: 'fitness',
             iconName: 'F',
             brandColor: '#DC2626',
             confidence: {'name': 0.92, 'price': 0.98, 'cycle': 0.90, 'currency': 0.99},
@@ -550,7 +539,7 @@ class AiScanService {
             billingCycle: 'monthly',
             isTrial: true,
             trialEndDate: DateTime.now().add(const Duration(days: 7)),
-            category: 'Health',
+            category: 'fitness',
             iconName: 'M',
             brandColor: '#059669',
             confidence: {'name': 0.90, 'price': 0.95, 'cycle': 0.85, 'currency': 0.99},
@@ -582,7 +571,7 @@ class AiScanService {
             billingCycle: 'monthly',
             isTrial: true,
             trialEndDate: DateTime.now().add(const Duration(days: 30)),
-            category: 'Entertainment',
+            category: 'streaming',
             iconName: 'N',
             brandColor: '#E50914',
             confidence: {'name': 0.99, 'price': 0.99, 'cycle': 0.99, 'currency': 0.99},
@@ -612,6 +601,104 @@ class AiScanService {
     }
   }
 
+  /// Robustly extract JSON from Claude's response text.
+  ///
+  /// Claude sometimes adds commentary before or after the JSON
+  /// (e.g. "**IMPORTANT NOTE:** ..."). This method:
+  /// 1. Strips markdown code fences
+  /// 2. Finds the outermost JSON object ({...}) or array ([...])
+  /// 3. Ignores any text outside those boundaries
+  static dynamic _extractJson(String rawText) {
+    // Strip markdown fences first
+    var text = rawText
+        .replaceAll(RegExp(r'^```json?\s*', multiLine: true), '')
+        .replaceAll(RegExp(r'^```\s*$', multiLine: true), '')
+        .trim();
+
+    // Try parsing directly — works if Claude returned clean JSON
+    try {
+      return jsonDecode(text);
+    } catch (_) {
+      // Fall through to extraction logic
+    }
+
+    // Find the first { or [ and extract the balanced JSON from there
+    final firstBrace = text.indexOf('{');
+    final firstBracket = text.indexOf('[');
+
+    int start;
+    String openChar;
+    String closeChar;
+
+    if (firstBrace < 0 && firstBracket < 0) {
+      throw FormatException('No JSON found in AI response: ${text.substring(0, text.length.clamp(0, 200))}');
+    } else if (firstBrace < 0) {
+      start = firstBracket;
+      openChar = '[';
+      closeChar = ']';
+    } else if (firstBracket < 0) {
+      start = firstBrace;
+      openChar = '{';
+      closeChar = '}';
+    } else {
+      // Use whichever comes first
+      if (firstBrace < firstBracket) {
+        start = firstBrace;
+        openChar = '{';
+        closeChar = '}';
+      } else {
+        start = firstBracket;
+        openChar = '[';
+        closeChar = ']';
+      }
+    }
+
+    // Walk forward to find the matching closing bracket/brace,
+    // accounting for nesting and strings.
+    int depth = 0;
+    bool inString = false;
+    bool escaped = false;
+    int? end;
+
+    for (int i = start; i < text.length; i++) {
+      final c = text[i];
+
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+
+      if (c == r'\' && inString) {
+        escaped = true;
+        continue;
+      }
+
+      if (c == '"') {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) continue;
+
+      if (c == openChar) {
+        depth++;
+      } else if (c == closeChar) {
+        depth--;
+        if (depth == 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+
+    if (end == null) {
+      throw FormatException('Unbalanced JSON in AI response');
+    }
+
+    final jsonStr = text.substring(start, end + 1);
+    return jsonDecode(jsonStr);
+  }
+
   /// The structured extraction prompt sent to Claude Haiku.
   ///
   /// Includes both subscription extraction (Task 1) and
@@ -635,7 +722,7 @@ Find any subscription or recurring payment services and extract:
 - next_renewal: ISO date string if visible, or null
 - is_trial: boolean
 - trial_end_date: ISO date string, or null
-- category: one of "Entertainment", "Music", "Design", "Fitness", "Productivity", "Storage", "News", "Gaming", "Finance", "Education", "Health", "Other"
+- category: one of "streaming", "music", "ai", "productivity", "storage", "fitness", "gaming", "reading", "communication", "news", "finance", "education", "vpn", "developer", "bundle", "other"
 - icon: first letter or short identifier (1-2 chars)
 - brand_color: hex colour code for the brand
 - source_type: "email" | "bank_statement" | "app_store" | "receipt" | "billing_page" | "other"
@@ -652,21 +739,44 @@ Bank and card transaction lists require extra attention:
 - Common subscription merchants to look for: Netflix, Spotify, YouTube, Apple, Google, Adobe, Microsoft, Amazon Prime, Disney+, ChatGPT, Claude, Notion, Figma, Canva, ScreenPal, GitHub, Dropbox, iCloud, HBO, Hulu, Paramount+
 - If a transaction has a foreign currency conversion AND matches a known digital service, it is very likely a subscription
 
-CRITICAL — WHAT IS NOT A SUBSCRIPTION:
-You MUST strictly filter out non-subscription transactions. Only return transactions that are clearly RECURRING DIGITAL SERVICES or SOFTWARE SUBSCRIPTIONS. Do NOT return:
-- Retail store purchases (Rossmann, Decathlon, Zara, H&M, IKEA, Lidl, Biedronka, Żabka, Tesco, Carrefour, Auchan, MediaMarkt, RTV Euro AGD, Empik, Pepco, Action, TK Maxx, Primark, etc.)
-- Grocery/drugstore/pharmacy purchases
-- Restaurant or food delivery one-off orders
-- Clothing, electronics, or sporting goods stores
-- Bank transfers, ATM withdrawals, salary deposits
-- One-time online purchases (eBay, Allegro single buys, AliExpress)
-- Utility bill payments (electricity, gas, water, internet provider — unless it's a streaming/software service)
-- Fuel/petrol station charges
-- Public transport tickets
-- Insurance premiums (unless explicitly a digital subscription service)
+BANK STATEMENT DATE RULES — CRITICAL:
+Bank/card statements show TRANSACTION dates, NOT renewal dates.
+- A charge on "31 Jan" means the payment was taken on that date
+- It does NOT tell you when the NEXT charge will be
+- For bank statement source_type: ALWAYS set next_renewal to null
+- Do NOT try to calculate the next renewal from a transaction date
+- The app will ask the user for the actual renewal date separately
+
+BANK STATEMENT BILLING CYCLE RULES:
+When scanning bank statements, you often only see ONE charge. You cannot
+reliably determine the billing cycle from a single transaction.
+- If you can see MULTIPLE charges for the same service across different dates,
+  you CAN infer the cycle from the gap between them
+- If you only see ONE charge, set billing_cycle to null — do NOT guess
+- Do NOT use price alone to determine billing cycle for bank statements
+  (prices vary hugely by country and currency)
+
+CRITICAL — WHAT IS NOT A SUBSCRIPTION (ABSOLUTE RULES):
+You MUST strictly filter out non-subscription transactions. ONLY return transactions that you are HIGHLY CONFIDENT are RECURRING DIGITAL SERVICES or SOFTWARE SUBSCRIPTIONS.
+
+NEVER return ANY of the following — even if the amount looks subscription-like:
+- Retail/grocery stores: Lidl, Biedronka, Żabka, Tesco, Carrefour, Auchan, Kaufland, Netto, Stokrotka, Dino, etc.
+- Drugstores/pharmacies: Rossmann, Hebe, dm, etc.
+- Clothing/sports: Decathlon, Zara, H&M, IKEA, Pepco, Action, TK Maxx, Primark, etc.
+- Electronics: MediaMarkt, RTV Euro AGD, x-kom, etc.
+- General retail: Empik, Allegro (one-off), AliExpress, eBay, Amazon (non-Prime one-offs)
+- BLIK payments: "Zakup BLIK" is a Polish instant payment method — the merchant after "BLIK" (e.g. PayPro S.A., Przelewy24, Tpay, DotPay) is a PAYMENT PROCESSOR, not a subscription service. ALWAYS skip these.
+- Payment processors: PayPro, Przelewy24, Tpay, DotPay, PayU, Stripe (as merchant name), Adyen — these are intermediaries, NOT the actual service
+- Bank transfers, ATM withdrawals, salary deposits, standing orders to individuals
+- One-time online purchases
+- Utility bills (electricity, gas, water) — unless clearly a streaming/software service
+- Fuel stations, public transport, parking
+- Insurance, loan repayments
+- Restaurant/food delivery one-off orders
+- "Wpłata końcówek" or rounding-up savings — these are bank features, NOT subscriptions
 - ANY physical store or brick-and-mortar retailer
 
-A subscription MUST be a digital/software service with recurring billing (e.g. streaming, SaaS, cloud storage, digital media, app subscriptions). If in doubt, DO NOT include the transaction.
+KEY RULE: If a transaction description does NOT clearly contain a recognisable digital/software service name (like Netflix, Spotify, ScreenPal, Adobe, ChatGPT, etc.), do NOT include it. When in doubt, EXCLUDE the transaction.
 
 HOW TO READ iOS SUBSCRIPTIONS SCREEN (Settings → Subscriptions):
 
@@ -824,7 +934,7 @@ For EACH recurring subscription or digital service charge you find, extract:
 - next_renewal: ISO date string if visible, or null
 - is_trial: boolean
 - trial_end_date: ISO date string, or null
-- category: one of "Entertainment", "Music", "Design", "Fitness", "Productivity", "Storage", "News", "Gaming", "Finance", "Education", "Health", "Other"
+- category: one of "streaming", "music", "ai", "productivity", "storage", "fitness", "gaming", "reading", "communication", "news", "finance", "education", "vpn", "developer", "bundle", "other"
 - icon: first letter or short identifier (1-2 chars)
 - brand_color: hex colour code for the brand
 - source_type: "email" | "bank_statement" | "app_store" | "receipt" | "billing_page" | "other"
@@ -843,20 +953,44 @@ HOW TO READ BANK STATEMENTS:
 - UK bank format: "CARD PAYMENT TO [service name]"
 - Common subscription merchants: Netflix, Spotify, YouTube, Apple, Google, Adobe, Microsoft, Amazon Prime, Disney+, ChatGPT, Claude, Notion, Figma, Canva, ScreenPal, GitHub, Dropbox, iCloud, HBO, Hulu, Paramount+
 
-CRITICAL — WHAT IS NOT A SUBSCRIPTION (MUST EXCLUDE):
-You MUST strictly filter out non-subscription transactions. Only return transactions that are clearly RECURRING DIGITAL SERVICES or SOFTWARE SUBSCRIPTIONS. Do NOT return:
-- Retail store purchases (Rossmann, Decathlon, Zara, H&M, IKEA, Lidl, Biedronka, Żabka, Tesco, Carrefour, Auchan, MediaMarkt, RTV Euro AGD, Empik, Pepco, Action, TK Maxx, Primark, etc.)
-- Grocery/drugstore/pharmacy purchases
-- Restaurant or food delivery one-off orders
-- Clothing, electronics, or sporting goods stores
-- Bank transfers, ATM withdrawals, salary deposits
-- One-time online purchases (eBay, Allegro single buys, AliExpress)
-- Utility bill payments (electricity, gas, water, internet provider — unless it's a streaming/software service)
-- Fuel/petrol station charges, public transport tickets
-- Insurance premiums, loan repayments
+BANK STATEMENT DATE RULES — CRITICAL:
+Bank/card statements show TRANSACTION dates, NOT renewal dates.
+- A charge on "31 Jan" means the payment was taken on that date
+- It does NOT tell you when the NEXT charge will be
+- For bank statement source_type: ALWAYS set next_renewal to null
+- Do NOT try to calculate the next renewal from a transaction date
+- The app will ask the user for the actual renewal date separately
+
+BANK STATEMENT BILLING CYCLE RULES:
+When scanning bank statements, you often only see ONE charge. You cannot
+reliably determine the billing cycle from a single transaction.
+- If you can see MULTIPLE charges for the same service across different dates,
+  you CAN infer the cycle from the gap between them
+- If you only see ONE charge, set billing_cycle to null — do NOT guess
+- Do NOT use price alone to determine billing cycle for bank statements
+  (prices vary hugely by country and currency)
+
+CRITICAL — WHAT IS NOT A SUBSCRIPTION (ABSOLUTE RULES — MUST EXCLUDE):
+You MUST strictly filter out non-subscription transactions. ONLY return transactions that you are HIGHLY CONFIDENT are RECURRING DIGITAL SERVICES or SOFTWARE SUBSCRIPTIONS.
+
+NEVER return ANY of the following — even if the amount looks subscription-like:
+- Retail/grocery stores: Lidl, Biedronka, Żabka, Tesco, Carrefour, Auchan, Kaufland, Netto, Stokrotka, Dino, etc.
+- Drugstores/pharmacies: Rossmann, Hebe, dm, etc.
+- Clothing/sports: Decathlon, Zara, H&M, IKEA, Pepco, Action, TK Maxx, Primark, etc.
+- Electronics: MediaMarkt, RTV Euro AGD, x-kom, etc.
+- General retail: Empik, Allegro (one-off), AliExpress, eBay, Amazon (non-Prime one-offs)
+- BLIK payments: "Zakup BLIK" is a Polish instant payment method — the merchant after "BLIK" (e.g. PayPro S.A., Przelewy24, Tpay, DotPay) is a PAYMENT PROCESSOR, not a subscription service. ALWAYS skip these.
+- Payment processors: PayPro, Przelewy24, Tpay, DotPay, PayU, Stripe (as merchant name), Adyen — these are intermediaries, NOT the actual service
+- Bank transfers, ATM withdrawals, salary deposits, standing orders to individuals
+- One-time online purchases
+- Utility bills (electricity, gas, water) — unless clearly a streaming/software service
+- Fuel stations, public transport, parking
+- Insurance, loan repayments
+- Restaurant/food delivery one-off orders
+- "Wpłata końcówek" or rounding-up savings — these are bank features, NOT subscriptions
 - ANY physical store or brick-and-mortar retailer
 
-A subscription MUST be a digital/software service with recurring billing (e.g. streaming, SaaS, cloud storage, digital media, app subscriptions). When unsure, DO NOT include the transaction — only return transactions you are highly confident are subscriptions.
+KEY RULE: If a transaction description does NOT clearly contain a recognisable digital/software service name (like Netflix, Spotify, ScreenPal, Adobe, ChatGPT, etc.), do NOT include it. When in doubt, EXCLUDE the transaction.
 
 HOW TO READ iOS SUBSCRIPTIONS SCREEN (Settings → Subscriptions):
 

@@ -144,8 +144,9 @@ class Subscription {
   DateTime nextRenewal = DateTime.now();
 
   /// Category for grouping and colour coding.
+  /// Values match the Supabase `service_category` enum.
   @Index()
-  String category = 'Other';
+  String category = 'other';
 
   /// Whether currently in a free trial.
   bool isTrial = false;
@@ -207,6 +208,15 @@ class Subscription {
 
   /// Whether aggressive trial alerts have been scheduled.
   bool trialReminderSet = false;
+
+  // ─── Service Matching ───
+
+  /// UUID from ServiceCache if matched to a known service, null if unmatched.
+  String? matchedServiceId;
+
+  /// Whether this subscription is matched to a known service in our database.
+  @ignore
+  bool get isMatched => matchedServiceId != null;
 
   // ─── Nudge / Review Fields ───
 
@@ -448,7 +458,7 @@ class Subscription {
       ..currency = scan.currency
       ..cycle = cycle
       ..nextRenewal = _nextFutureRenewal(scan.nextRenewal, cycle)
-      ..category = scan.category ?? 'Other'
+      ..category = scan.category ?? 'other'
       ..isTrial = trialStillActive
       ..trialEndDate = trialStillActive ? effectiveTrialEnd : null
       ..isActive = true
@@ -507,6 +517,7 @@ class Subscription {
       'trap_severity': trapSeverity,
       'trial_expires_at': trialExpiresAt?.toUtc().toIso8601String(),
       'trial_reminder_set': trialReminderSet,
+      'matched_service_id': matchedServiceId,
       'last_reviewed_at': lastReviewedAt?.toUtc().toIso8601String(),
       'last_nudged_at': lastNudgedAt?.toUtc().toIso8601String(),
       'keep_confirmed': keepConfirmed,
@@ -532,7 +543,7 @@ class Subscription {
       ..currency = row['currency'] as String? ?? 'GBP'
       ..cycle = BillingCycle.fromString(row['cycle'] as String? ?? 'monthly')
       ..nextRenewal = DateTime.parse(row['next_renewal'] as String)
-      ..category = row['category'] as String? ?? 'Other'
+      ..category = row['category'] as String? ?? 'other'
       ..isTrial = row['is_trial'] as bool? ?? false
       ..isActive = row['is_active'] as bool? ?? true
       ..source = SubscriptionSource.values.firstWhere(
@@ -568,6 +579,7 @@ class Subscription {
       sub.trialExpiresAt = DateTime.parse(row['trial_expires_at'] as String);
     }
     sub.trialReminderSet = row['trial_reminder_set'] as bool? ?? false;
+    sub.matchedServiceId = row['matched_service_id'] as String?;
     if (row['last_reviewed_at'] != null) {
       sub.lastReviewedAt = DateTime.parse(row['last_reviewed_at'] as String);
     }

@@ -1429,16 +1429,13 @@ class SPl extends S {
   String get cycleYearlyShort => 'rok';
 
   @override
-  String get categoryEntertainment => 'Rozrywka';
+  String get categoryStreaming => 'Streaming';
 
   @override
   String get categoryMusic => 'Muzyka';
 
   @override
-  String get categoryDesign => 'Design';
-
-  @override
-  String get categoryFitness => 'Fitness';
+  String get categoryAi => 'AI';
 
   @override
   String get categoryProductivity => 'Produktywność';
@@ -1447,10 +1444,19 @@ class SPl extends S {
   String get categoryStorage => 'Chmura';
 
   @override
-  String get categoryNews => 'Wiadomości';
+  String get categoryFitness => 'Fitness';
 
   @override
   String get categoryGaming => 'Gry';
+
+  @override
+  String get categoryReading => 'Czytanie';
+
+  @override
+  String get categoryCommunication => 'Komunikacja';
+
+  @override
+  String get categoryNews => 'Wiadomości';
 
   @override
   String get categoryFinance => 'Finanse';
@@ -1459,10 +1465,20 @@ class SPl extends S {
   String get categoryEducation => 'Edukacja';
 
   @override
-  String get categoryHealth => 'Zdrowie';
+  String get categoryVpn => 'VPN';
+
+  @override
+  String get categoryDeveloper => 'Developer';
+
+  @override
+  String get categoryBundle => 'Pakiet';
 
   @override
   String get categoryOther => 'Inne';
+
+  @override
+  String get paymentsTrackedHint =>
+      'Płatności będą śledzone po każdym odnowieniu';
 
   @override
   String get renewsToday => 'Odnawia się dziś';
@@ -1571,4 +1587,45 @@ class SPl extends S {
   @override
   String get signOutConfirm =>
       'Czy na pewno chcesz się wylogować? Dane pozostaną na tym urządzeniu.';
+
+  @override
+  String get annualSavingsTitle => 'PRZEJDŹ NA ROCZNY';
+
+  @override
+  String get annualSavingsSubtitle =>
+      'potencjalne oszczędności przy planach rocznych';
+
+  @override
+  String annualSavingsCoverage(int matched, int total) {
+    return 'Na podstawie $matched z $total subskrypcji';
+  }
+
+  @override
+  String get seeAll => 'Zobacz wszystkie';
+
+  @override
+  String get allSavingsTitle => 'Oszczędności roczne';
+
+  @override
+  String get allSavingsSubtitle =>
+      'Zmień te miesięczne plany na roczne, żeby zaoszczędzić';
+
+  @override
+  String get annualPlanLabel => 'PLAN ROCZNY';
+
+  @override
+  String annualPlanAvailable(String amount) {
+    return 'Dostępny plan roczny — oszczędź $amount/rok';
+  }
+
+  @override
+  String get noAnnualPlan => 'Brak planu rocznego dla tej usługi';
+
+  @override
+  String monthlyVsAnnual(String monthly, String annual) {
+    return '$monthly/mies. → $annual/rok';
+  }
+
+  @override
+  String get perYear => '/rok';
 }

@@ -86,6 +86,26 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
           .filter()
           .deletedAtIsNull()
           .findAll();
+
+      // Migrate legacy category names → Supabase enum values
+      final needsMigration = <Subscription>[];
+      for (final sub in subs) {
+        final migrated = AppConstants.migrateCategory(sub.category);
+        if (migrated != sub.category) {
+          sub.category = migrated;
+          needsMigration.add(sub);
+        }
+      }
+      if (needsMigration.isNotEmpty) {
+        debugPrint(
+          '[SubscriptionsNotifier] Migrating ${needsMigration.length} '
+          'category names to Supabase enum values',
+        );
+        await _isar.writeTxn(() async {
+          await _isar.subscriptions.putAll(needsMigration);
+        });
+      }
+
       state = subs;
     } catch (e) {
       debugPrint('[SubscriptionsNotifier] Isar load failed: $e');

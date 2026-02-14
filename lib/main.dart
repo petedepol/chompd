@@ -12,6 +12,7 @@ import 'services/isar_service.dart';
 import 'services/merchant_db.dart';
 import 'services/notification_service.dart';
 import 'services/purchase_service.dart';
+import 'services/service_sync_service.dart';
 import 'services/sync_service.dart';
 
 void main() async {
@@ -69,11 +70,15 @@ void main() async {
   // Non-blocking initial sync (pull remote changes)
   SyncService.instance.pullAndMerge();
 
+  // Sync service database (cancel guides, pricing, dark patterns, etc.)
+  ServiceSyncService.instance.syncServices();
+
   // Re-sync whenever connectivity is restored
   Connectivity().onConnectivityChanged.listen((results) {
     if (!results.contains(ConnectivityResult.none)) {
       debugPrint('[Sync] Connectivity restored — syncing...');
       SyncService.instance.pullAndMerge();
+      ServiceSyncService.instance.syncServices();
     }
   });
 

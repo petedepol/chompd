@@ -8,10 +8,12 @@ import '../../models/scan_result.dart';
 import '../../models/subscription.dart';
 import '../../models/trap_result.dart';
 import '../../providers/scan_provider.dart';
+import '../../providers/service_cache_provider.dart';
 import '../../widgets/mascot_image.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/notification_service.dart';
+import '../../services/unmatched_service_logger.dart';
 import '../../widgets/price_breakdown_card.dart';
 import '../../utils/l10n_extension.dart';
 import '../../widgets/severity_badge.dart';
@@ -171,6 +173,18 @@ class TrapWarningCard extends ConsumerWidget {
                     final displayCurrency = ref.read(currencyProvider);
                     if (subscription.price == null && sub.currency != displayCurrency) {
                       sub.currency = displayCurrency;
+                    }
+
+                    // Match against service database
+                    final matchedId = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+                    sub.matchedServiceId = matchedId;
+                    if (matchedId == null) {
+                      UnmatchedServiceLogger.instance.log(
+                        name: sub.name,
+                        category: sub.category,
+                        price: sub.price,
+                        currency: sub.currency,
+                      );
                     }
 
                     // 3. Save to subscriptions list

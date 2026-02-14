@@ -6,7 +6,9 @@ import '../../config/constants.dart';
 import '../../config/theme.dart';
 import '../../models/subscription.dart';
 import '../../providers/currency_provider.dart';
+import '../../providers/service_cache_provider.dart';
 import '../../providers/subscriptions_provider.dart';
+import '../../services/unmatched_service_logger.dart';
 import '../../utils/l10n_extension.dart';
 
 /// Add or edit a subscription.
@@ -48,7 +50,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     );
     _currency = sub?.currency ?? ref.read(currencyProvider);
     _cycle = sub?.cycle ?? BillingCycle.monthly;
-    _category = sub?.category ?? 'Entertainment';
+    _category = sub?.category ?? 'streaming';
     _nextRenewal = sub?.nextRenewal ?? DateTime.now().add(const Duration(days: 30));
     _isTrial = sub?.isTrial ?? false;
     _trialEndDate = sub?.trialEndDate;
@@ -214,7 +216,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                                 border: Border.all(
                                   color: selected
                                       ? c.mint.withValues(alpha: 0.4)
-                                      : c.border,
+                                      : c.text.withValues(alpha: 0.15),
                                 ),
                               ),
                               alignment: Alignment.center,
@@ -225,7 +227,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                                   fontWeight: FontWeight.w600,
                                   color: selected
                                       ? c.mint
-                                      : c.textDim,
+                                      : c.textMid,
                                 ),
                               ),
                             ),
@@ -646,6 +648,10 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     final name = _nameCtrl.text.trim();
     final price = double.parse(_priceCtrl.text);
     final notifier = ref.read(subscriptionsProvider.notifier);
+    final cacheNotifier = ref.read(serviceCacheProvider.notifier);
+
+    // Try to match against service database
+    final matchedId = cacheNotifier.matchServiceId(name);
 
     if (_isEditing) {
       final updated = widget.existingSub!
@@ -657,6 +663,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
         ..nextRenewal = _nextRenewal
         ..isTrial = _isTrial
         ..trialEndDate = _isTrial ? _trialEndDate : null;
+      // Update match on edit (name may have changed)
+      updated.matchedServiceId = matchedId;
       notifier.update(updated);
     } else {
       final sub = Subscription()
@@ -673,8 +681,19 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
         ..iconName = _iconName ?? name[0].toUpperCase()
         ..brandColor = _brandColor
         ..source = SubscriptionSource.manual
+        ..matchedServiceId = matchedId
         ..createdAt = DateTime.now();
       notifier.add(sub);
+
+      // Log unmatched services for future database expansion
+      if (matchedId == null) {
+        UnmatchedServiceLogger.instance.log(
+          name: name,
+          category: _category,
+          price: price,
+          currency: _currency,
+        );
+      }
     }
 
     Navigator.of(context).pop();

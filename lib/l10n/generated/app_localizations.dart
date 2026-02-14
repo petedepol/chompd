@@ -2305,11 +2305,11 @@ abstract class S {
   /// **'yr'**
   String get cycleYearlyShort;
 
-  /// No description provided for @categoryEntertainment.
+  /// No description provided for @categoryStreaming.
   ///
   /// In en, this message translates to:
-  /// **'Entertainment'**
-  String get categoryEntertainment;
+  /// **'Streaming'**
+  String get categoryStreaming;
 
   /// No description provided for @categoryMusic.
   ///
@@ -2317,17 +2317,11 @@ abstract class S {
   /// **'Music'**
   String get categoryMusic;
 
-  /// No description provided for @categoryDesign.
+  /// No description provided for @categoryAi.
   ///
   /// In en, this message translates to:
-  /// **'Design'**
-  String get categoryDesign;
-
-  /// No description provided for @categoryFitness.
-  ///
-  /// In en, this message translates to:
-  /// **'Fitness'**
-  String get categoryFitness;
+  /// **'AI'**
+  String get categoryAi;
 
   /// No description provided for @categoryProductivity.
   ///
@@ -2341,17 +2335,35 @@ abstract class S {
   /// **'Storage'**
   String get categoryStorage;
 
-  /// No description provided for @categoryNews.
+  /// No description provided for @categoryFitness.
   ///
   /// In en, this message translates to:
-  /// **'News'**
-  String get categoryNews;
+  /// **'Fitness'**
+  String get categoryFitness;
 
   /// No description provided for @categoryGaming.
   ///
   /// In en, this message translates to:
   /// **'Gaming'**
   String get categoryGaming;
+
+  /// No description provided for @categoryReading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get categoryReading;
+
+  /// No description provided for @categoryCommunication.
+  ///
+  /// In en, this message translates to:
+  /// **'Communication'**
+  String get categoryCommunication;
+
+  /// No description provided for @categoryNews.
+  ///
+  /// In en, this message translates to:
+  /// **'News'**
+  String get categoryNews;
 
   /// No description provided for @categoryFinance.
   ///
@@ -2365,17 +2377,35 @@ abstract class S {
   /// **'Education'**
   String get categoryEducation;
 
-  /// No description provided for @categoryHealth.
+  /// No description provided for @categoryVpn.
   ///
   /// In en, this message translates to:
-  /// **'Health'**
-  String get categoryHealth;
+  /// **'VPN'**
+  String get categoryVpn;
+
+  /// No description provided for @categoryDeveloper.
+  ///
+  /// In en, this message translates to:
+  /// **'Developer'**
+  String get categoryDeveloper;
+
+  /// No description provided for @categoryBundle.
+  ///
+  /// In en, this message translates to:
+  /// **'Bundle'**
+  String get categoryBundle;
 
   /// No description provided for @categoryOther.
   ///
   /// In en, this message translates to:
   /// **'Other'**
   String get categoryOther;
+
+  /// No description provided for @paymentsTrackedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Payments will be tracked after each renewal'**
+  String get paymentsTrackedHint;
 
   /// No description provided for @renewsToday.
   ///
@@ -2562,6 +2592,72 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Are you sure you want to sign out? Your data will stay on this device.'**
   String get signOutConfirm;
+
+  /// No description provided for @annualSavingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'SWITCH TO ANNUAL'**
+  String get annualSavingsTitle;
+
+  /// No description provided for @annualSavingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'potential savings by switching to yearly plans'**
+  String get annualSavingsSubtitle;
+
+  /// No description provided for @annualSavingsCoverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Based on {matched} of {total} subscriptions'**
+  String annualSavingsCoverage(int matched, int total);
+
+  /// No description provided for @seeAll.
+  ///
+  /// In en, this message translates to:
+  /// **'See all'**
+  String get seeAll;
+
+  /// No description provided for @allSavingsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual Savings'**
+  String get allSavingsTitle;
+
+  /// No description provided for @allSavingsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch these monthly plans to yearly to save'**
+  String get allSavingsSubtitle;
+
+  /// No description provided for @annualPlanLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'ANNUAL PLAN'**
+  String get annualPlanLabel;
+
+  /// No description provided for @annualPlanAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Annual plan available — save {amount}/yr'**
+  String annualPlanAvailable(String amount);
+
+  /// No description provided for @noAnnualPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'No annual plan available for this service'**
+  String get noAnnualPlan;
+
+  /// No description provided for @monthlyVsAnnual.
+  ///
+  /// In en, this message translates to:
+  /// **'{monthly}/mo → {annual}/yr'**
+  String monthlyVsAnnual(String monthly, String annual);
+
+  /// No description provided for @perYear.
+  ///
+  /// In en, this message translates to:
+  /// **'/yr'**
+  String get perYear;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

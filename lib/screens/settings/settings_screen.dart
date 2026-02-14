@@ -230,7 +230,6 @@ class SettingsScreen extends ConsumerWidget {
                             value: prefs.trialAlertsEnabled,
                             onChanged:
                                 prefsNotifier.toggleTrialAlerts,
-                            accentColor: c.amber,
                           ),
                         ],
                       ),

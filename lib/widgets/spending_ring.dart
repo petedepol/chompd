@@ -174,33 +174,13 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                             : context.l10n.ofBudget(Subscription.formatPrice(displayBudget, currency, decimals: 0)),
                         key: ValueKey('budget_$isYearly'),
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           color: overBudget
                               ? c.red
                               : percentage > 0.9
                                   ? c.amber
-                                  : c.textMid,
+                                  : Colors.white.withValues(alpha: 0.7),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-
-                    // Toggle hint
-                    Text(
-                      isYearly ? context.l10n.tapForMonthly : context.l10n.tapForYearly,
-                      style: ChompdTypography.mono(
-                        size: 10,
-                        color: c.textDim,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    // Budget target range
-                    Text(
-                      context.l10n.budgetRange(Subscription.formatPrice(0, currency, decimals: 0), Subscription.formatPrice(displayBudget, currency, decimals: 0)),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: c.textDim.withValues(alpha: 0.7),
-                        letterSpacing: 0.3,
                       ),
                     ),
                   ],

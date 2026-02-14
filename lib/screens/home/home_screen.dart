@@ -14,6 +14,7 @@ import '../../providers/subscriptions_provider.dart';
 import '../../widgets/share_card_builder.dart';
 import '../../services/haptic_service.dart';
 import '../../widgets/animated_list_item.dart';
+import '../../widgets/annual_savings_card.dart';
 import '../../widgets/category_bar.dart';
 import '../../widgets/confetti_overlay.dart';
 import '../../widgets/empty_state.dart';
@@ -468,6 +469,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
+
+              // ─── Annual Savings Card ───
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                  child: const AnnualSavingsCard(),
+                ),
+              ),
 
               // ─── Smart Insights ───
               Builder(builder: (context) {

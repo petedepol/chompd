@@ -676,18 +676,24 @@
   "cycleQuarterlyShort": "kw.",
   "cycleYearlyShort": "rok",
 
-  "categoryEntertainment": "Rozrywka",
+  "categoryStreaming": "Streaming",
   "categoryMusic": "Muzyka",
-  "categoryDesign": "Design",
-  "categoryFitness": "Fitness",
+  "categoryAi": "AI",
   "categoryProductivity": "Produktywność",
   "categoryStorage": "Chmura",
-  "categoryNews": "Wiadomości",
+  "categoryFitness": "Fitness",
   "categoryGaming": "Gry",
+  "categoryReading": "Czytanie",
+  "categoryCommunication": "Komunikacja",
+  "categoryNews": "Wiadomości",
   "categoryFinance": "Finanse",
   "categoryEducation": "Edukacja",
-  "categoryHealth": "Zdrowie",
+  "categoryVpn": "VPN",
+  "categoryDeveloper": "Developer",
+  "categoryBundle": "Pakiet",
   "categoryOther": "Inne",
+
+  "paymentsTrackedHint": "Płatności będą śledzone po każdym odnowieniu",
 
   "renewsToday": "Odnawia si\u0119 dzi\u015B",
   "renewsTomorrow": "Odnawia si\u0119 jutro",
@@ -736,5 +742,26 @@
   "signInWithGoogle": "Zaloguj przez Google",
   "signInWithEmail": "Zaloguj przez e-mail",
   "signOut": "Wyloguj si\u0119",
-  "signOutConfirm": "Czy na pewno chcesz si\u0119 wylogowa\u0107? Dane pozostan\u0105 na tym urz\u0105dzeniu."
+  "signOutConfirm": "Czy na pewno chcesz si\u0119 wylogowa\u0107? Dane pozostan\u0105 na tym urz\u0105dzeniu.",
+
+  "annualSavingsTitle": "PRZEJD\u0179 NA ROCZNY",
+  "annualSavingsSubtitle": "potencjalne oszcz\u0119dno\u015bci przy planach rocznych",
+  "annualSavingsCoverage": "Na podstawie {matched} z {total} subskrypcji",
+  "@annualSavingsCoverage": {
+    "placeholders": { "matched": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "seeAll": "Zobacz wszystkie",
+  "allSavingsTitle": "Oszcz\u0119dno\u015bci roczne",
+  "allSavingsSubtitle": "Zmie\u0144 te miesi\u0119czne plany na roczne, \u017ceby zaoszcz\u0119dzi\u0107",
+  "annualPlanLabel": "PLAN ROCZNY",
+  "annualPlanAvailable": "Dost\u0119pny plan roczny \u2014 oszcz\u0119d\u017a {amount}/rok",
+  "@annualPlanAvailable": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "noAnnualPlan": "Brak planu rocznego dla tej us\u0142ugi",
+  "monthlyVsAnnual": "{monthly}/mies. \u2192 {annual}/rok",
+  "@monthlyVsAnnual": {
+    "placeholders": { "monthly": {"type": "String"}, "annual": {"type": "String"} }
+  },
+  "perYear": "/rok"
 }

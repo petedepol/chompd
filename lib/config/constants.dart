@@ -30,20 +30,24 @@ class AppConstants {
   static const List<int> proReminderDays = [7, 3, 1, 0]; // 0 = morning-of
   static const List<int> freeReminderDays = [0]; // morning-of only
 
-  // ─── Categories ───
+  // ─── Categories (aligned with Supabase service_category enum) ───
   static const List<String> categories = [
-    'Entertainment',
-    'Music',
-    'Design',
-    'Fitness',
-    'Productivity',
-    'Storage',
-    'News',
-    'Gaming',
-    'Finance',
-    'Education',
-    'Health',
-    'Other',
+    'streaming',
+    'music',
+    'ai',
+    'productivity',
+    'storage',
+    'fitness',
+    'gaming',
+    'reading',
+    'communication',
+    'news',
+    'finance',
+    'education',
+    'vpn',
+    'developer',
+    'bundle',
+    'other',
   ];
 
   // ─── Billing Cycles ───
@@ -56,35 +60,58 @@ class AppConstants {
 
   /// Returns localised category names in the same order as [categories].
   static List<String> localisedCategories(S l) => [
-    l.categoryEntertainment,
+    l.categoryStreaming,
     l.categoryMusic,
-    l.categoryDesign,
-    l.categoryFitness,
+    l.categoryAi,
     l.categoryProductivity,
     l.categoryStorage,
-    l.categoryNews,
+    l.categoryFitness,
     l.categoryGaming,
+    l.categoryReading,
+    l.categoryCommunication,
+    l.categoryNews,
     l.categoryFinance,
     l.categoryEducation,
-    l.categoryHealth,
+    l.categoryVpn,
+    l.categoryDeveloper,
+    l.categoryBundle,
     l.categoryOther,
   ];
 
-  /// Maps English category keys to localised labels.
+  /// Maps category enum key to localised label.
   static String localisedCategory(String key, S l) {
     switch (key) {
-      case 'Entertainment': return l.categoryEntertainment;
-      case 'Music': return l.categoryMusic;
-      case 'Design': return l.categoryDesign;
-      case 'Fitness': return l.categoryFitness;
-      case 'Productivity': return l.categoryProductivity;
-      case 'Storage': return l.categoryStorage;
-      case 'News': return l.categoryNews;
-      case 'Gaming': return l.categoryGaming;
-      case 'Finance': return l.categoryFinance;
-      case 'Education': return l.categoryEducation;
-      case 'Health': return l.categoryHealth;
+      case 'streaming': return l.categoryStreaming;
+      case 'music': return l.categoryMusic;
+      case 'ai': return l.categoryAi;
+      case 'productivity': return l.categoryProductivity;
+      case 'storage': return l.categoryStorage;
+      case 'fitness': return l.categoryFitness;
+      case 'gaming': return l.categoryGaming;
+      case 'reading': return l.categoryReading;
+      case 'communication': return l.categoryCommunication;
+      case 'news': return l.categoryNews;
+      case 'finance': return l.categoryFinance;
+      case 'education': return l.categoryEducation;
+      case 'vpn': return l.categoryVpn;
+      case 'developer': return l.categoryDeveloper;
+      case 'bundle': return l.categoryBundle;
       default: return l.categoryOther;
     }
+  }
+
+  /// Migrate legacy category names to Supabase enum values.
+  static String migrateCategory(String old) {
+    const map = {
+      'Entertainment': 'streaming',
+      'Design': 'productivity',
+      'Health': 'fitness',
+    };
+    // Known legacy mappings first, then lowercase for anything that
+    // already matches (e.g. 'Music' → 'music', 'News' → 'news').
+    if (map.containsKey(old)) return map[old]!;
+    final lower = old.toLowerCase();
+    if (categories.contains(lower)) return lower;
+    return 'other';
   }
 }

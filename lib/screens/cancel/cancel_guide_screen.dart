@@ -3,7 +3,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/theme.dart';
-import '../../models/cancel_guide.dart';
+import '../../models/cancel_guide_v2.dart';
 import '../../models/subscription.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/haptic_service.dart';
@@ -13,12 +13,14 @@ import '../refund/refund_rescue_screen.dart';
 
 class CancelGuideScreen extends ConsumerStatefulWidget {
   final Subscription subscription;
-  final CancelGuide guide;
+  final CancelGuideData guideData;
+  final int? cancelDifficulty;
 
   const CancelGuideScreen({
     Key? key,
     required this.subscription,
-    required this.guide,
+    required this.guideData,
+    this.cancelDifficulty,
   }) : super(key: key);
 
   @override
@@ -31,19 +33,28 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   @override
   void initState() {
     super.initState();
-    _completed = List<bool>.filled(widget.guide.steps.length, false);
+    _completed = List<bool>.filled(widget.guideData.steps.length, false);
   }
 
-  Color _getDifficultyColor(int index) {
+  int get _difficulty => widget.cancelDifficulty ?? 3;
+
+  Color _getDifficultyColor() {
     final c = context.colors;
-    final difficulty = widget.guide.difficultyRating;
-    if (difficulty <= 2) {
+    if (_difficulty <= 3) {
       return c.mint;
-    } else if (difficulty <= 4) {
+    } else if (_difficulty <= 6) {
       return c.amber;
     } else {
       return c.red;
     }
+  }
+
+  String _getDifficultyLabel() {
+    if (_difficulty <= 2) return 'Easy — straightforward cancel';
+    if (_difficulty <= 4) return 'Moderate — a few steps required';
+    if (_difficulty <= 6) return 'Medium — takes a few minutes';
+    if (_difficulty <= 8) return 'Hard — they make this deliberately difficult';
+    return 'Very hard — multiple retention screens or fees';
   }
 
   void _toggleStep(int index) {
@@ -209,19 +220,10 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
 
   void _handleOpenCancelPage() {
     HapticService.instance.light();
-    final url = widget.guide.cancellationUrl ?? widget.guide.deepLink;
+    final url = widget.guideData.bestCancelUrl;
     if (url != null) {
       developer.log('Opening cancellation URL: $url', name: 'CancelGuide');
     }
-  }
-
-  void _navigateToRefundRescue() {
-    HapticService.instance.light();
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => RefundRescueScreen(subscription: widget.subscription),
-      ),
-    );
   }
 
   @override
@@ -260,15 +262,20 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
             _buildStepsList(),
             const SizedBox(height: 24),
 
-            // Notes Card (if present)
-            if (widget.guide.notes != null) ...[
+            // Warning/Notes Card (if present)
+            if (widget.guideData.warningText != null) ...[
               _buildNotesCard(),
               const SizedBox(height: 24),
             ],
 
+            // Pro tip card (if present)
+            if (widget.guideData.proTip != null) ...[
+              _buildProTipCard(),
+              const SizedBox(height: 24),
+            ],
+
             // Open Cancel Page Button
-            if (widget.guide.cancellationUrl != null ||
-                widget.guide.deepLink != null) ...[
+            if (widget.guideData.bestCancelUrl != null) ...[
               _buildOpenCancelPageButton(),
               const SizedBox(height: 16),
             ],
@@ -292,8 +299,10 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
 
   Widget _buildDifficultyCard() {
     final c = context.colors;
-    final difficulty = widget.guide.difficultyRating;
-    final color = _getDifficultyColor(0);
+    final difficulty = _difficulty;
+    final color = _getDifficultyColor();
+    // Map 1-10 to 5 blocks: each block = 2 levels
+    final filledBlocks = (difficulty / 2).ceil().clamp(1, 5);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -325,7 +334,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
-                    color: index < difficulty
+                    color: index < filledBlocks
                         ? color
                         : c.bgCard,
                     border: Border.all(
@@ -340,7 +349,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
           ),
           const SizedBox(height: 12),
           Text(
-            widget.guide.difficultyLabel,
+            _getDifficultyLabel(),
             style: TextStyle(
               color: c.text,
               fontSize: 14,
@@ -367,7 +376,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
         ListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: widget.guide.steps.length,
+          itemCount: widget.guideData.steps.length,
           itemBuilder: (context, index) {
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -382,7 +391,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   Widget _buildStepCard(int index) {
     final c = context.colors;
     final isCompleted = _completed[index];
-    final step = widget.guide.steps[index];
+    final step = widget.guideData.steps[index];
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -432,13 +441,25 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  step,
+                  step.title,
                   style: TextStyle(
                     color: c.text,
                     fontSize: 14,
+                    fontWeight: FontWeight.w600,
                     height: 1.5,
                   ),
                 ),
+                if (step.detail.isNotEmpty && step.detail != step.title) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    step.detail,
+                    style: TextStyle(
+                      color: c.textMid,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -471,7 +492,44 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
           ),
           Expanded(
             child: Text(
-              widget.guide.notes!,
+              widget.guideData.warningText!,
+              style: TextStyle(
+                color: c.text,
+                fontSize: 14,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProTipCard() {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.mint.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: c.mint.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12, top: 2),
+            child: Icon(
+              Icons.tips_and_updates_outlined,
+              color: c.mint,
+              size: 20,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              widget.guideData.proTip!,
               style: TextStyle(
                 color: c.text,
                 fontSize: 14,

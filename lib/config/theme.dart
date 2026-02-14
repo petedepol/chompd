@@ -78,8 +78,8 @@ class ChompdColorsLight {
 
   // ─── Text ───
   static const text = Color(0xFF1A2B25);
-  static const textMid = Color(0xFF5E6D67);
-  static const textDim = Color(0xFF94A09B);
+  static const textMid = Color(0xFF566560);        // ~5.1:1 vs parchment
+  static const textDim = Color(0xFF6E7B76);        // ~4.5:1 vs parchment (WCAG AA)
 
   // ─── Accent: Forest green ───
   static const mint = Color(0xFF1B8F6A);
@@ -374,19 +374,26 @@ class ChompdEffects {
 // CATEGORY COLOURS & ICONS
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-/// Category brand colours for the spending breakdown bar.
+/// Category brand colours (aligned with Supabase service_category enum).
 class CategoryColors {
   CategoryColors._();
 
   static const Map<String, Color> map = {
-    'Entertainment': Color(0xFFE50914),
-    'Music': Color(0xFF1DB954),
-    'Design': Color(0xFFA259FF),
-    'Fitness': Color(0xFFFC6719),
-    'Productivity': Color(0xFF00A4EF),
-    'Storage': Color(0xFF4285F4),
-    'News': Color(0xFF1DA1F2),
-    'Gaming': Color(0xFF107C10),
+    'streaming': Color(0xFFE50914),      // Netflix red
+    'music': Color(0xFF1DB954),          // Spotify green
+    'ai': Color(0xFF8B5CF6),             // Violet
+    'productivity': Color(0xFF00A4EF),   // Light blue
+    'storage': Color(0xFF4285F4),        // Google blue
+    'fitness': Color(0xFFFC6719),        // Orange
+    'gaming': Color(0xFF107C10),         // Xbox green
+    'reading': Color(0xFFE8B341),        // Amber
+    'communication': Color(0xFFA259FF),  // Purple
+    'news': Color(0xFF1DA1F2),           // Twitter blue
+    'finance': Color(0xFF00C853),        // Money green
+    'education': Color(0xFFFF6D00),      // Deep orange
+    'vpn': Color(0xFF2962FF),            // Bold blue
+    'developer': Color(0xFF78909C),      // Blue grey
+    'bundle': Color(0xFF6D4C41),         // Brown
   };
 
   static Color forCategory(String category) {
@@ -394,22 +401,26 @@ class CategoryColors {
   }
 }
 
-/// Category icons for when AI hasn't set a brand icon.
+/// Category icons (aligned with Supabase service_category enum).
 class CategoryIcons {
   CategoryIcons._();
 
   static const Map<String, IconData> map = {
-    'Entertainment': Icons.movie_outlined,
-    'Music': Icons.music_note_outlined,
-    'Design': Icons.palette_outlined,
-    'Fitness': Icons.fitness_center_outlined,
-    'Productivity': Icons.work_outline,
-    'Storage': Icons.cloud_outlined,
-    'News': Icons.newspaper_outlined,
-    'Gaming': Icons.sports_esports_outlined,
-    'Finance': Icons.account_balance_outlined,
-    'Education': Icons.school_outlined,
-    'Health': Icons.favorite_outline,
+    'streaming': Icons.movie_outlined,
+    'music': Icons.music_note_outlined,
+    'ai': Icons.auto_awesome_outlined,
+    'productivity': Icons.work_outline,
+    'storage': Icons.cloud_outlined,
+    'fitness': Icons.fitness_center_outlined,
+    'gaming': Icons.sports_esports_outlined,
+    'reading': Icons.auto_stories_outlined,
+    'communication': Icons.chat_outlined,
+    'news': Icons.newspaper_outlined,
+    'finance': Icons.account_balance_outlined,
+    'education': Icons.school_outlined,
+    'vpn': Icons.vpn_key_outlined,
+    'developer': Icons.code_outlined,
+    'bundle': Icons.inventory_2_outlined,
   };
 
   static IconData? forCategory(String category) => map[category];
