@@ -254,7 +254,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
 
         const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
-        // Service-specific templates (from Supabase cache)
+        // Service-specific templates (from Supabase cache) OR generic fallback
         if (_serviceTemplates.isNotEmpty) ...[
           SliverList(
             delegate: SliverChildBuilderDelegate(
@@ -272,36 +272,25 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
               childCount: _serviceTemplates.length,
             ),
           ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-              child: Text(
-                context.l10n.howCharged,
-                style: ChompdTypography.sectionLabel.copyWith(
-                  color: c.textDim,
-                ),
-              ),
+        ] else ...[
+          // Generic path cards (fallback when no service-specific data)
+          SliverList(
+            delegate: SliverChildBuilderDelegate(
+              (context, index) {
+                final template = _genericRefundPaths[index];
+                return Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
+                  child: _PathCard(
+                    template: template,
+                    onTap: () => _selectPath(template),
+                  ),
+                );
+              },
+              childCount: _genericRefundPaths.length,
             ),
           ),
         ],
-
-        // Generic path cards (always available as fallback)
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (context, index) {
-              final template = _genericRefundPaths[index];
-              return Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-                child: _PathCard(
-                  template: template,
-                  onTap: () => _selectPath(template),
-                ),
-              );
-            },
-            childCount: _genericRefundPaths.length,
-          ),
-        ),
 
         SliverToBoxAdapter(
           child: SizedBox(
