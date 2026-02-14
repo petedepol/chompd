@@ -2,31 +2,117 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/constants.dart';
 import '../models/scan_result.dart';
 import '../models/trap_result.dart';
 import '../models/scan_output.dart';
 
-/// Use real API when ANTHROPIC_API_KEY is provided, mock data otherwise.
-/// Override with --dart-define=USE_MOCK=true to force mock even with a key.
+/// Use real API when ANTHROPIC_API_KEY or SUPABASE_URL is provided.
+/// Override with --dart-define=USE_MOCK=true to force mock.
 const _forceMock = bool.fromEnvironment('USE_MOCK');
 const _hasApiKey = String.fromEnvironment('ANTHROPIC_API_KEY') != '';
-final useMockData = _forceMock || !_hasApiKey;
+const _hasSupabase = String.fromEnvironment('SUPABASE_URL') != '';
+final useMockData = _forceMock || (!_hasApiKey && !_hasSupabase);
+
+/// Thrown when the free scan limit is reached (server returns 429).
+class ScanLimitReachedException implements Exception {
+  final int limit;
+  ScanLimitReachedException(this.limit);
+
+  @override
+  String toString() => 'Free scan limit reached ($limit scans)';
+}
 
 /// Claude Haiku integration for screenshot scanning.
 ///
-/// Takes a screenshot image (bytes), sends it to Claude Haiku
-/// with a structured extraction prompt, and returns a [ScanResult]
-/// or [ScanOutput] (subscription + trap detection).
-///
-/// For v1 the API key is bundled in the app (move to proxy at scale).
+/// Routes requests through a Supabase Edge Function ('ai-scan')
+/// when Supabase is configured. Falls back to direct Anthropic API
+/// when only ANTHROPIC_API_KEY is provided (dev mode).
 class AiScanService {
-  AiScanService({required this.apiKey});
+  AiScanService();
 
-  final String apiKey;
+  static const _directBaseUrl = 'https://api.anthropic.com/v1/messages';
 
-  static const _baseUrl = 'https://api.anthropic.com/v1/messages';
+  /// Whether Supabase is configured (preferred path).
+  bool get _useEdgeFunction => _hasSupabase;
+
+  /// Call the AI API via Edge Function or direct fallback.
+  ///
+  /// Prefers Supabase Edge Function when configured. Falls back to direct
+  /// Anthropic API if the Edge Function is unavailable (not deployed, etc.)
+  /// and a local ANTHROPIC_API_KEY is provided.
+  Future<Map<String, dynamic>> _callApi(Map<String, dynamic> body) async {
+    if (_useEdgeFunction) {
+      try {
+        return await _callViaEdgeFunction(body);
+      } on ScanLimitReachedException {
+        rethrow; // Don't fall back for intentional limit
+      } catch (e) {
+        // Edge Function not deployed or erroring — try direct if key available
+        if (_hasApiKey) {
+          debugPrint('[AiScan] Edge Function failed, falling back to direct API: $e');
+          return _callDirectApi(body);
+        }
+        rethrow;
+      }
+    }
+    return _callDirectApi(body);
+  }
+
+  /// Call via Supabase Edge Function (production path).
+  Future<Map<String, dynamic>> _callViaEdgeFunction(
+      Map<String, dynamic> body) async {
+    final client = Supabase.instance.client;
+    final response = await client.functions.invoke(
+      'ai-scan',
+      body: body,
+    );
+
+    if (response.status == 429) {
+      final data = response.data as Map<String, dynamic>? ?? {};
+      throw ScanLimitReachedException(data['limit'] as int? ?? 5);
+    }
+
+    if (response.status != 200) {
+      throw Exception('Edge Function error ${response.status}: ${response.data}');
+    }
+
+    return response.data as Map<String, dynamic>;
+  }
+
+  /// Direct Anthropic API call (dev fallback).
+  Future<Map<String, dynamic>> _callDirectApi(
+      Map<String, dynamic> body) async {
+    const apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
+    if (apiKey.isEmpty) {
+      throw Exception('No API key configured');
+    }
+
+    final response = await http
+        .post(
+          Uri.parse(_directBaseUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: jsonEncode(body),
+        )
+        .timeout(Duration(
+            seconds: (body['model'] as String?)?.contains('sonnet') == true
+                ? 60
+                : 30));
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Claude API error ${response.statusCode}: ${response.body}',
+      );
+    }
+
+    return jsonDecode(response.body) as Map<String, dynamic>;
+  }
 
   /// Analyse a screenshot and extract subscription + trap details.
   ///
@@ -35,6 +121,7 @@ class AiScanService {
   ///
   /// Returns a [ScanOutput] with both subscription and trap data.
   /// Throws on network or parse errors.
+  /// Throws [ScanLimitReachedException] if free scan limit reached.
   Future<ScanOutput> analyseScreenshotWithTrap({
     required Uint8List imageBytes,
     required String mimeType,
@@ -42,7 +129,7 @@ class AiScanService {
   }) async {
     final base64Image = base64Encode(imageBytes);
 
-    final body = jsonEncode({
+    final body = {
       'model': modelOverride ?? AppConstants.aiModel,
       'max_tokens': 4096,
       'messages': [
@@ -64,27 +151,9 @@ class AiScanService {
           ],
         },
       ],
-    });
+    };
 
-    final response = await http
-        .post(
-          Uri.parse(_baseUrl),
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-          },
-          body: body,
-        )
-        .timeout(Duration(seconds: modelOverride != null ? 60 : 30));
-
-    if (response.statusCode != 200) {
-      throw Exception(
-        'Claude API error ${response.statusCode}: ${response.body}',
-      );
-    }
-
-    final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+    final responseJson = await _callApi(body);
     final content = responseJson['content'] as List<dynamic>;
     final textBlock = content.firstWhere(
       (block) => block['type'] == 'text',
@@ -119,6 +188,7 @@ class AiScanService {
   ///
   /// Returns a list of [ScanOutput] when multiple subscriptions are found
   /// (e.g. bank statements). Returns a single-item list for single results.
+  /// Throws [ScanLimitReachedException] if free scan limit reached.
   Future<List<ScanOutput>> analyseScreenshotMulti({
     required Uint8List imageBytes,
     required String mimeType,
@@ -126,7 +196,7 @@ class AiScanService {
   }) async {
     final base64Image = base64Encode(imageBytes);
 
-    final body = jsonEncode({
+    final body = {
       'model': modelOverride ?? AppConstants.aiModel,
       'max_tokens': 4096,
       'messages': [
@@ -148,27 +218,9 @@ class AiScanService {
           ],
         },
       ],
-    });
+    };
 
-    final response = await http
-        .post(
-          Uri.parse(_baseUrl),
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-          },
-          body: body,
-        )
-        .timeout(Duration(seconds: modelOverride != null ? 60 : 30));
-
-    if (response.statusCode != 200) {
-      throw Exception(
-        'Claude API error ${response.statusCode}: ${response.body}',
-      );
-    }
-
-    final responseJson = jsonDecode(response.body) as Map<String, dynamic>;
+    final responseJson = await _callApi(body);
     final content = responseJson['content'] as List<dynamic>;
     final textBlock = content.firstWhere(
       (block) => block['type'] == 'text',
@@ -185,8 +237,8 @@ class AiScanService {
 
     if (decoded is List) {
       return decoded
-          .where((item) => item is Map<String, dynamic>)
-          .map((item) => ScanOutput.fromJson(item as Map<String, dynamic>))
+          .whereType<Map<String, dynamic>>()
+          .map((item) => ScanOutput.fromJson(item))
           .toList();
     } else if (decoded is Map<String, dynamic>) {
       return [ScanOutput.fromJson(decoded)];

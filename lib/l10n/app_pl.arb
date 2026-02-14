@@ -54,12 +54,18 @@
   "sectionCancelledSaved": "ANULOWANE — ZAOSZCZĘDZONE",
   "sectionMilestones": "KAMIENIE MILOWE",
   "sectionYearlyBurn": "ROCZNE WYDATKI",
+  "sectionMonthlyBurn": "MIESIĘCZNE WYDATKI",
   "sectionSavedWithChompd": "ZAOSZCZĘDZONE Z CHOMPD",
   "perYearAcrossSubs": "rocznie za {count, plural, =1{1 subskrypcję} few{{count} subskrypcje} other{{count} subskrypcji}}",
   "@perYearAcrossSubs": {
     "placeholders": { "count": {"type": "int"} }
   },
+  "perMonthAcrossSubs": "miesięcznie za {count, plural, =1{1 subskrypcję} few{{count} subskrypcje} other{{count} subskrypcji}}",
+  "@perMonthAcrossSubs": {
+    "placeholders": { "count": {"type": "int"} }
+  },
   "monthlyAvg": "śr. miesięcznie",
+  "yearlyTotal": "roczny koszt",
   "dailyCost": "dzienny koszt",
   "fromCancelled": "z {count} anulowanych",
   "@fromCancelled": {
@@ -707,5 +713,28 @@
   "discoveryTipAppStore": "App Store / Play Store",
   "discoveryTipAppStoreDesc": "Ustawienia \u2192 Subskrypcje poka\u017Ce aktywne subskrypcje z app\u00F3w",
   "discoveryTipPaypal": "PayPal i aplikacje p\u0142atnicze",
-  "discoveryTipPaypalDesc": "Sprawd\u017A automatyczne p\u0142atno\u015Bci w PayPalu, Revolut lub innej appce"
+  "discoveryTipPaypalDesc": "Sprawd\u017A automatyczne p\u0142atno\u015Bci w PayPalu, Revolut lub innej appce",
+
+  "sectionAccount": "KONTO",
+  "accountAnonymous": "Anonimowy",
+  "accountBackupPrompt": "Zabezpiecz swoje dane",
+  "accountBackedUp": "Zabezpieczone",
+  "accountSignedInAs": "Zalogowano jako {email}",
+  "@accountSignedInAs": {
+    "placeholders": { "email": {"type": "String"} }
+  },
+  "syncStatusSyncing": "Synchronizacja...",
+  "syncStatusSynced": "Zsynchronizowano",
+  "syncStatusLastSync": "Ostatnia synchronizacja: {time}",
+  "@syncStatusLastSync": {
+    "placeholders": { "time": {"type": "String"} }
+  },
+  "syncStatusOffline": "Offline",
+  "syncStatusNeverSynced": "Jeszcze nie zsynchronizowano",
+  "signInToBackUp": "Zaloguj si\u0119, by zabezpieczy\u0107 dane",
+  "signInWithApple": "Zaloguj przez Apple",
+  "signInWithGoogle": "Zaloguj przez Google",
+  "signInWithEmail": "Zaloguj przez e-mail",
+  "signOut": "Wyloguj si\u0119",
+  "signOutConfirm": "Czy na pewno chcesz si\u0119 wylogowa\u0107? Dane pozostan\u0105 na tym urz\u0105dzeniu."
 }

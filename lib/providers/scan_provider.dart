@@ -309,14 +309,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
           return;
         }
 
-        const apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
-        if (apiKey.isEmpty) {
-          _addSystemMessage('AI scanning is not configured. Please contact support.');
-          state = state.copyWith(phase: ScanPhase.idle);
-          return;
-        }
-
-        final service = AiScanService(apiKey: apiKey);
+        final service = AiScanService();
 
         // Pass 1: Haiku (fast + cheap)
         result = await service.analyseScreenshot(
@@ -357,6 +350,18 @@ class ScanNotifier extends StateNotifier<ScanState> {
       } else {
         await _handleFullQuestion(result, scenario);
       }
+    } on ScanLimitReachedException catch (e) {
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'scan_limit_reached',
+        messages: [
+          ...state.messages,
+          ChatMessage(
+            type: ChatMessageType.system,
+            text: 'You\'ve used all ${e.limit} free scans. Upgrade to Pro for unlimited scanning!',
+          ),
+        ],
+      );
     } catch (e) {
       state = state.copyWith(
         phase: ScanPhase.error,
@@ -1004,14 +1009,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
         return;
       }
 
-      const apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
-      if (apiKey.isEmpty) {
-        _addSystemMessage('AI scanning is not configured. Please contact support.');
-        state = state.copyWith(phase: ScanPhase.idle);
-        return;
-      }
-
-      final service = AiScanService(apiKey: apiKey);
+      final service = AiScanService();
 
       // Try multi-extraction first (handles both single and multi results)
       List<ScanOutput> outputs = await service.analyseScreenshotMulti(
@@ -1072,6 +1070,18 @@ class ScanNotifier extends StateNotifier<ScanState> {
         // Multiple subscriptions → one-by-one review flow
         await _handleMultiScan(outputs: outputs);
       }
+    } on ScanLimitReachedException catch (e) {
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'scan_limit_reached',
+        messages: [
+          ...state.messages,
+          ChatMessage(
+            type: ChatMessageType.system,
+            text: 'You\'ve used all ${e.limit} free scans. Upgrade to Pro for unlimited scanning!',
+          ),
+        ],
+      );
     } catch (e) {
       state = state.copyWith(
         phase: ScanPhase.error,

@@ -5,13 +5,16 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../../config/constants.dart';
 import '../../config/theme.dart';
 import '../../models/subscription.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/budget_provider.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
+import '../../providers/sync_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../providers/locale_provider.dart';
+import '../../services/auth_service.dart';
 import '../../services/haptic_service.dart';
 import '../../services/notification_service.dart';
 import '../../utils/csv_export.dart';
@@ -87,6 +90,16 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+
+          // ─── Account Section ───
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _AccountSection(),
             ),
           ),
 
@@ -714,6 +727,373 @@ class _ThemeChip extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────
+// Account Section
+// ──────────────────────────────────────────────
+
+class _AccountSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final syncState = ref.watch(syncProvider);
+
+    final isAnonymous = authState.status == AuthStatus.anonymous ||
+        authState.status == AuthStatus.initialising;
+    final email = AuthService.instance.email;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.person_outline_rounded,
+              size: 16,
+              color: context.colors.blue,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.sectionAccount,
+              style: ChompdTypography.sectionLabel.copyWith(
+                color: context.colors.blue,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        GestureDetector(
+          onTap: () => _showAccountSheet(context, ref, isAnonymous),
+          child: Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: ChompdColors.bgCard,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: isAnonymous
+                    ? ChompdColors.amber.withValues(alpha: 0.3)
+                    : ChompdColors.mint.withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isAnonymous
+                        ? ChompdColors.amber.withValues(alpha: 0.1)
+                        : ChompdColors.mint.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    isAnonymous
+                        ? Icons.cloud_off_outlined
+                        : Icons.cloud_done_outlined,
+                    size: 20,
+                    color: isAnonymous
+                        ? ChompdColors.amber
+                        : ChompdColors.mint,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isAnonymous
+                            ? context.l10n.accountAnonymous
+                            : context.l10n.accountBackedUp,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: ChompdColors.text,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        isAnonymous
+                            ? context.l10n.accountBackupPrompt
+                            : (email != null
+                                ? context.l10n.accountSignedInAs(email)
+                                : _syncLabel(context, syncState)),
+                        style: const TextStyle(
+                          fontSize: 10.5,
+                          color: ChompdColors.textDim,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                // Sync indicator
+                if (!isAnonymous) ...[
+                  const SizedBox(width: 8),
+                  if (syncState.isSyncing)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: ChompdColors.mint,
+                      ),
+                    )
+                  else
+                    Icon(
+                      syncState.isOnline
+                          ? Icons.check_circle_outline_rounded
+                          : Icons.wifi_off_rounded,
+                      size: 16,
+                      color: syncState.isOnline
+                          ? ChompdColors.mint
+                          : ChompdColors.textDim,
+                    ),
+                ],
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 12,
+                  color: ChompdColors.textDim,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _syncLabel(BuildContext context, SyncState syncState) {
+    if (syncState.isSyncing) return context.l10n.syncStatusSyncing;
+    if (!syncState.isOnline) return context.l10n.syncStatusOffline;
+    if (syncState.lastSyncAt != null) {
+      final ago = DateTime.now().difference(syncState.lastSyncAt!);
+      if (ago.inMinutes < 1) return context.l10n.syncStatusSynced;
+      if (ago.inMinutes < 60) {
+        return context.l10n.syncStatusLastSync('${ago.inMinutes}m ago');
+      }
+      return context.l10n.syncStatusLastSync('${ago.inHours}h ago');
+    }
+    return context.l10n.syncStatusNeverSynced;
+  }
+
+  void _showAccountSheet(
+    BuildContext context,
+    WidgetRef ref,
+    bool isAnonymous,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: ChompdColors.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: ChompdColors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              if (isAnonymous) ...[
+                const Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 40,
+                  color: ChompdColors.blue,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  context.l10n.signInToBackUp,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: ChompdColors.text,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _SignInButton(
+                  icon: Icons.apple,
+                  label: context.l10n.signInWithApple,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await AuthService.instance.linkAppleSignIn();
+                    ref.invalidate(authProvider);
+                  },
+                ),
+                const SizedBox(height: 10),
+                _SignInButton(
+                  icon: Icons.g_mobiledata_rounded,
+                  label: context.l10n.signInWithGoogle,
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await AuthService.instance.linkGoogleSignIn();
+                    ref.invalidate(authProvider);
+                  },
+                ),
+              ] else ...[
+                const Icon(
+                  Icons.cloud_done_outlined,
+                  size: 40,
+                  color: ChompdColors.mint,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  context.l10n.accountBackedUp,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: ChompdColors.text,
+                  ),
+                ),
+                if (AuthService.instance.email != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    AuthService.instance.email!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: ChompdColors.textDim,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _confirmSignOut(context, ref);
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: ChompdColors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: ChompdColors.red.withValues(alpha: 0.3),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      context.l10n.signOut,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: ChompdColors.red,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _confirmSignOut(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ChompdColors.bgCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: ChompdColors.border),
+        ),
+        title: Text(
+          context.l10n.signOut,
+          style: const TextStyle(
+            color: ChompdColors.text,
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          context.l10n.signOutConfirm,
+          style: const TextStyle(
+            color: ChompdColors.textMid,
+            fontSize: 13,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              context.l10n.cancel,
+              style: const TextStyle(color: ChompdColors.textDim),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await AuthService.instance.signOut();
+              ref.invalidate(authProvider);
+            },
+            child: Text(
+              context.l10n.signOut,
+              style: const TextStyle(color: ChompdColors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SignInButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _SignInButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: ChompdColors.bgElevated,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: ChompdColors.border),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20, color: ChompdColors.text),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: ChompdColors.text,
+              ),
+            ),
+          ],
         ),
       ),
     );

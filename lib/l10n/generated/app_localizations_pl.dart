@@ -151,6 +151,9 @@ class SPl extends S {
   String get sectionYearlyBurn => 'ROCZNE WYDATKI';
 
   @override
+  String get sectionMonthlyBurn => 'MIESIĘCZNE WYDATKI';
+
+  @override
   String get sectionSavedWithChompd => 'ZAOSZCZĘDZONE Z CHOMPD';
 
   @override
@@ -166,7 +169,22 @@ class SPl extends S {
   }
 
   @override
+  String perMonthAcrossSubs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subskrypcji',
+      few: '$count subskrypcje',
+      one: '1 subskrypcję',
+    );
+    return 'miesięcznie za $_temp0';
+  }
+
+  @override
   String get monthlyAvg => 'śr. miesięcznie';
+
+  @override
+  String get yearlyTotal => 'roczny koszt';
 
   @override
   String get dailyCost => 'dzienny koszt';
@@ -1500,4 +1518,57 @@ class SPl extends S {
   @override
   String get discoveryTipPaypalDesc =>
       'Sprawdź automatyczne płatności w PayPalu, Revolut lub innej appce';
+
+  @override
+  String get sectionAccount => 'KONTO';
+
+  @override
+  String get accountAnonymous => 'Anonimowy';
+
+  @override
+  String get accountBackupPrompt => 'Zabezpiecz swoje dane';
+
+  @override
+  String get accountBackedUp => 'Zabezpieczone';
+
+  @override
+  String accountSignedInAs(String email) {
+    return 'Zalogowano jako $email';
+  }
+
+  @override
+  String get syncStatusSyncing => 'Synchronizacja...';
+
+  @override
+  String get syncStatusSynced => 'Zsynchronizowano';
+
+  @override
+  String syncStatusLastSync(String time) {
+    return 'Ostatnia synchronizacja: $time';
+  }
+
+  @override
+  String get syncStatusOffline => 'Offline';
+
+  @override
+  String get syncStatusNeverSynced => 'Jeszcze nie zsynchronizowano';
+
+  @override
+  String get signInToBackUp => 'Zaloguj się, by zabezpieczyć dane';
+
+  @override
+  String get signInWithApple => 'Zaloguj przez Apple';
+
+  @override
+  String get signInWithGoogle => 'Zaloguj przez Google';
+
+  @override
+  String get signInWithEmail => 'Zaloguj przez e-mail';
+
+  @override
+  String get signOut => 'Wyloguj się';
+
+  @override
+  String get signOutConfirm =>
+      'Czy na pewno chcesz się wylogować? Dane pozostaną na tym urządzeniu.';
 }

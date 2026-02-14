@@ -1,7 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:isar/isar.dart';
 
 import '../config/constants.dart';
 import '../models/subscription.dart';
+import '../services/isar_service.dart';
+import '../services/sync_service.dart';
 import 'currency_provider.dart';
 
 /// Provider: all subscriptions (active + cancelled).
@@ -66,31 +70,83 @@ final totalSavedProvider = Provider<double>((ref) {
 
 /// State notifier for subscription list management.
 ///
-/// Starts empty — users add subscriptions via AI Scan or Quick Add.
-/// Will integrate with Isar for persistence in a future sprint.
+/// Backed by Isar for local persistence. Loads from Isar on construction.
+/// Sync hooks for Supabase are called after each write (Phase 5).
 class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
-  SubscriptionsNotifier() : super([]);
+  SubscriptionsNotifier() : super([]) {
+    _loadFromIsar();
+  }
 
-  void add(Subscription sub) {
+  Isar get _isar => IsarService.instance.db;
+
+  /// Load all non-deleted subscriptions from Isar.
+  Future<void> _loadFromIsar() async {
+    try {
+      final subs = await _isar.subscriptions
+          .filter()
+          .deletedAtIsNull()
+          .findAll();
+      state = subs;
+    } catch (e) {
+      debugPrint('[SubscriptionsNotifier] Isar load failed: $e');
+    }
+  }
+
+  /// Reload from Isar (e.g. after sync merge).
+  Future<void> reload() async => _loadFromIsar();
+
+  Future<void> add(Subscription sub) async {
+    sub.updatedAt = DateTime.now();
     state = [...state, sub];
+    try {
+      await _isar.writeTxn(() async {
+        await _isar.subscriptions.put(sub);
+      });
+      SyncService.instance.pushSubscription(sub);
+    } catch (e) {
+      debugPrint('[SubscriptionsNotifier] Isar add failed: $e');
+    }
   }
 
-  void remove(String uid) {
+  Future<void> remove(String uid) async {
+    // Soft-delete: set deletedAt, keep in Isar for sync
+    final idx = state.indexWhere((s) => s.uid == uid);
+    if (idx < 0) return;
+    final sub = state[idx];
+    sub.deletedAt = DateTime.now();
+    sub.updatedAt = DateTime.now();
     state = state.where((s) => s.uid != uid).toList();
+    try {
+      await _isar.writeTxn(() async {
+        await _isar.subscriptions.put(sub);
+      });
+      SyncService.instance.pushDelete(uid);
+    } catch (e) {
+      debugPrint('[SubscriptionsNotifier] Isar remove failed: $e');
+    }
   }
 
-  void update(Subscription updated) {
+  Future<void> update(Subscription updated) async {
+    updated.updatedAt = DateTime.now();
     state = [
       for (final s in state)
         if (s.uid == updated.uid) updated else s,
     ];
+    try {
+      await _isar.writeTxn(() async {
+        await _isar.subscriptions.put(updated);
+      });
+      SyncService.instance.pushSubscription(updated);
+    } catch (e) {
+      debugPrint('[SubscriptionsNotifier] Isar update failed: $e');
+    }
   }
 
   /// Toggle a reminder day for a specific subscription.
   ///
   /// Initialises the subscription's reminder list from global defaults
   /// on first use, then toggles the specified day.
-  void toggleReminderDay(String uid, int day) {
+  Future<void> toggleReminderDay(String uid, int day) async {
     final sub = state.firstWhere((s) => s.uid == uid);
     // If reminders list is empty, initialise from global defaults
     if (sub.reminders.isEmpty) {
@@ -109,18 +165,27 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         ..daysBefore = day
         ..enabled = true);
     }
-    update(sub);
+    await update(sub);
   }
 
-  void cancel(String uid) {
+  Future<void> cancel(String uid) async {
+    final idx = state.indexWhere((s) => s.uid == uid);
+    if (idx < 0) return;
+    final sub = state[idx]
+      ..isActive = false
+      ..cancelledDate = DateTime.now()
+      ..updatedAt = DateTime.now();
     state = [
       for (final s in state)
-        if (s.uid == uid)
-          (s
-            ..isActive = false
-            ..cancelledDate = DateTime.now())
-        else
-          s,
+        if (s.uid == uid) sub else s,
     ];
+    try {
+      await _isar.writeTxn(() async {
+        await _isar.subscriptions.put(sub);
+      });
+      SyncService.instance.pushSubscription(sub);
+    } catch (e) {
+      debugPrint('[SubscriptionsNotifier] Isar cancel failed: $e');
+    }
   }
 }

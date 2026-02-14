@@ -219,6 +219,14 @@ class Subscription {
   /// User explicitly said "keep it" — suppress nudges for 90 days.
   bool keepConfirmed = false;
 
+  // ─── Sync Fields ───
+
+  /// Last time this record was modified (for sync conflict resolution).
+  DateTime updatedAt = DateTime.now();
+
+  /// Soft-delete timestamp (null = not deleted; set = deleted).
+  DateTime? deletedAt;
+
   // ─── Computed Helpers ───
 
   /// Active reminder days for this subscription (or null = use global default).
@@ -465,6 +473,121 @@ class Subscription {
       // For trap/trial subs, "next renewal" = when trial expires
       // and real charge kicks in.
       sub.nextRenewal = effectiveTrialEnd;
+    }
+
+    return sub;
+  }
+
+  // ─── Supabase Serialization ───
+
+  /// Convert to Supabase-compatible map for upsert.
+  Map<String, dynamic> toSupabaseMap(String userId) {
+    return {
+      'user_id': userId,
+      'uid': uid,
+      'name': name,
+      'price': price,
+      'currency': currency,
+      'cycle': cycle.name,
+      'next_renewal': nextRenewal.toUtc().toIso8601String(),
+      'category': category,
+      'is_trial': isTrial,
+      'trial_end_date': trialEndDate?.toUtc().toIso8601String(),
+      'is_active': isActive,
+      'cancelled_date': cancelledDate?.toUtc().toIso8601String(),
+      'icon_name': iconName,
+      'brand_color': brandColor,
+      'source': source.name,
+      'is_trap': isTrap,
+      'trap_type': trapType,
+      'trial_price': trialPrice,
+      'trial_duration_days': trialDurationDays,
+      'real_price': realPrice,
+      'real_annual_cost': realAnnualCost,
+      'trap_severity': trapSeverity,
+      'trial_expires_at': trialExpiresAt?.toUtc().toIso8601String(),
+      'trial_reminder_set': trialReminderSet,
+      'last_reviewed_at': lastReviewedAt?.toUtc().toIso8601String(),
+      'last_nudged_at': lastNudgedAt?.toUtc().toIso8601String(),
+      'keep_confirmed': keepConfirmed,
+      'reminders': reminders
+          .map((r) => {
+                'daysBefore': r.daysBefore,
+                'enabled': r.enabled,
+                'requiresPro': r.requiresPro,
+              })
+          .toList(),
+      'created_at': createdAt.toUtc().toIso8601String(),
+      'updated_at': updatedAt.toUtc().toIso8601String(),
+      'deleted_at': deletedAt?.toUtc().toIso8601String(),
+    };
+  }
+
+  /// Create a Subscription from a Supabase row.
+  static Subscription fromSupabaseMap(Map<String, dynamic> row) {
+    final sub = Subscription()
+      ..uid = row['uid'] as String
+      ..name = row['name'] as String
+      ..price = (row['price'] as num).toDouble()
+      ..currency = row['currency'] as String? ?? 'GBP'
+      ..cycle = BillingCycle.fromString(row['cycle'] as String? ?? 'monthly')
+      ..nextRenewal = DateTime.parse(row['next_renewal'] as String)
+      ..category = row['category'] as String? ?? 'Other'
+      ..isTrial = row['is_trial'] as bool? ?? false
+      ..isActive = row['is_active'] as bool? ?? true
+      ..source = SubscriptionSource.values.firstWhere(
+        (e) => e.name == (row['source'] as String?),
+        orElse: () => SubscriptionSource.manual,
+      )
+      ..createdAt = DateTime.parse(row['created_at'] as String)
+      ..updatedAt = DateTime.parse(row['updated_at'] as String);
+
+    // Nullable fields
+    if (row['trial_end_date'] != null) {
+      sub.trialEndDate = DateTime.parse(row['trial_end_date'] as String);
+    }
+    if (row['cancelled_date'] != null) {
+      sub.cancelledDate = DateTime.parse(row['cancelled_date'] as String);
+    }
+    sub.iconName = row['icon_name'] as String?;
+    sub.brandColor = row['brand_color'] as String?;
+    sub.isTrap = row['is_trap'] as bool?;
+    sub.trapType = row['trap_type'] as String?;
+    if (row['trial_price'] != null) {
+      sub.trialPrice = (row['trial_price'] as num).toDouble();
+    }
+    sub.trialDurationDays = row['trial_duration_days'] as int?;
+    if (row['real_price'] != null) {
+      sub.realPrice = (row['real_price'] as num).toDouble();
+    }
+    if (row['real_annual_cost'] != null) {
+      sub.realAnnualCost = (row['real_annual_cost'] as num).toDouble();
+    }
+    sub.trapSeverity = row['trap_severity'] as String?;
+    if (row['trial_expires_at'] != null) {
+      sub.trialExpiresAt = DateTime.parse(row['trial_expires_at'] as String);
+    }
+    sub.trialReminderSet = row['trial_reminder_set'] as bool? ?? false;
+    if (row['last_reviewed_at'] != null) {
+      sub.lastReviewedAt = DateTime.parse(row['last_reviewed_at'] as String);
+    }
+    if (row['last_nudged_at'] != null) {
+      sub.lastNudgedAt = DateTime.parse(row['last_nudged_at'] as String);
+    }
+    sub.keepConfirmed = row['keep_confirmed'] as bool? ?? false;
+    if (row['deleted_at'] != null) {
+      sub.deletedAt = DateTime.parse(row['deleted_at'] as String);
+    }
+
+    // Reminders from JSONB
+    final remindersJson = row['reminders'] as List<dynamic>?;
+    if (remindersJson != null) {
+      sub.reminders = remindersJson
+          .map((r) => ReminderConfig()
+            ..daysBefore = (r['daysBefore'] as num?)?.toInt() ?? 0
+            ..enabled = r['enabled'] as bool? ?? true
+            ..requiresPro = r['requiresPro'] as bool? ?? false)
+          .toList();
     }
 
     return sub;

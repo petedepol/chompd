@@ -148,6 +148,9 @@ class SEn extends S {
   String get sectionYearlyBurn => 'YEARLY BURN';
 
   @override
+  String get sectionMonthlyBurn => 'MONTHLY BURN';
+
+  @override
   String get sectionSavedWithChompd => 'SAVED WITH CHOMPD';
 
   @override
@@ -162,7 +165,21 @@ class SEn extends S {
   }
 
   @override
+  String perMonthAcrossSubs(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subscriptions',
+      one: '1 subscription',
+    );
+    return 'per month across $_temp0';
+  }
+
+  @override
   String get monthlyAvg => 'monthly avg';
+
+  @override
+  String get yearlyTotal => 'yearly total';
 
   @override
   String get dailyCost => 'daily cost';
@@ -1471,4 +1488,57 @@ class SEn extends S {
   @override
   String get discoveryTipPaypalDesc =>
       'Check automatic payments in PayPal, Revolut or your payment app';
+
+  @override
+  String get sectionAccount => 'ACCOUNT';
+
+  @override
+  String get accountAnonymous => 'Anonymous';
+
+  @override
+  String get accountBackupPrompt => 'Back up your data';
+
+  @override
+  String get accountBackedUp => 'Backed up';
+
+  @override
+  String accountSignedInAs(String email) {
+    return 'Signed in as $email';
+  }
+
+  @override
+  String get syncStatusSyncing => 'Syncing...';
+
+  @override
+  String get syncStatusSynced => 'Synced';
+
+  @override
+  String syncStatusLastSync(String time) {
+    return 'Last sync: $time';
+  }
+
+  @override
+  String get syncStatusOffline => 'Offline';
+
+  @override
+  String get syncStatusNeverSynced => 'Not yet synced';
+
+  @override
+  String get signInToBackUp => 'Sign in to back up your data';
+
+  @override
+  String get signInWithApple => 'Sign in with Apple';
+
+  @override
+  String get signInWithGoogle => 'Sign in with Google';
+
+  @override
+  String get signInWithEmail => 'Sign in with Email';
+
+  @override
+  String get signOut => 'Sign Out';
+
+  @override
+  String get signOutConfirm =>
+      'Are you sure you want to sign out? Your data will stay on this device.';
 }

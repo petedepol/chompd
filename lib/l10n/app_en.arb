@@ -54,12 +54,18 @@
   "sectionCancelledSaved": "CANCELLED \u2014 MONEY SAVED",
   "sectionMilestones": "MILESTONES",
   "sectionYearlyBurn": "YEARLY BURN",
+  "sectionMonthlyBurn": "MONTHLY BURN",
   "sectionSavedWithChompd": "SAVED WITH CHOMPD",
   "perYearAcrossSubs": "per year across {count, plural, =1{1 subscription} other{{count} subscriptions}}",
   "@perYearAcrossSubs": {
     "placeholders": { "count": {"type": "int"} }
   },
+  "perMonthAcrossSubs": "per month across {count, plural, =1{1 subscription} other{{count} subscriptions}}",
+  "@perMonthAcrossSubs": {
+    "placeholders": { "count": {"type": "int"} }
+  },
   "monthlyAvg": "monthly avg",
+  "yearlyTotal": "yearly total",
   "dailyCost": "daily cost",
   "fromCancelled": "from {count} cancelled",
   "@fromCancelled": {
@@ -707,5 +713,28 @@
   "discoveryTipAppStore": "App Store / Play Store",
   "discoveryTipAppStoreDesc": "Settings \u2192 Subscriptions shows all active app subscriptions",
   "discoveryTipPaypal": "PayPal & payment apps",
-  "discoveryTipPaypalDesc": "Check automatic payments in PayPal, Revolut or your payment app"
+  "discoveryTipPaypalDesc": "Check automatic payments in PayPal, Revolut or your payment app",
+
+  "sectionAccount": "ACCOUNT",
+  "accountAnonymous": "Anonymous",
+  "accountBackupPrompt": "Back up your data",
+  "accountBackedUp": "Backed up",
+  "accountSignedInAs": "Signed in as {email}",
+  "@accountSignedInAs": {
+    "placeholders": { "email": {"type": "String"} }
+  },
+  "syncStatusSyncing": "Syncing...",
+  "syncStatusSynced": "Synced",
+  "syncStatusLastSync": "Last sync: {time}",
+  "@syncStatusLastSync": {
+    "placeholders": { "time": {"type": "String"} }
+  },
+  "syncStatusOffline": "Offline",
+  "syncStatusNeverSynced": "Not yet synced",
+  "signInToBackUp": "Sign in to back up your data",
+  "signInWithApple": "Sign in with Apple",
+  "signInWithGoogle": "Sign in with Google",
+  "signInWithEmail": "Sign in with Email",
+  "signOut": "Sign Out",
+  "signOutConfirm": "Are you sure you want to sign out? Your data will stay on this device."
 }

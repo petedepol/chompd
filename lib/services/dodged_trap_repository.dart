@@ -1,52 +1,76 @@
+import 'package:flutter/foundation.dart';
+import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/dodged_trap.dart';
+import 'isar_service.dart';
+import 'sync_service.dart';
 
 const _kDodgedTrapsKey = 'dodged_traps';
 
-/// Persists dodged trap records via SharedPreferences.
+/// Persists dodged trap records via Isar.
+///
+/// On first run, migrates existing data from SharedPreferences to Isar,
+/// then clears the SharedPreferences key.
 ///
 /// Singleton following the same pattern as [NotificationService] and
-/// [PurchaseService]. Call [load] once at startup, then [add] to
-/// persist new dodged traps.
-///
-/// Will migrate to Isar when Subscriptions move to Isar.
+/// [PurchaseService].
 class DodgedTrapRepository {
   DodgedTrapRepository._();
   static final instance = DodgedTrapRepository._();
 
-  List<DodgedTrap> _cache = [];
-  bool _loaded = false;
+  Isar get _isar => IsarService.instance.db;
 
-  /// Load persisted dodged traps from SharedPreferences.
+  /// Load + migrate from SharedPreferences on first run.
   Future<void> load() async {
-    if (_loaded) return;
-    final prefs = await SharedPreferences.getInstance();
-    final jsonStr = prefs.getString(_kDodgedTrapsKey);
-    if (jsonStr != null && jsonStr.isNotEmpty) {
-      _cache = DodgedTrap.decodeList(jsonStr);
-    }
-    _loaded = true;
+    await _migrateFromSharedPreferences();
   }
 
-  /// All dodged traps (unmodifiable).
-  List<DodgedTrap> getAll() => List.unmodifiable(_cache);
+  /// One-time migration from SharedPreferences to Isar.
+  Future<void> _migrateFromSharedPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final jsonStr = prefs.getString(_kDodgedTrapsKey);
+      if (jsonStr == null || jsonStr.isEmpty) return;
 
-  /// Add a new dodged trap and persist immediately.
+      // Only migrate if Isar is empty (avoids duplicate migration)
+      final existing = await _isar.dodgedTraps.count();
+      if (existing > 0) {
+        // Already migrated — clean up SharedPreferences
+        await prefs.remove(_kDodgedTrapsKey);
+        return;
+      }
+
+      final oldTraps = DodgedTrap.decodeList(jsonStr);
+      await _isar.writeTxn(() async {
+        for (final trap in oldTraps) {
+          await _isar.dodgedTraps.put(trap);
+        }
+      });
+
+      // Clear SharedPreferences after successful migration
+      await prefs.remove(_kDodgedTrapsKey);
+      debugPrint('[DodgedTrapRepo] Migrated ${oldTraps.length} traps from SharedPreferences to Isar');
+    } catch (e) {
+      debugPrint('[DodgedTrapRepo] Migration failed: $e');
+    }
+  }
+
+  /// All dodged traps.
+  List<DodgedTrap> getAll() => _isar.dodgedTraps.where().findAllSync();
+
+  /// Add a new dodged trap and persist to Isar.
   Future<void> add(DodgedTrap trap) async {
-    trap.id = _cache.length;
-    _cache.add(trap);
-    await _persist();
+    await _isar.writeTxn(() async {
+      await _isar.dodgedTraps.put(trap);
+    });
+    SyncService.instance.pushDodgedTrap(trap);
   }
 
   /// Total money saved from all dodged traps.
-  double get totalSaved => _cache.fold(0.0, (sum, t) => sum + t.savedAmount);
+  double get totalSaved =>
+      getAll().fold(0.0, (sum, t) => sum + t.savedAmount);
 
   /// Number of dodged traps recorded.
-  int get count => _cache.length;
-
-  Future<void> _persist() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kDodgedTrapsKey, DodgedTrap.encodeList(_cache));
-  }
+  int get count => _isar.dodgedTraps.countSync();
 }

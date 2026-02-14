@@ -1,16 +1,45 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'services/auth_service.dart';
 import 'services/dodged_trap_repository.dart';
 import 'services/exchange_rate_service.dart';
+import 'services/isar_service.dart';
 import 'services/merchant_db.dart';
 import 'services/notification_service.dart';
 import 'services/purchase_service.dart';
+import 'services/sync_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialise Supabase (before other services)
+  const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+  const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
+    await Supabase.initialize(
+      url: supabaseUrl,
+      anonKey: supabaseAnonKey,
+    );
+  } else {
+    debugPrint('[Supabase] Skipped — no URL/key provided via --dart-define');
+  }
+
+  // Anonymous auth — deferred if offline or Supabase not configured
+  if (supabaseUrl.isNotEmpty) {
+    try {
+      await AuthService.instance.ensureUser();
+    } catch (e) {
+      debugPrint('[Auth] Deferred (offline): $e');
+    }
+  }
+
+  // Initialise Isar local database (before services that depend on it)
+  await IsarService.instance.init();
 
   // Seed the merchant intelligence DB with known patterns
   MerchantDb.instance.seed();
@@ -26,6 +55,27 @@ void main() async {
 
   // Load persisted dodged traps
   await DodgedTrapRepository.instance.load();
+
+  // Restore from remote on reinstall (if local is empty but user is signed in)
+  try {
+    final restored = await SyncService.instance.restoreFromRemote();
+    if (restored) {
+      debugPrint('[Main] Welcome back — data restored from cloud');
+    }
+  } catch (e) {
+    debugPrint('[Main] Restore check failed: $e');
+  }
+
+  // Non-blocking initial sync (pull remote changes)
+  SyncService.instance.pullAndMerge();
+
+  // Re-sync whenever connectivity is restored
+  Connectivity().onConnectivityChanged.listen((results) {
+    if (!results.contains(ConnectivityResult.none)) {
+      debugPrint('[Sync] Connectivity restored — syncing...');
+      SyncService.instance.pullAndMerge();
+    }
+  });
 
   // Lock to portrait for v1
   SystemChrome.setPreferredOrientations([

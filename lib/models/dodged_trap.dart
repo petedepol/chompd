@@ -1,5 +1,9 @@
 import 'dart:convert';
 
+import 'package:isar/isar.dart';
+
+part 'dodged_trap.g.dart';
+
 /// How the trap was dodged.
 enum DodgedTrapSource {
   skipped, // user chose "Skip It" on trap warning
@@ -12,26 +16,28 @@ enum DodgedTrapSource {
 /// Feeds the "Unchompd" counter on the home screen
 /// and the Trap Dodger milestone track.
 ///
-/// Persisted via SharedPreferences (JSON-encoded list).
+/// Persisted in Isar (migrated from SharedPreferences).
+@collection
 class DodgedTrap {
-  int id = 0;
+  Id id = Isar.autoIncrement;
 
   /// The service name that was dodged.
-  late String serviceName;
+  String serviceName = '';
 
   /// Amount saved (typically the annual cost of the trap).
-  late double savedAmount;
+  double savedAmount = 0.0;
 
   /// When the user dodged this trap.
-  late DateTime dodgedAt;
+  DateTime dodgedAt = DateTime.now();
 
   /// Trap type stored as string.
-  late String trapType;
+  String trapType = '';
 
   /// How the trap was dodged.
+  @enumerated
   DodgedTrapSource source = DodgedTrapSource.skipped;
 
-  // ─── JSON Serialization ───
+  // ─── JSON Serialization (kept for SharedPreferences migration) ───
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -44,7 +50,6 @@ class DodgedTrap {
 
   static DodgedTrap fromJson(Map<String, dynamic> json) {
     return DodgedTrap()
-      ..id = (json['id'] as num?)?.toInt() ?? 0
       ..serviceName = json['serviceName'] as String
       ..savedAmount = (json['savedAmount'] as num).toDouble()
       ..dodgedAt = DateTime.parse(json['dodgedAt'] as String)
@@ -66,5 +71,34 @@ class DodgedTrap {
     return list
         .map((item) => DodgedTrap.fromJson(item as Map<String, dynamic>))
         .toList();
+  }
+
+  // ─── Supabase Serialization ───
+
+  /// Convert to Supabase-compatible map for insert.
+  Map<String, dynamic> toSupabaseMap(String userId) {
+    return {
+      'user_id': userId,
+      'service_name': serviceName,
+      'saved_amount': savedAmount,
+      'dodged_at': dodgedAt.toUtc().toIso8601String(),
+      'trap_type': trapType,
+      'source': source.name,
+    };
+  }
+
+  /// Create from Supabase row.
+  static DodgedTrap fromSupabaseMap(Map<String, dynamic> row) {
+    return DodgedTrap()
+      ..serviceName = row['service_name'] as String? ?? ''
+      ..savedAmount = (row['saved_amount'] as num?)?.toDouble() ?? 0.0
+      ..dodgedAt = row['dodged_at'] != null
+          ? DateTime.parse(row['dodged_at'] as String)
+          : DateTime.now()
+      ..trapType = row['trap_type'] as String? ?? ''
+      ..source = DodgedTrapSource.values.firstWhere(
+        (e) => e.name == (row['source'] as String?),
+        orElse: () => DodgedTrapSource.skipped,
+      );
   }
 }

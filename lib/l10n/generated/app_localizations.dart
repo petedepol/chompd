@@ -361,6 +361,12 @@ abstract class S {
   /// **'YEARLY BURN'**
   String get sectionYearlyBurn;
 
+  /// No description provided for @sectionMonthlyBurn.
+  ///
+  /// In en, this message translates to:
+  /// **'MONTHLY BURN'**
+  String get sectionMonthlyBurn;
+
   /// No description provided for @sectionSavedWithChompd.
   ///
   /// In en, this message translates to:
@@ -373,11 +379,23 @@ abstract class S {
   /// **'per year across {count, plural, =1{1 subscription} other{{count} subscriptions}}'**
   String perYearAcrossSubs(int count);
 
+  /// No description provided for @perMonthAcrossSubs.
+  ///
+  /// In en, this message translates to:
+  /// **'per month across {count, plural, =1{1 subscription} other{{count} subscriptions}}'**
+  String perMonthAcrossSubs(int count);
+
   /// No description provided for @monthlyAvg.
   ///
   /// In en, this message translates to:
   /// **'monthly avg'**
   String get monthlyAvg;
+
+  /// No description provided for @yearlyTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'yearly total'**
+  String get yearlyTotal;
 
   /// No description provided for @dailyCost.
   ///
@@ -2448,6 +2466,102 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Check automatic payments in PayPal, Revolut or your payment app'**
   String get discoveryTipPaypalDesc;
+
+  /// No description provided for @sectionAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT'**
+  String get sectionAccount;
+
+  /// No description provided for @accountAnonymous.
+  ///
+  /// In en, this message translates to:
+  /// **'Anonymous'**
+  String get accountAnonymous;
+
+  /// No description provided for @accountBackupPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Back up your data'**
+  String get accountBackupPrompt;
+
+  /// No description provided for @accountBackedUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Backed up'**
+  String get accountBackedUp;
+
+  /// No description provided for @accountSignedInAs.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in as {email}'**
+  String accountSignedInAs(String email);
+
+  /// No description provided for @syncStatusSyncing.
+  ///
+  /// In en, this message translates to:
+  /// **'Syncing...'**
+  String get syncStatusSyncing;
+
+  /// No description provided for @syncStatusSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced'**
+  String get syncStatusSynced;
+
+  /// No description provided for @syncStatusLastSync.
+  ///
+  /// In en, this message translates to:
+  /// **'Last sync: {time}'**
+  String syncStatusLastSync(String time);
+
+  /// No description provided for @syncStatusOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline'**
+  String get syncStatusOffline;
+
+  /// No description provided for @syncStatusNeverSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Not yet synced'**
+  String get syncStatusNeverSynced;
+
+  /// No description provided for @signInToBackUp.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to back up your data'**
+  String get signInToBackUp;
+
+  /// No description provided for @signInWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Apple'**
+  String get signInWithApple;
+
+  /// No description provided for @signInWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Google'**
+  String get signInWithGoogle;
+
+  /// No description provided for @signInWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Email'**
+  String get signInWithEmail;
+
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
+
+  /// No description provided for @signOutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to sign out? Your data will stay on this device.'**
+  String get signOutConfirm;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {
