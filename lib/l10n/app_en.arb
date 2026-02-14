@@ -153,6 +153,14 @@
   "fieldNextRenewal": "NEXT RENEWAL",
   "selectDate": "Select date",
   "freeTrialToggle": "This is a free trial",
+  "trialDurationLabel": "Trial length",
+  "trialDays7": "7 days",
+  "trialDays14": "14 days",
+  "trialDays30": "30 days",
+  "trialCustomDays": "{days}d",
+  "@trialCustomDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
   "fieldTrialEnds": "TRIAL ENDS",
   "saveChanges": "Save Changes",
 
@@ -297,6 +305,8 @@
   "openCancelPage": "Open Cancel Page",
   "iveCancelled": "I\u2019ve Cancelled",
   "couldntCancelRefund": "Couldn\u2019t cancel? Get Refund Help \u2192",
+  "refundTipTitle": "Tip: Why request a refund?",
+  "refundTipBody": "If you were charged unexpectedly, signed up by accident, or the service didn\u2019t work as promised \u2014 you may be entitled to a refund. The earlier you request, the better your chances.",
 
   "refundRescue": "Refund Rescue",
   "refundIntro": "Don\u2019t worry \u2014 most people get their money back. Let\u2019s sort this.",
@@ -317,6 +327,10 @@
   "emailCopied": "Email copied to clipboard",
 
   "settingsTitle": "Settings",
+  "themeTitle": "THEME",
+  "themeSystem": "System",
+  "themeDark": "Dark",
+  "themeLight": "Light",
   "sectionNotifications": "NOTIFICATIONS",
   "remindersScheduledSummary": "{count, plural, =1{1 reminder scheduled} other{{count} reminders scheduled}}",
   "@remindersScheduledSummary": {
@@ -668,6 +682,22 @@
   "categoryEducation": "Education",
   "categoryHealth": "Health",
   "categoryOther": "Other",
+
+  "renewsToday": "Renews today",
+  "renewsTomorrow": "Renews tomorrow",
+  "renewsInDays": "Renews in {days} days",
+  "@renewsInDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "renewsOnDate": "Renews {date}",
+  "@renewsOnDate": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "renewedYesterday": "Renewed yesterday",
+  "renewedDaysAgo": "Renewed {days} days ago",
+  "@renewedDaysAgo": {
+    "placeholders": { "days": {"type": "int"} }
+  },
 
   "discoveryTipsTitle": "Where to find subscriptions",
   "discoveryTipBank": "Bank statement",

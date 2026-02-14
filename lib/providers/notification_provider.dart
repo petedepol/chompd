@@ -101,6 +101,23 @@ class NotificationPreferencesNotifier
     state = state.copyWith(renewalRemindersEnabled: value);
   }
 
+  /// Toggle a specific reminder day on/off.
+  /// Copies the current activeReminderDays, adds/removes [day],
+  /// then stores as customReminderDays.
+  void toggleReminderDay(int day) {
+    final current = List<int>.from(state.activeReminderDays);
+    if (current.contains(day)) {
+      current.remove(day);
+    } else {
+      current.add(day);
+      current.sort((a, b) => b.compareTo(a)); // descending: 7, 3, 1, 0
+    }
+    state = state.copyWith(
+      customReminderDays: current,
+      renewalRemindersEnabled: current.isNotEmpty,
+    );
+  }
+
   void setProStatus(bool isPro) {
     state = state.copyWith(isPro: isPro);
     NotificationService.instance.setProStatus(isPro);

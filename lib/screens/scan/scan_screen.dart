@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../config/theme.dart';
+import '../../models/scan_output.dart';
 import '../../models/scan_result.dart';
 import '../../models/subscription.dart';
 import '../../models/trap_result.dart';
@@ -608,22 +609,29 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         );
 
       case ChatMessageType.multiReview:
-        return _MultiReviewMessage(
-          result: msg.scanResult!,
-          trap: msg.trapResult,
-          index: msg.multiReviewIndex!,
-          total: msg.multiReviewTotal!,
-          onAdd: () => _addMultiReviewItem(msg.multiReviewIndex!),
-          onSkip: () => ref.read(scanProvider.notifier).skipCurrentMultiResult(),
+        final scanState = ref.read(scanProvider);
+        return _MultiChecklistMessage(
+          outputs: scanState.multiOutputs ?? [],
+          onAddSelected: (indices, edits) => _addSelectedMultiResults(indices, edits),
         );
     }
   }
 
-  /// Add a single subscription from the multi-review flow, then advance.
-  void _addMultiReviewItem(int index) async {
+  /// Batch-add selected subscriptions from the multi-scan checklist.
+  /// [edits] contains user overrides for price, currency, and cycle per index.
+  void _addSelectedMultiResults(
+    List<int> selectedIndices,
+    Map<int, _ScanEdits> edits,
+  ) async {
     final scanState = ref.read(scanProvider);
     final outputs = scanState.multiOutputs;
-    if (outputs == null || index >= outputs.length) return;
+    if (outputs == null) return;
+
+    // Skip all — nothing to add
+    if (selectedIndices.isEmpty) {
+      ref.read(scanProvider.notifier).completeMultiReview(0);
+      return;
+    }
 
     final canAdd = ref.read(canAddSubProvider);
     if (!canAdd) {
@@ -631,44 +639,81 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       return;
     }
 
-    final output = outputs[index];
-    final scan = output.subscription;
-    final trap = output.trap;
-
-    // Create subscription using fromScanWithTrap if trap exists, else manual
-    final Subscription sub;
-    if (trap.isTrap) {
-      sub = Subscription.fromScanWithTrap(scan, trap);
-    } else {
-      final now = DateTime.now();
-      final cycle = _parseCycle(scan.billingCycle ?? 'monthly');
-      sub = Subscription()
-        ..uid =
-            '${scan.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}-$index'
-        ..name = scan.serviceName
-        ..price = scan.price ?? 0
-        ..currency = scan.currency
-        ..cycle = cycle
-        ..nextRenewal = _nextFutureRenewal(scan.nextRenewal, cycle)
-        ..category = scan.category ?? 'Other'
-        ..isTrial = scan.isTrial
-        ..trialEndDate = scan.trialEndDate
-        ..iconName = scan.iconName
-        ..brandColor = scan.brandColor
-        ..isActive = true
-        ..source = SubscriptionSource.aiScan
-        ..createdAt = now;
-    }
-
-    // Fix currency when AI guessed (no visible price on screenshot).
-    // Use the user's display currency instead (e.g. PLN for Polish users).
+    final now = DateTime.now();
     final displayCurrency = ref.read(currencyProvider);
-    if (scan.price == null && sub.currency != displayCurrency) {
-      sub.currency = displayCurrency;
+    int addedCount = 0;
+
+    for (final index in selectedIndices) {
+      if (index >= outputs.length) continue;
+
+      final output = outputs[index];
+      final scan = output.subscription;
+      final trap = output.trap;
+      final edit = edits[index];
+
+      // Resolve effective values — user edits override AI scan data
+      final effectivePrice = edit?.price ?? scan.price ?? 0;
+      final effectiveCurrency = edit?.currency ?? scan.currency;
+      final effectiveCycleStr = edit?.cycle ?? scan.billingCycle ?? 'monthly';
+      final effectiveCycle = _parseCycle(effectiveCycleStr);
+
+      final Subscription sub;
+      if (trap.isTrap) {
+        sub = Subscription.fromScanWithTrap(scan, trap);
+        // Apply user edits on top of trap-created subscription
+        if (edit != null) {
+          if (edit.price != null) sub.price = edit.price!;
+          if (edit.currency != null) sub.currency = edit.currency!;
+          if (edit.cycle != null) sub.cycle = _parseCycle(edit.cycle!);
+        }
+      } else {
+        // Only clear trial flag when we have an explicit PAST trial end date.
+        // If trialEndDate is null (AI didn't extract one), keep the AI's isTrial flag.
+        final trialEndDateIsInPast = scan.trialEndDate != null &&
+            scan.trialEndDate!.isBefore(DateTime(now.year, now.month, now.day));
+        final trialStillActive = scan.isTrial && !trialEndDateIsInPast;
+
+        // For trial subs, prefer trialEndDate as nextRenewal when
+        // the AI didn't extract a specific nextRenewal date.
+        final renewalDate = (trialStillActive && scan.nextRenewal == null && scan.trialEndDate != null)
+            ? scan.trialEndDate!
+            : _nextFutureRenewal(scan.nextRenewal, effectiveCycle);
+
+        sub = Subscription()
+          ..uid =
+              '${scan.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}-$index'
+          ..name = scan.serviceName
+          ..price = effectivePrice.toDouble()
+          ..currency = effectiveCurrency
+          ..cycle = effectiveCycle
+          ..nextRenewal = renewalDate
+          ..category = scan.category ?? 'Other'
+          ..isTrial = trialStillActive
+          ..trialEndDate = trialStillActive ? scan.trialEndDate : null
+          ..iconName = scan.iconName
+          ..brandColor = scan.brandColor
+          ..isActive = true
+          ..source = SubscriptionSource.aiScan
+          ..createdAt = now;
+      }
+
+      // Fix currency when AI guessed (no visible price on screenshot)
+      // and user didn't explicitly override it.
+      if (scan.price == null && edit?.price == null && sub.currency != displayCurrency) {
+        sub.currency = displayCurrency;
+      }
+
+      // Mark expiring (already cancelled) subs as inactive
+      if (scan.isExpiring) {
+        sub.isActive = false;
+        sub.cancelledDate = now;
+      }
+
+      ref.read(subscriptionsProvider.notifier).add(sub);
+      addedCount++;
     }
 
-    ref.read(subscriptionsProvider.notifier).add(sub);
-    ref.read(scanProvider.notifier).addCurrentMultiResult();
+    ref.read(scanProvider.notifier).completeMultiReview(addedCount);
   }
 
   void _onAnswer(int index, String answer, ScanState scanState) {
@@ -703,6 +748,19 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
     final now = DateTime.now();
     final cycle = _parseCycle(result.billingCycle ?? 'monthly');
+
+    // Only clear trial flag when we have an explicit PAST trial end date.
+    // If trialEndDate is null (AI didn't extract one), keep the AI's isTrial flag.
+    final trialEndDateIsInPast = result.trialEndDate != null &&
+        result.trialEndDate!.isBefore(DateTime(now.year, now.month, now.day));
+    final trialStillActive = result.isTrial && !trialEndDateIsInPast;
+
+    // For trial subs, prefer trialEndDate as nextRenewal when
+    // the AI didn't extract a specific nextRenewal date.
+    final renewalDate = (trialStillActive && result.nextRenewal == null && result.trialEndDate != null)
+        ? result.trialEndDate!
+        : _nextFutureRenewal(result.nextRenewal, cycle);
+
     final sub = Subscription()
       ..uid =
           '${result.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}'
@@ -710,10 +768,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       ..price = result.price ?? 0
       ..currency = result.currency
       ..cycle = cycle
-      ..nextRenewal = _nextFutureRenewal(result.nextRenewal, cycle)
+      ..nextRenewal = renewalDate
       ..category = result.category ?? 'Other'
-      ..isTrial = result.isTrial
-      ..trialEndDate = result.trialEndDate
+      ..isTrial = trialStillActive
+      ..trialEndDate = trialStillActive ? result.trialEndDate : null
       ..iconName = result.iconName
       ..brandColor = result.brandColor
       ..isActive = true
@@ -748,6 +806,19 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     for (var i = 0; i < results.length; i++) {
       final result = results[i];
       final cycle = _parseCycle(result.billingCycle ?? 'monthly');
+
+      // Only clear trial flag when we have an explicit PAST trial end date.
+      // If trialEndDate is null (AI didn't extract one), keep the AI's isTrial flag.
+      final trialEndDateIsInPast = result.trialEndDate != null &&
+          result.trialEndDate!.isBefore(DateTime(now.year, now.month, now.day));
+      final trialStillActive = result.isTrial && !trialEndDateIsInPast;
+
+      // For trial subs, prefer trialEndDate as nextRenewal when
+      // the AI didn't extract a specific nextRenewal date.
+      final renewalDate = (trialStillActive && result.nextRenewal == null && result.trialEndDate != null)
+          ? result.trialEndDate!
+          : _nextFutureRenewal(result.nextRenewal, cycle);
+
       final sub = Subscription()
         ..uid =
             '${result.serviceName.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}-$i'
@@ -755,10 +826,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         ..price = result.price ?? 0
         ..currency = result.currency
         ..cycle = cycle
-        ..nextRenewal = _nextFutureRenewal(result.nextRenewal, cycle)
+        ..nextRenewal = renewalDate
         ..category = result.category ?? 'Other'
-        ..isTrial = result.isTrial
-        ..trialEndDate = result.trialEndDate
+        ..isTrial = trialStillActive
+        ..trialEndDate = trialStillActive ? result.trialEndDate : null
         ..iconName = result.iconName
         ..brandColor = result.brandColor
         ..isActive = true
@@ -1898,33 +1969,90 @@ class _MiniResultRow extends StatelessWidget {
   }
 }
 
-/// Single subscription card for the one-by-one multi-review flow.
+/// Checklist for batch-selecting subscriptions from multi-scan.
 ///
-/// Shows progress (1 of 6), service details, trap warning if applicable,
-/// and Add/Skip buttons.
-class _MultiReviewMessage extends StatelessWidget {
-  final ScanResult result;
-  final TrapResult? trap;
-  final int index;
-  final int total;
-  final VoidCallback onAdd;
-  final VoidCallback onSkip;
+/// Shows all detected subscriptions as expandable rows with checkboxes.
+/// Tap a row to expand and see details + edit price/currency/cycle.
+/// Tap the checkbox to toggle selection. "Add N selected" adds in batch.
+class _MultiChecklistMessage extends StatefulWidget {
+  final List<ScanOutput> outputs;
+  final void Function(List<int> selectedIndices, Map<int, _ScanEdits> edits) onAddSelected;
 
-  const _MultiReviewMessage({
-    required this.result,
-    required this.trap,
-    required this.index,
-    required this.total,
-    required this.onAdd,
-    required this.onSkip,
+  const _MultiChecklistMessage({
+    required this.outputs,
+    required this.onAddSelected,
   });
 
-  Color get _brandColor {
-    final hex = result.brandColor?.replaceFirst('#', '') ?? '6EE7B7';
-    return Color(int.parse('FF$hex', radix: 16));
+  @override
+  State<_MultiChecklistMessage> createState() => _MultiChecklistMessageState();
+}
+
+/// Holds user edits for a single scan result row.
+class _ScanEdits {
+  double? price;
+  String? currency;
+  String? cycle; // 'monthly', 'yearly', 'weekly', 'quarterly'
+
+  _ScanEdits({this.price, this.currency, this.cycle});
+}
+
+class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
+  late List<bool> _checked;
+  int? _expandedIndex;
+  final Map<int, _ScanEdits> _edits = {};
+  final Map<int, TextEditingController> _priceControllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _checked = List.generate(widget.outputs.length, (i) {
+      final output = widget.outputs[i];
+      final trap = output.trap;
+      // Auto-untick high-severity traps
+      if (trap.isTrap && trap.severity == TrapSeverity.high) return false;
+      // Auto-untick already-cancelled (expiring) subscriptions
+      if (output.subscription.isExpiring) return false;
+      return true;
+    });
   }
 
-  String _cycleLabel(String? cycle) {
+  @override
+  void dispose() {
+    for (final c in _priceControllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  int get _selectedCount => _checked.where((c) => c).length;
+
+  bool get _hasExpiringItems => widget.outputs.any((o) => o.subscription.isExpiring);
+
+  List<int> get _selectedIndices {
+    final indices = <int>[];
+    for (int i = 0; i < _checked.length; i++) {
+      if (_checked[i]) indices.add(i);
+    }
+    return indices;
+  }
+
+  _ScanEdits _getEdits(int i) => _edits.putIfAbsent(i, () => _ScanEdits());
+
+  TextEditingController _getPriceController(int i) {
+    return _priceControllers.putIfAbsent(i, () {
+      final scan = widget.outputs[i].subscription;
+      return TextEditingController(
+        text: scan.price != null ? scan.price!.toStringAsFixed(2) : '',
+      );
+    });
+  }
+
+  static Color _parseBrandColor(String? hex) {
+    final h = hex?.replaceFirst('#', '') ?? '6EE7B7';
+    return Color(int.parse('FF$h', radix: 16));
+  }
+
+  static String _cycleLabel(String? cycle) {
     return switch (cycle?.toLowerCase()) {
       'yearly' => 'yr',
       'weekly' => 'wk',
@@ -1933,292 +2061,174 @@ class _MultiReviewMessage extends StatelessWidget {
     };
   }
 
+  static String _formatShortDate(DateTime date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  String _getEffectiveCycle(int i) {
+    return _edits[i]?.cycle ?? widget.outputs[i].subscription.billingCycle ?? 'monthly';
+  }
+
+  String _getEffectiveCurrency(int i) {
+    return _edits[i]?.currency ?? widget.outputs[i].subscription.currency;
+  }
+
+  double _getEffectivePrice(int i) {
+    return _edits[i]?.price ?? widget.outputs[i].subscription.price ?? 0;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final hasTrap = trap != null && trap!.isTrap;
-    final isHighSeverity = hasTrap && trap!.severity != TrapSeverity.low;
-
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.85,
+          maxWidth: MediaQuery.of(context).size.width * 0.9,
         ),
         margin: const EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
           color: ChompdColors.bgCard,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: hasTrap
-                ? (isHighSeverity
-                    ? ChompdColors.red.withValues(alpha: 0.4)
-                    : ChompdColors.amber.withValues(alpha: 0.4))
-                : ChompdColors.border,
-          ),
+          border: Border.all(color: ChompdColors.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            // ─── Progress pill ───
+            // ─── Header ───
             Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: ChompdColors.purple.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${index + 1} of $total',
-                  style: ChompdTypography.mono(
-                    size: 10,
-                    weight: FontWeight.w700,
-                    color: ChompdColors.purple,
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 10),
-
-            // ─── Service info row ───
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
+              padding: const EdgeInsets.fromLTRB(14, 14, 14, 0),
               child: Row(
                 children: [
-                  // Brand icon
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      gradient: LinearGradient(
-                        colors: [
-                          _brandColor.withValues(alpha: 0.87),
-                          _brandColor.withValues(alpha: 0.53),
-                        ],
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      result.iconName ?? result.serviceName[0],
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
+                  const Text('\u2705', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Found ${widget.outputs.length} subscriptions',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: ChompdColors.text,
                     ),
                   ),
-                  const SizedBox(width: 12),
-
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          result.serviceName,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: ChompdColors.text,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Text(
-                              '${Subscription.formatPrice(result.price ?? 0, result.currency)}/${_cycleLabel(result.billingCycle)}',
-                              style: ChompdTypography.mono(
-                                size: 13,
-                                weight: FontWeight.w700,
-                                color: ChompdColors.textMid,
-                              ),
-                            ),
-                            if (result.isTrial) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 5,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: ChompdColors.amber.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  context.l10n.trialLabel,
-                                  style: const TextStyle(
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w700,
-                                    color: ChompdColors.amber,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Category chip
-                  if (result.category != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: ChompdColors.bgElevated,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        result.category!,
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          color: ChompdColors.textDim,
-                        ),
-                      ),
-                    ),
                 ],
               ),
             ),
-
-            // ─── Trap warning banner ───
-            if (hasTrap) ...[
-              const SizedBox(height: 10),
-              Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 14),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                decoration: BoxDecoration(
-                  color: isHighSeverity
-                      ? ChompdColors.red.withValues(alpha: 0.08)
-                      : ChompdColors.amber.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: isHighSeverity
-                        ? ChompdColors.red.withValues(alpha: 0.2)
-                        : ChompdColors.amber.withValues(alpha: 0.2),
-                  ),
+            const SizedBox(height: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              child: Text(
+                'Tap to expand and edit details',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: ChompdColors.textMid,
                 ),
-                child: Row(
-                  children: [
-                    Text(
-                      isHighSeverity ? '\u26A0\uFE0F' : '\u23F0',
-                      style: const TextStyle(fontSize: 14),
+              ),
+            ),
+
+            // ─── Expiring subs tip ───
+            if (_hasExpiringItems) ...[
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: ChompdColors.blue.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: ChompdColors.blue.withValues(alpha: 0.2),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            trap!.trapTypeLabel,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: isHighSeverity
-                                  ? ChompdColors.red
-                                  : ChompdColors.amber,
-                            ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Text('\uD83D\uDCA1', style: TextStyle(fontSize: 12)),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Some subscriptions are already cancelled and will expire soon — we\'ve unticked them for you.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: ChompdColors.blue.withValues(alpha: 0.9),
+                            height: 1.35,
                           ),
-                          if (trap!.realPrice != null) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              'Real cost: ${Subscription.formatPrice(trap!.realPrice!, result.currency)}/${trap!.realBillingCycle ?? 'year'}',
-                              style: ChompdTypography.mono(
-                                size: 10,
-                                weight: FontWeight.w600,
-                                color: isHighSeverity
-                                    ? ChompdColors.red.withValues(alpha: 0.8)
-                                    : ChompdColors.amber.withValues(alpha: 0.8),
-                              ),
-                            ),
-                          ],
-                          if (trap!.warningMessage.isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              trap!.warningMessage,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: ChompdColors.textMid,
-                              ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],
 
             const SizedBox(height: 12),
 
+            // ─── Checklist rows ───
+            ...List.generate(widget.outputs.length, (i) =>
+              _buildChecklistRow(context, i)),
+
+            const SizedBox(height: 14),
+
             // ─── Action buttons ───
             Padding(
               padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
               child: Row(
                 children: [
-                  // Skip button
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: onSkip,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 11),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: ChompdColors.border),
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          'Skip',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: ChompdColors.textMid,
-                          ),
-                        ),
+                  GestureDetector(
+                    onTap: () => widget.onAddSelected([], {}),
+                    child: const Text(
+                      'Skip all',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: ChompdColors.textMid,
                       ),
                     ),
                   ),
-
-                  const SizedBox(width: 10),
-
-                  // Add button
+                  const SizedBox(width: 16),
                   Expanded(
-                    flex: 2,
                     child: GestureDetector(
-                      onTap: onAdd,
+                      onTap: _selectedCount > 0
+                          ? () => widget.onAddSelected(_selectedIndices, _edits)
+                          : null,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 11),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [ChompdColors.mintDark, ChompdColors.mint],
-                          ),
+                          gradient: _selectedCount > 0
+                              ? const LinearGradient(
+                                  colors: [ChompdColors.mintDark, ChompdColors.mint],
+                                )
+                              : null,
+                          color: _selectedCount > 0 ? null : ChompdColors.border,
                           borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: ChompdColors.mint.withValues(alpha: 0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
+                          boxShadow: _selectedCount > 0
+                              ? [
+                                  BoxShadow(
+                                    color: ChompdColors.mint.withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
                         ),
                         alignment: Alignment.center,
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.add_rounded, size: 15, color: ChompdColors.bg),
+                            Icon(
+                              Icons.add_rounded,
+                              size: 15,
+                              color: _selectedCount > 0 ? ChompdColors.bg : ChompdColors.textDim,
+                            ),
                             const SizedBox(width: 4),
                             Text(
-                              context.l10n.addToChompd,
-                              style: const TextStyle(
+                              _selectedCount > 0
+                                  ? 'Add $_selectedCount selected'
+                                  : 'Select subscriptions',
+                              style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w700,
-                                color: ChompdColors.bg,
+                                color: _selectedCount > 0 ? ChompdColors.bg : ChompdColors.textDim,
                               ),
                             ),
                           ],
@@ -2229,6 +2239,453 @@ class _MultiReviewMessage extends StatelessWidget {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChecklistRow(BuildContext context, int i) {
+    final output = widget.outputs[i];
+    final scan = output.subscription;
+    final trap = output.trap;
+    final hasTrap = trap.isTrap;
+    final isHigh = hasTrap && trap.severity == TrapSeverity.high;
+    final isExpiring = scan.isExpiring;
+    final brandColor = _parseBrandColor(scan.brandColor);
+    final isExpanded = _expandedIndex == i;
+
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeInOut,
+      alignment: Alignment.topCenter,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+        decoration: BoxDecoration(
+          color: _checked[i]
+              ? ChompdColors.mint.withValues(alpha: 0.06)
+              : (isExpanded ? ChompdColors.bgElevated.withValues(alpha: 0.5) : Colors.transparent),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: _checked[i]
+                ? ChompdColors.mint.withValues(alpha: 0.2)
+                : isExpiring
+                    ? ChompdColors.textDim.withValues(alpha: 0.3)
+                    : (hasTrap
+                        ? (isHigh
+                            ? ChompdColors.red.withValues(alpha: 0.3)
+                            : ChompdColors.amber.withValues(alpha: 0.3))
+                        : ChompdColors.border.withValues(alpha: 0.5)),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // ─── Collapsed row ───
+            GestureDetector(
+              onTap: () => setState(() {
+                _expandedIndex = isExpanded ? null : i;
+              }),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Row(
+                  children: [
+                    // Checkbox — separate tap target
+                    GestureDetector(
+                      onTap: () => setState(() => _checked[i] = !_checked[i]),
+                      behavior: HitTestBehavior.opaque,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 10),
+                        child: Container(
+                          width: 22,
+                          height: 22,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            color: _checked[i] ? ChompdColors.mint : Colors.transparent,
+                            border: Border.all(
+                              color: _checked[i] ? ChompdColors.mint : ChompdColors.textDim,
+                              width: 1.5,
+                            ),
+                          ),
+                          alignment: Alignment.center,
+                          child: _checked[i]
+                              ? const Icon(Icons.check_rounded, size: 14, color: ChompdColors.bg)
+                              : null,
+                        ),
+                      ),
+                    ),
+
+                    // Brand icon
+                    Opacity(
+                      opacity: isExpiring ? 0.45 : 1.0,
+                      child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        gradient: LinearGradient(
+                          colors: [
+                            brandColor.withValues(alpha: 0.87),
+                            brandColor.withValues(alpha: 0.53),
+                          ],
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        scan.iconName ?? (scan.serviceName.isNotEmpty ? scan.serviceName[0] : '?'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    ),
+                    const SizedBox(width: 10),
+
+                    // Name + price / expiry info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            scan.serviceName,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: isExpiring ? ChompdColors.textMid : ChompdColors.text,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          if (isExpiring)
+                            Text(
+                              'Already cancelled${scan.nextRenewal != null ? ' · Expires ${_formatShortDate(scan.nextRenewal!)}' : ''}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: ChompdColors.textDim,
+                              ),
+                            )
+                          else
+                            Text(
+                              '${Subscription.formatPrice(_getEffectivePrice(i), _getEffectiveCurrency(i))}/${_cycleLabel(_getEffectiveCycle(i))}',
+                              style: ChompdTypography.mono(
+                                size: 11,
+                                color: ChompdColors.textMid,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+
+                    // Expiring badge (already cancelled)
+                    if (isExpiring) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: ChompdColors.textDim.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.event_busy_rounded,
+                              size: 10,
+                              color: ChompdColors.textMid,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              'Expires',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: ChompdColors.textMid,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+
+                    // Trap badge
+                    if (hasTrap && !isExpiring) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: isHigh
+                              ? ChompdColors.red.withValues(alpha: 0.12)
+                              : ChompdColors.amber.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.warning_rounded,
+                              size: 10,
+                              color: isHigh ? ChompdColors.red : ChompdColors.amber,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              isHigh ? 'Trap' : 'Trial',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w700,
+                                color: isHigh ? ChompdColors.red : ChompdColors.amber,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+
+                    // Expand chevron
+                    Icon(
+                      isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded,
+                      size: 18,
+                      color: ChompdColors.textDim,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // ─── Expanded detail panel ───
+            if (isExpanded) ...[
+              const Divider(color: ChompdColors.border, height: 1),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Trap warning banner
+                    if (hasTrap)
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isHigh
+                              ? ChompdColors.red.withValues(alpha: 0.08)
+                              : ChompdColors.amber.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: isHigh
+                                ? ChompdColors.red.withValues(alpha: 0.2)
+                                : ChompdColors.amber.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              isHigh ? '\u26A0\uFE0F' : '\u23F0',
+                              style: const TextStyle(fontSize: 14),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    trap.trapTypeLabel,
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: isHigh ? ChompdColors.red : ChompdColors.amber,
+                                    ),
+                                  ),
+                                  if (trap.realPrice != null) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      'Real cost: ${Subscription.formatPrice(trap.realPrice!, scan.currency)}/${trap.realBillingCycle ?? 'year'}',
+                                      style: ChompdTypography.mono(
+                                        size: 10,
+                                        weight: FontWeight.w600,
+                                        color: (isHigh ? ChompdColors.red : ChompdColors.amber)
+                                            .withValues(alpha: 0.8),
+                                      ),
+                                    ),
+                                  ],
+                                  if (trap.warningMessage.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      trap.warningMessage,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: ChompdColors.textMid,
+                                      ),
+                                      maxLines: 3,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // Price + Currency row
+                    Row(
+                      children: [
+                        // Price field
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: _getPriceController(i),
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
+                            ],
+                            style: ChompdTypography.mono(
+                              size: 14,
+                              weight: FontWeight.w700,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: '0.00',
+                              hintStyle: TextStyle(
+                                color: ChompdColors.textDim.withValues(alpha: 0.5),
+                              ),
+                              filled: true,
+                              fillColor: ChompdColors.bgElevated,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              isDense: true,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: ChompdColors.border),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: ChompdColors.border),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(color: ChompdColors.mint),
+                              ),
+                            ),
+                            onChanged: (v) {
+                              final parsed = double.tryParse(v.replaceAll(',', '.'));
+                              if (parsed != null) {
+                                _getEdits(i).price = parsed;
+                                setState(() {});
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+
+                        // Currency dropdown
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: ChompdColors.bgElevated,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: ChompdColors.border),
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _getEffectiveCurrency(i),
+                              dropdownColor: ChompdColors.bgElevated,
+                              isDense: true,
+                              style: ChompdTypography.mono(
+                                size: 11,
+                                weight: FontWeight.w600,
+                              ),
+                              icon: const Icon(
+                                Icons.expand_more_rounded,
+                                size: 14,
+                                color: ChompdColors.textDim,
+                              ),
+                              items: supportedCurrencies
+                                  .map((c) => DropdownMenuItem<String>(
+                                        value: c['code'] as String,
+                                        child: Text(
+                                          '${c['symbol']} ${c['code']}',
+                                          style: ChompdTypography.mono(
+                                            size: 11,
+                                            weight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ))
+                                  .toList(),
+                              onChanged: (v) {
+                                if (v != null) {
+                                  setState(() => _getEdits(i).currency = v);
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Cycle chips
+                    Row(
+                      children: ['monthly', 'yearly', 'weekly', 'quarterly'].map((c) {
+                        final current = _getEffectiveCycle(i);
+                        final isSelected = c == current;
+                        final label = c == 'monthly'
+                            ? 'Mo'
+                            : c == 'yearly'
+                                ? 'Yr'
+                                : c == 'weekly'
+                                    ? 'Wk'
+                                    : 'Qtr';
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: GestureDetector(
+                            onTap: () => setState(() => _getEdits(i).cycle = c),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? ChompdColors.mint.withValues(alpha: 0.15)
+                                    : ChompdColors.bgElevated,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? ChompdColors.mint.withValues(alpha: 0.5)
+                                      : ChompdColors.border,
+                                ),
+                              ),
+                              child: Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  color: isSelected ? ChompdColors.mint : ChompdColors.textDim,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                    // Category
+                    if (scan.category != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.label_outline_rounded, size: 12, color: ChompdColors.textDim),
+                          const SizedBox(width: 4),
+                          Text(
+                            scan.category!,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: ChompdColors.textDim,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ],
         ),
       ),

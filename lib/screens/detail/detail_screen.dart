@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../config/constants.dart';
 import '../../config/theme.dart';
 import '../../models/subscription.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../data/cancel_guides_data.dart';
+import '../../services/haptic_service.dart';
 import '../../services/notification_service.dart';
 import '../../utils/date_helpers.dart';
 import '../../utils/l10n_extension.dart';
 import '../../widgets/mascot_image.dart';
 import '../cancel/cancel_guide_screen.dart';
 import '../paywall/paywall_screen.dart';
-import '../refund/refund_rescue_screen.dart';
 import 'add_edit_screen.dart';
 
 /// Subscription detail screen — matches the visual design prototype.
@@ -154,7 +155,7 @@ class DetailScreen extends ConsumerWidget {
                             ),
                           ),
                           TextSpan(
-                            text: '/${sub.cycle.shortLabel}',
+                            text: '/${sub.cycle.localShortLabel(context.l10n)}',
                             style: const TextStyle(
                               fontSize: 14,
                               color: ChompdColors.textDim,
@@ -345,7 +346,7 @@ class DetailScreen extends ConsumerWidget {
                             ),
                           ),
                           Text(
-                            Subscription.formatPrice(sub.price * 4, sub.currency),
+                            Subscription.formatPrice(sub.totalPaidSinceCreation, sub.currency),
                             style: ChompdTypography.mono(
                               size: 13,
                               weight: FontWeight.w700,
@@ -371,11 +372,11 @@ class DetailScreen extends ConsumerWidget {
                 label: context.l10n.sectionDetails,
                 child: Column(
                   children: [
-                    _DetailRow(label: context.l10n.detailCategory, value: sub.category),
+                    _DetailRow(label: context.l10n.detailCategory, value: AppConstants.localisedCategory(sub.category, context.l10n)),
                     _divider(),
                     _DetailRow(label: context.l10n.detailCurrency, value: sub.currency),
                     _divider(),
-                    _DetailRow(label: context.l10n.detailBillingCycle, value: sub.cycle.label),
+                    _DetailRow(label: context.l10n.detailBillingCycle, value: sub.cycle.localLabel(context.l10n)),
                     _divider(),
                     _DetailRow(
                       label: context.l10n.detailAdded,
@@ -395,72 +396,6 @@ class DetailScreen extends ConsumerWidget {
           ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 20)),
-
-          // ─── Cancel Guide Button ───
-          if (sub.isActive)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: GestureDetector(
-                  onTap: () => _navigateToCancelGuide(context, sub),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: ChompdColors.redGlow,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: ChompdColors.red.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      context.l10n.cancelSubscription,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: ChompdColors.red,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-
-          // ─── Refund Rescue Button ───
-          if (sub.isActive)
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => RefundRescueScreen(subscription: sub),
-                    ),
-                  ),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    decoration: BoxDecoration(
-                      color: ChompdColors.purple.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: ChompdColors.purple.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      context.l10n.requestRefund,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: ChompdColors.purple,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
 
           // ─── Delete Button ───
           SliverToBoxAdapter(
@@ -489,6 +424,37 @@ class DetailScreen extends ConsumerWidget {
               ),
             ),
           ),
+
+          // ─── Cancel Guide Button (bottom of page) ───
+          if (sub.isActive)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+                child: GestureDetector(
+                  onTap: () => _navigateToCancelGuide(context, sub),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: ChompdColors.redGlow,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: ChompdColors.red.withValues(alpha: 0.2),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      context.l10n.cancelSubscription,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: ChompdColors.red,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
 
           SliverToBoxAdapter(
             child: SizedBox(
@@ -772,6 +738,10 @@ class _RemindersCard extends StatelessWidget {
                 prefs.activeReminderDays.contains(7),
             isPro: true,
             isLocked: !isPro,
+            onChanged: isPro ? (_) {
+              ref.read(notificationPrefsProvider.notifier).toggleReminderDay(7);
+              HapticService.instance.selection();
+            } : null,
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
@@ -780,6 +750,10 @@ class _RemindersCard extends StatelessWidget {
                 prefs.activeReminderDays.contains(3),
             isPro: true,
             isLocked: !isPro,
+            onChanged: isPro ? (_) {
+              ref.read(notificationPrefsProvider.notifier).toggleReminderDay(3);
+              HapticService.instance.selection();
+            } : null,
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
@@ -788,6 +762,10 @@ class _RemindersCard extends StatelessWidget {
                 prefs.activeReminderDays.contains(1),
             isPro: true,
             isLocked: !isPro,
+            onChanged: isPro ? (_) {
+              ref.read(notificationPrefsProvider.notifier).toggleReminderDay(1);
+              HapticService.instance.selection();
+            } : null,
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
@@ -796,6 +774,10 @@ class _RemindersCard extends StatelessWidget {
                 prefs.activeReminderDays.contains(0),
             isPro: false,
             isLocked: false,
+            onChanged: (_) {
+              ref.read(notificationPrefsProvider.notifier).toggleReminderDay(0);
+              HapticService.instance.selection();
+            },
           ),
 
           if (!isPro) ...[
@@ -852,82 +834,87 @@ class _ReminderRow extends StatelessWidget {
   final bool enabled;
   final bool isPro;
   final bool isLocked;
+  final ValueChanged<bool>? onChanged;
   const _ReminderRow({
     required this.label,
     required this.enabled,
     required this.isPro,
     this.isLocked = false,
+    this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12.5,
-                color: enabled ? ChompdColors.text : ChompdColors.textDim,
-              ),
-            ),
-          ),
-          if (isPro)
-            Container(
-              margin: const EdgeInsets.only(right: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-              decoration: BoxDecoration(
-                color: ChompdColors.mint.withValues(alpha: 0.09),
-                borderRadius: BorderRadius.circular(4),
-              ),
+    return GestureDetector(
+      onTap: isLocked ? null : () => onChanged?.call(!enabled),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        child: Row(
+          children: [
+            Expanded(
               child: Text(
-                'PRO',
-                style: ChompdTypography.mono(
-                  size: 7,
-                  weight: FontWeight.w700,
-                  color: ChompdColors.mint,
+                label,
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: enabled ? ChompdColors.text : ChompdColors.textDim,
                 ),
               ),
             ),
-          if (isLocked)
-            const Icon(
-              Icons.lock_outline_rounded,
-              size: 14,
-              color: ChompdColors.textDim,
-            )
-          else
-            Container(
-              width: 36,
-              height: 20,
-              padding: const EdgeInsets.all(2),
-              decoration: BoxDecoration(
-                color: enabled ? ChompdColors.mint : ChompdColors.bgElevated,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: AnimatedAlign(
-                duration: const Duration(milliseconds: 200),
-                alignment:
-                    enabled ? Alignment.centerRight : Alignment.centerLeft,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.black26,
-                        blurRadius: 3,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
+            if (isPro)
+              Container(
+                margin: const EdgeInsets.only(right: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                decoration: BoxDecoration(
+                  color: ChompdColors.mint.withValues(alpha: 0.09),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'PRO',
+                  style: ChompdTypography.mono(
+                    size: 7,
+                    weight: FontWeight.w700,
+                    color: ChompdColors.mint,
                   ),
                 ),
               ),
-            ),
-        ],
+            if (isLocked)
+              const Icon(
+                Icons.lock_outline_rounded,
+                size: 14,
+                color: ChompdColors.textDim,
+              )
+            else
+              Container(
+                width: 36,
+                height: 20,
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  color: enabled ? ChompdColors.mint : ChompdColors.bgElevated,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: AnimatedAlign(
+                  duration: const Duration(milliseconds: 200),
+                  alignment:
+                      enabled ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 3,
+                          offset: Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

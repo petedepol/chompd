@@ -372,6 +372,23 @@ class SEn extends S {
   String get freeTrialToggle => 'This is a free trial';
 
   @override
+  String get trialDurationLabel => 'Trial length';
+
+  @override
+  String get trialDays7 => '7 days';
+
+  @override
+  String get trialDays14 => '14 days';
+
+  @override
+  String get trialDays30 => '30 days';
+
+  @override
+  String trialCustomDays(int days) {
+    return '${days}d';
+  }
+
+  @override
   String get fieldTrialEnds => 'TRIAL ENDS';
 
   @override
@@ -661,6 +678,13 @@ class SEn extends S {
   String get couldntCancelRefund => 'Couldn’t cancel? Get Refund Help →';
 
   @override
+  String get refundTipTitle => 'Tip: Why request a refund?';
+
+  @override
+  String get refundTipBody =>
+      'If you were charged unexpectedly, signed up by accident, or the service didn’t work as promised — you may be entitled to a refund. The earlier you request, the better your chances.';
+
+  @override
   String get refundRescue => 'Refund Rescue';
 
   @override
@@ -701,6 +725,18 @@ class SEn extends S {
 
   @override
   String get settingsTitle => 'Settings';
+
+  @override
+  String get themeTitle => 'THEME';
+
+  @override
+  String get themeSystem => 'System';
+
+  @override
+  String get themeDark => 'Dark';
+
+  @override
+  String get themeLight => 'Light';
 
   @override
   String get sectionNotifications => 'NOTIFICATIONS';
@@ -1380,6 +1416,30 @@ class SEn extends S {
 
   @override
   String get categoryOther => 'Other';
+
+  @override
+  String get renewsToday => 'Renews today';
+
+  @override
+  String get renewsTomorrow => 'Renews tomorrow';
+
+  @override
+  String renewsInDays(int days) {
+    return 'Renews in $days days';
+  }
+
+  @override
+  String renewsOnDate(String date) {
+    return 'Renews $date';
+  }
+
+  @override
+  String get renewedYesterday => 'Renewed yesterday';
+
+  @override
+  String renewedDaysAgo(int days) {
+    return 'Renewed $days days ago';
+  }
 
   @override
   String get discoveryTipsTitle => 'Where to find subscriptions';

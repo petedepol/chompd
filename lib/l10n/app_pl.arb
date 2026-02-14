@@ -152,8 +152,16 @@
   "fieldCategory": "KATEGORIA",
   "fieldNextRenewal": "NASTĘPNE ODNOWIENIE",
   "selectDate": "Wybierz datę",
-  "freeTrialToggle": "To jest darmowy okres próbny",
-  "fieldTrialEnds": "TRIAL KOŃCZY SIĘ",
+  "freeTrialToggle": "To jest darmowy okres pr\u00F3bny",
+  "trialDurationLabel": "D\u0142ugo\u015B\u0107 triala",
+  "trialDays7": "7 dni",
+  "trialDays14": "14 dni",
+  "trialDays30": "30 dni",
+  "trialCustomDays": "{days}d",
+  "@trialCustomDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "fieldTrialEnds": "TRIAL KO\u0143CZY SI\u0118",
   "saveChanges": "Zapisz zmiany",
 
   "subscriptionDetail": "Szczegóły subskrypcji",
@@ -297,6 +305,8 @@
   "openCancelPage": "Otwórz stronę anulowania",
   "iveCancelled": "Anulowałem",
   "couldntCancelRefund": "Nie możesz anulować? Pomoc ze zwrotem →",
+  "refundTipTitle": "Wskazówka: Dlaczego warto poprosić o zwrot?",
+  "refundTipBody": "Jeśli zostałeś obciążony niespodziewanie, zapisałeś się przez przypadek lub usługa nie działała zgodnie z obietnicą \u2014 możesz mieć prawo do zwrotu. Im szybciej poprosisz, tym większe szanse.",
 
   "refundRescue": "Ratunek zwrotu",
   "refundIntro": "Spokojnie — większość ludzi odzyskuje pieniądze. Ogarniemy to.",
@@ -317,6 +327,10 @@
   "emailCopied": "E-mail skopiowany do schowka",
 
   "settingsTitle": "Ustawienia",
+  "themeTitle": "MOTYW",
+  "themeSystem": "Systemowy",
+  "themeDark": "Ciemny",
+  "themeLight": "Jasny",
   "sectionNotifications": "POWIADOMIENIA",
   "remindersScheduledSummary": "{count, plural, =1{1 przypomnienie ustawione} few{{count} przypomnienia ustawione} other{{count} przypomnień ustawionych}}",
   "@remindersScheduledSummary": {
@@ -668,6 +682,22 @@
   "categoryEducation": "Edukacja",
   "categoryHealth": "Zdrowie",
   "categoryOther": "Inne",
+
+  "renewsToday": "Odnawia si\u0119 dzi\u015B",
+  "renewsTomorrow": "Odnawia si\u0119 jutro",
+  "renewsInDays": "Odnawia si\u0119 za {days} dni",
+  "@renewsInDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "renewsOnDate": "Odnawia si\u0119 {date}",
+  "@renewsOnDate": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "renewedYesterday": "Odnowi\u0142o si\u0119 wczoraj",
+  "renewedDaysAgo": "Odnowi\u0142o si\u0119 {days} dni temu",
+  "@renewedDaysAgo": {
+    "placeholders": { "days": {"type": "int"} }
+  },
 
   "discoveryTipsTitle": "Gdzie szuka\u0107 subskrypcji",
   "discoveryTipBank": "Wyci\u0105g bankowy",

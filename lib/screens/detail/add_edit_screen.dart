@@ -217,7 +217,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                               ),
                               alignment: Alignment.center,
                               child: Text(
-                                cycle.label,
+                                cycle.localLabel(context.l10n),
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -274,7 +274,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  cat,
+                                  AppConstants.localisedCategory(cat, context.l10n),
                                   style: TextStyle(
                                     fontSize: 11.5,
                                     fontWeight: FontWeight.w500,

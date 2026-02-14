@@ -721,6 +721,36 @@ abstract class S {
   /// **'This is a free trial'**
   String get freeTrialToggle;
 
+  /// No description provided for @trialDurationLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial length'**
+  String get trialDurationLabel;
+
+  /// No description provided for @trialDays7.
+  ///
+  /// In en, this message translates to:
+  /// **'7 days'**
+  String get trialDays7;
+
+  /// No description provided for @trialDays14.
+  ///
+  /// In en, this message translates to:
+  /// **'14 days'**
+  String get trialDays14;
+
+  /// No description provided for @trialDays30.
+  ///
+  /// In en, this message translates to:
+  /// **'30 days'**
+  String get trialDays30;
+
+  /// No description provided for @trialCustomDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d'**
+  String trialCustomDays(int days);
+
   /// No description provided for @fieldTrialEnds.
   ///
   /// In en, this message translates to:
@@ -1201,6 +1231,18 @@ abstract class S {
   /// **'Couldn’t cancel? Get Refund Help →'**
   String get couldntCancelRefund;
 
+  /// No description provided for @refundTipTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Tip: Why request a refund?'**
+  String get refundTipTitle;
+
+  /// No description provided for @refundTipBody.
+  ///
+  /// In en, this message translates to:
+  /// **'If you were charged unexpectedly, signed up by accident, or the service didn’t work as promised — you may be entitled to a refund. The earlier you request, the better your chances.'**
+  String get refundTipBody;
+
   /// No description provided for @refundRescue.
   ///
   /// In en, this message translates to:
@@ -1272,6 +1314,30 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settingsTitle;
+
+  /// No description provided for @themeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'THEME'**
+  String get themeTitle;
+
+  /// No description provided for @themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get themeSystem;
+
+  /// No description provided for @themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get themeDark;
+
+  /// No description provided for @themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get themeLight;
 
   /// No description provided for @sectionNotifications.
   ///
@@ -2292,6 +2358,42 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Other'**
   String get categoryOther;
+
+  /// No description provided for @renewsToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews today'**
+  String get renewsToday;
+
+  /// No description provided for @renewsTomorrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews tomorrow'**
+  String get renewsTomorrow;
+
+  /// No description provided for @renewsInDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews in {days} days'**
+  String renewsInDays(int days);
+
+  /// No description provided for @renewsOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Renews {date}'**
+  String renewsOnDate(String date);
+
+  /// No description provided for @renewedYesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Renewed yesterday'**
+  String get renewedYesterday;
+
+  /// No description provided for @renewedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Renewed {days} days ago'**
+  String renewedDaysAgo(int days);
 
   /// No description provided for @discoveryTipsTitle.
   ///

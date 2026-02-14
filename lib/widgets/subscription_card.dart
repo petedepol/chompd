@@ -39,16 +39,40 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
       try {
         return _parseHexColor(widget.subscription.brandColor!);
       } catch (_) {
-        return ChompdColors.mint;
+        // Fall through to category colour
       }
     }
-    return ChompdColors.mint;
+    // Fall back to category colour
+    return CategoryColors.forCategory(widget.subscription.category);
   }
 
   static Color _parseHexColor(String hex) {
     hex = hex.replaceFirst('#', '');
     if (hex.length == 6) hex = 'FF$hex';
     return Color(int.parse(hex, radix: 16));
+  }
+
+  /// Build the icon content — uses category icon when the AI hasn't
+  /// set a proper icon (i.e. single letter or null).
+  Widget _buildIconContent(Subscription sub) {
+    final icon = sub.iconName;
+    final isSingleLetter = icon == null || icon.length <= 1;
+
+    if (isSingleLetter) {
+      final catIcon = CategoryIcons.forCategory(sub.category);
+      if (catIcon != null) {
+        return Icon(catIcon, size: 20, color: Colors.white);
+      }
+    }
+
+    return Text(
+      icon ?? (sub.name.isNotEmpty ? sub.name[0] : '?'),
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        color: Colors.white,
+      ),
+    );
   }
 
   @override
@@ -156,17 +180,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                       ],
                     ),
                     alignment: Alignment.center,
-                    child: Text(
-                      subscription.iconName ??
-                          (subscription.name.isNotEmpty
-                              ? subscription.name[0]
-                              : '?'),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: _buildIconContent(subscription),
                   ),
 
                   const SizedBox(width: 12),
@@ -201,12 +215,12 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          subscription.renewalLabel,
+                          subscription.localRenewalLabel(context.l10n),
                           style: TextStyle(
                             fontSize: 11,
                             color: subscription.daysUntilRenewal < 0
                                 ? ChompdColors.amber
-                                : ChompdColors.textDim,
+                                : ChompdColors.textMid,
                           ),
                         ),
                       ],
@@ -250,7 +264,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         )
                       else
                         Text(
-                          '/${subscription.cycle.shortLabel}',
+                          '/${subscription.cycle.localShortLabel(context.l10n)}',
                           style: ChompdTypography.cycleLabel,
                         ),
                     ],
@@ -367,7 +381,7 @@ class _TrapBadge extends StatelessWidget {
                 ? context.l10n.trapDays(subscription.trialDurationDays!)
                 : context.l10n.trapBadge,
             style: GoogleFonts.spaceMono(
-              fontSize: 8,
+              fontSize: 10,
               fontWeight: FontWeight.w700,
               color: color,
             ),

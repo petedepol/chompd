@@ -232,16 +232,28 @@ class Subscription {
   /// Recent past (≤7 days): "Renewed yesterday/X days ago"
   /// Old past (>7 days): "Renews 14 Mar 2026" — shows the date so
   /// users can spot incorrect dates and fix them.
-  String get renewalLabel {
+  String get renewalLabel => localRenewalLabel(null);
+
+  /// Localised renewal label. Pass [l] for full localisation.
+  /// Falls back to English when [l] is null.
+  String localRenewalLabel(S? l) {
     final days = daysUntilRenewal;
+    if (l != null) {
+      if (days == 0) return l.renewsToday;
+      if (days == 1) return l.renewsTomorrow;
+      if (days > 1 && days <= 30) return l.renewsInDays(days);
+      if (days > 30) return l.renewsOnDate(DateHelpers.shortDate(nextRenewal));
+      if (days == -1) return l.renewedYesterday;
+      if (days >= -7) return l.renewedDaysAgo(-days);
+      return l.renewsOnDate(DateHelpers.shortDate(nextRenewal));
+    }
+    // Fallback English (used in model-only contexts)
     if (days == 0) return 'Renews today';
     if (days == 1) return 'Renews tomorrow';
     if (days > 1 && days <= 30) return 'Renews in $days days';
     if (days > 30) return 'Renews ${DateHelpers.shortDate(nextRenewal)}';
-    // Past dates
     if (days == -1) return 'Renewed yesterday';
     if (days >= -7) return 'Renewed ${-days} days ago';
-    // Very old past — show the actual date so user can fix
     return 'Renews ${DateHelpers.shortDate(nextRenewal)}';
   }
 
@@ -261,6 +273,14 @@ class Subscription {
       return realPrice!;
     }
     return price;
+  }
+
+  /// Total paid since subscription was added to Chompd.
+  /// Counts billing cycles elapsed since [createdAt].
+  double get totalPaidSinceCreation {
+    final daysSince = DateTime.now().difference(createdAt).inDays;
+    final cyclesElapsed = (daysSince / cycle.approximateDays).floor();
+    return effectivePrice * cyclesElapsed.clamp(0, 999);
   }
 
   /// Monthly equivalent price for consistent comparisons.
@@ -379,7 +399,29 @@ class Subscription {
   /// with all trap metadata populated.
   static Subscription fromScanWithTrap(ScanResult scan, TrapResult trap) {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final cycle = BillingCycle.fromString(scan.billingCycle ?? 'monthly');
+
+    // Determine the effective trial end date:
+    // 1. AI extracted a future date → use it
+    // 2. AI extracted a PAST date → trial expired, clear it
+    // 3. No date extracted but trap has duration → calculate from now
+    // 4. No date at all → keep AI's isTrial flag but no expiry date
+    final bool trialEndDateIsInPast =
+        scan.trialEndDate != null && scan.trialEndDate!.isBefore(today);
+
+    DateTime? effectiveTrialEnd;
+    if (scan.trialEndDate != null && !trialEndDateIsInPast) {
+      effectiveTrialEnd = scan.trialEndDate;
+    } else if (!trialEndDateIsInPast && trap.trialDurationDays != null) {
+      effectiveTrialEnd = now.add(Duration(days: trap.trialDurationDays!));
+    }
+
+    // Trial is active if:
+    // - AI says trial AND no explicit past expiry date, OR
+    // - trap has duration days and we calculated a future expiry
+    final bool aiSaysTrial = scan.isTrial || trap.trialDurationDays != null;
+    final bool trialStillActive = aiSaysTrial && !trialEndDateIsInPast;
 
     final sub = Subscription()
       ..uid =
@@ -390,8 +432,8 @@ class Subscription {
       ..cycle = cycle
       ..nextRenewal = _nextFutureRenewal(scan.nextRenewal, cycle)
       ..category = scan.category ?? 'Other'
-      ..isTrial = scan.isTrial || (trap.trialDurationDays != null)
-      ..trialEndDate = scan.trialEndDate
+      ..isTrial = trialStillActive
+      ..trialEndDate = trialStillActive ? effectiveTrialEnd : null
       ..isActive = true
       ..iconName = scan.iconName
       ..brandColor = scan.brandColor
@@ -407,20 +449,13 @@ class Subscription {
       ..trapSeverity = trap.severity.name
       ..trapWarningMessage = trap.warningMessage.isNotEmpty ? trap.warningMessage : null;
 
-    // Set trial expiry: prefer AI-extracted date from screenshot,
-    // fall back to calculated (now + trialDurationDays) if not available.
-    if (scan.trialEndDate != null) {
-      sub.trialExpiresAt = scan.trialEndDate;
-      sub.trialEndDate = scan.trialEndDate;
-    } else if (trap.trialDurationDays != null) {
-      sub.trialExpiresAt = now.add(Duration(days: trap.trialDurationDays!));
-      sub.trialEndDate ??= sub.trialExpiresAt;
-    }
-
-    // For trap/trial subs, "next renewal" = when trial expires and real charge kicks in.
-    // This drives the countdown, reminders, and "Renews in X days" label.
-    if (sub.isTrap == true && sub.trialExpiresAt != null) {
-      sub.nextRenewal = sub.trialExpiresAt!;
+    // Set trial expiry and override nextRenewal only when we have
+    // a concrete future expiry date (not just isTrial with no date).
+    if (trialStillActive && effectiveTrialEnd != null) {
+      sub.trialExpiresAt = effectiveTrialEnd;
+      // For trap/trial subs, "next renewal" = when trial expires
+      // and real charge kicks in.
+      sub.nextRenewal = effectiveTrialEnd;
     }
 
     return sub;

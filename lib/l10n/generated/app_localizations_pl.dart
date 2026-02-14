@@ -378,6 +378,23 @@ class SPl extends S {
   String get freeTrialToggle => 'To jest darmowy okres próbny';
 
   @override
+  String get trialDurationLabel => 'Długość triala';
+
+  @override
+  String get trialDays7 => '7 dni';
+
+  @override
+  String get trialDays14 => '14 dni';
+
+  @override
+  String get trialDays30 => '30 dni';
+
+  @override
+  String trialCustomDays(int days) {
+    return '${days}d';
+  }
+
+  @override
   String get fieldTrialEnds => 'TRIAL KOŃCZY SIĘ';
 
   @override
@@ -673,6 +690,13 @@ class SPl extends S {
   String get couldntCancelRefund => 'Nie możesz anulować? Pomoc ze zwrotem →';
 
   @override
+  String get refundTipTitle => 'Wskazówka: Dlaczego warto poprosić o zwrot?';
+
+  @override
+  String get refundTipBody =>
+      'Jeśli zostałeś obciążony niespodziewanie, zapisałeś się przez przypadek lub usługa nie działała zgodnie z obietnicą — możesz mieć prawo do zwrotu. Im szybciej poprosisz, tym większe szanse.';
+
+  @override
   String get refundRescue => 'Ratunek zwrotu';
 
   @override
@@ -713,6 +737,18 @@ class SPl extends S {
 
   @override
   String get settingsTitle => 'Ustawienia';
+
+  @override
+  String get themeTitle => 'MOTYW';
+
+  @override
+  String get themeSystem => 'Systemowy';
+
+  @override
+  String get themeDark => 'Ciemny';
+
+  @override
+  String get themeLight => 'Jasny';
 
   @override
   String get sectionNotifications => 'POWIADOMIENIA';
@@ -1409,6 +1445,30 @@ class SPl extends S {
 
   @override
   String get categoryOther => 'Inne';
+
+  @override
+  String get renewsToday => 'Odnawia się dziś';
+
+  @override
+  String get renewsTomorrow => 'Odnawia się jutro';
+
+  @override
+  String renewsInDays(int days) {
+    return 'Odnawia się za $days dni';
+  }
+
+  @override
+  String renewsOnDate(String date) {
+    return 'Odnawia się $date';
+  }
+
+  @override
+  String get renewedYesterday => 'Odnowiło się wczoraj';
+
+  @override
+  String renewedDaysAgo(int days) {
+    return 'Odnowiło się $days dni temu';
+  }
 
   @override
   String get discoveryTipsTitle => 'Gdzie szukać subskrypcji';

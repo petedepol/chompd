@@ -274,6 +274,14 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
             _buildCancelledButton(),
             const SizedBox(height: 16),
 
+            // Refund tip card
+            _buildRefundTipCard(),
+            const SizedBox(height: 16),
+
+            // Request Refund Button
+            _buildRequestRefundButton(),
+            const SizedBox(height: 16),
+
             // Refund Help Link
             _buildRefundHelpLink(),
             const SizedBox(height: 32),
@@ -519,6 +527,84 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
           style: const TextStyle(
             fontWeight: FontWeight.w600,
             fontSize: 16,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRefundTipCard() {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ChompdColors.purple.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: ChompdColors.purple.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(
+            Icons.lightbulb_outline_rounded,
+            size: 18,
+            color: ChompdColors.purple,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.refundTipTitle,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: ChompdColors.text,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.l10n.refundTipBody,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: ChompdColors.textMid,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRequestRefundButton() {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => RefundRescueScreen(subscription: widget.subscription),
+        ),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          color: ChompdColors.purple.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: ChompdColors.purple.withValues(alpha: 0.2),
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          context.l10n.requestRefund,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: ChompdColors.purple,
           ),
         ),
       ),

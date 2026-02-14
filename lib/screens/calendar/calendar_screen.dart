@@ -503,7 +503,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     ),
                   ),
                   Text(
-                    sub.cycle.label,
+                    sub.cycle.localLabel(context.l10n),
                     style: const TextStyle(
                       fontSize: 10,
                       color: ChompdColors.textDim,

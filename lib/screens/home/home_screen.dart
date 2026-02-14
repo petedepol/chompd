@@ -262,13 +262,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             context.l10n.homeStatusLine(activeSubs.length, cancelledSubs.length),
                             style: const TextStyle(
                               fontSize: 11,
-                              color: ChompdColors.textDim,
+                              color: ChompdColors.textMid,
                             ),
                           ),
                         ],
                       ),
                       Row(
                         children: [
+                          // Scan / Add button
+                          GestureDetector(
+                            onTap: () => _showAddOptions(context, ref),
+                            child: Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: ChompdColors.mint.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: ChompdColors.mint.withValues(alpha: 0.25),
+                                ),
+                              ),
+                              alignment: Alignment.center,
+                              child: const Icon(
+                                Icons.camera_alt_rounded,
+                                size: 18,
+                                color: ChompdColors.mint,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           // Calendar button
                           GestureDetector(
                             onTap: () {
@@ -346,24 +368,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           final pct = budget > 0 ? spend / budget : 0.0;
 
                           if (pct > 1.0) {
-                            // Over budget — sad piranha
+                            // Over budget — big sad piranha with red glow
                             return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const MascotImage(
-                                    asset: 'piranha_sad.png',
-                                    size: 28,
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: ChompdColors.red
+                                              .withValues(alpha: 0.15),
+                                          blurRadius: 24,
+                                          spreadRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const MascotImage(
+                                      asset: 'piranha_sad.png',
+                                      size: 64,
+                                    ),
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(height: 8),
                                   Text(
                                     context.l10n.overBudgetMood,
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w500,
                                       color: ChompdColors.red
-                                          .withValues(alpha: 0.8),
+                                          .withValues(alpha: 0.9),
                                     ),
                                   ),
                                 ],
@@ -372,20 +407,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           } else if (pct < 0.5 && activeSubs.length >= 3) {
                             // Well under budget — happy piranha
                             return Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const MascotImage(
                                     asset: 'piranha_thumbsup.png',
-                                    size: 28,
+                                    size: 48,
                                   ),
-                                  const SizedBox(width: 8),
+                                  const SizedBox(height: 6),
                                   Text(
                                     context.l10n.underBudgetMood,
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       color: ChompdColors.mint
                                           .withValues(alpha: 0.8),
                                     ),
@@ -660,20 +694,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ],
 
-              // Bottom padding for FAB
+              // Bottom padding
               const SliverToBoxAdapter(
-                child: SizedBox(height: 100),
+                child: SizedBox(height: 32),
               ),
             ],
-          ),
-
-          // ─── Floating Scan Button ───
-          Positioned(
-            bottom: MediaQuery.of(context).padding.bottom + 24,
-            right: 20,
-            child: _ScanFab(
-              onTap: () => _showAddOptions(context, ref),
-            ),
           ),
 
           // ─── Confetti Overlay ───
@@ -979,185 +1004,6 @@ class _LimitBadge extends StatelessWidget {
   }
 }
 
-/// Premium floating scan button — the app's primary action.
-///
-/// Design: 64px pill-shaped button with mint gradient, breathing glow,
-/// specular highlight sweep, and camera icon.
-/// Position: Bottom-right, 20px from edge, above safe area.
-/// Interaction: Tap opens the add-options sheet (AI Scan / Quick Add).
-class _ScanFab extends StatefulWidget {
-  final VoidCallback onTap;
-  const _ScanFab({required this.onTap});
-
-  @override
-  State<_ScanFab> createState() => _ScanFabState();
-}
-
-class _ScanFabState extends State<_ScanFab> with TickerProviderStateMixin {
-  late AnimationController _breatheController;
-  late AnimationController _specularController;
-  late AnimationController _tapController;
-  bool _pressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Slow breathing glow — 3.5s cycle
-    _breatheController = AnimationController(
-      duration: const Duration(milliseconds: 3500),
-      vsync: this,
-    )..repeat();
-
-    // Specular highlight sweep — 4s cycle
-    _specularController = AnimationController(
-      duration: const Duration(seconds: 4),
-      vsync: this,
-    )..repeat();
-
-    // Tap scale feedback — 150ms
-    _tapController = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-    );
-  }
-
-  @override
-  void dispose() {
-    _breatheController.dispose();
-    _specularController.dispose();
-    _tapController.dispose();
-    super.dispose();
-  }
-
-  void _handleTap() {
-    HapticService.instance.success();
-    _tapController.forward().then((_) => _tapController.reverse());
-    widget.onTap();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _tapController,
-      builder: (context, child) {
-        final scale = 1.0 - (_tapController.value * 0.08);
-        return Transform.scale(scale: scale, child: child);
-      },
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _pressed = true),
-        onTapUp: (_) {
-          setState(() => _pressed = false);
-          _handleTap();
-        },
-        onTapCancel: () => setState(() => _pressed = false),
-        child: AnimatedBuilder(
-          animation: _breatheController,
-          builder: (context, child) {
-            final breathe = math.sin(_breatheController.value * 2 * math.pi);
-            final glowOpacity = 0.25 + (breathe * 0.5 + 0.5) * 0.2;
-            final glowBlur = 20.0 + (breathe * 0.5 + 0.5) * 12;
-
-            return Container(
-              width: 64,
-              height: 64,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(20),
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    ChompdColors.mintDark.withValues(alpha: _pressed ? 0.8 : 0.93),
-                    ChompdColors.mint.withValues(alpha: _pressed ? 0.75 : 0.87),
-                  ],
-                ),
-                boxShadow: [
-                  // Breathing glow shadow
-                  BoxShadow(
-                    color: ChompdColors.mint.withValues(alpha: glowOpacity),
-                    blurRadius: glowBlur,
-                    offset: const Offset(0, 6),
-                  ),
-                  // Subtle dark shadow for depth
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Stack(
-                children: [
-                  // Specular highlight sweep
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: AnimatedBuilder(
-                      animation: _specularController,
-                      builder: (context, _) {
-                        final sweepX = -64 * 0.3 +
-                            (64 * 1.6) * _specularController.value;
-                        return Transform.translate(
-                          offset: Offset(sweepX, 0),
-                          child: Transform.rotate(
-                            angle: 25 * math.pi / 180,
-                            child: Container(
-                              width: 64 * 0.3,
-                              height: 64,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
-                                  colors: [
-                                    Colors.white.withValues(alpha: 0),
-                                    Colors.white.withValues(alpha: 0.15),
-                                    Colors.white.withValues(alpha: 0),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                  // Static specular highlight at top
-                  Positioned(
-                    top: 3,
-                    left: 7,
-                    right: 7,
-                    height: 14,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(7),
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.white.withValues(alpha: 0.3),
-                            Colors.white.withValues(alpha: 0),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Camera icon
-                  const Center(
-                    child: Icon(
-                      Icons.camera_alt_rounded,
-                      size: 26,
-                      color: Color(0xFF07070C),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
 /// "Your subscriptions cost you £X,XXX/year" — the confronting truth.
 ///
 /// Tappable share button. Shows monthly + daily breakdowns.
@@ -1322,8 +1168,8 @@ class _BurnChip extends StatelessWidget {
           Text(
             label,
             style: const TextStyle(
-              fontSize: 10,
-              color: ChompdColors.textDim,
+              fontSize: 11,
+              color: ChompdColors.textMid,
             ),
           ),
         ],

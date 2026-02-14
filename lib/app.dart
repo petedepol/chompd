@@ -6,6 +6,7 @@ import 'l10n/generated/app_localizations.dart';
 
 import 'config/theme.dart';
 import 'providers/locale_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/scan/scan_screen.dart';
@@ -26,12 +27,15 @@ class ChompdApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(localeProvider);
+    final themeNotifier = ref.watch(themeModeProvider.notifier);
 
     return MaterialApp(
       title: 'Chompd',
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      theme: ChompdTheme.dark,
+      theme: ChompdTheme.light,
+      darkTheme: ChompdTheme.dark,
+      themeMode: themeNotifier.flutterThemeMode,
       locale: locale,
       localizationsDelegates: const [
         S.delegate,

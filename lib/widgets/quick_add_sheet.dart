@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/constants.dart';
 import '../config/theme.dart';
 import '../models/subscription.dart';
 import '../providers/currency_provider.dart';
@@ -10,6 +11,7 @@ import '../providers/purchase_provider.dart';
 import '../providers/subscriptions_provider.dart';
 import '../screens/detail/add_edit_screen.dart';
 import '../screens/paywall/paywall_screen.dart';
+import '../services/exchange_rate_service.dart';
 import '../services/haptic_service.dart';
 import '../utils/l10n_extension.dart';
 
@@ -82,6 +84,8 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
   late TextEditingController _priceCtrl;
   late String _editCurrency;
   BillingCycle _editCycle = BillingCycle.monthly;
+  bool _isTrial = false;
+  int _trialDays = 7;
   final ScrollController _listScrollCtrl = ScrollController();
 
   @override
@@ -116,9 +120,19 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
         _selectedTemplate = null;
       } else {
         _selectedTemplate = tpl;
-        _priceCtrl.text = tpl.price.toStringAsFixed(2);
         _editCurrency = ref.read(currencyProvider);
         _editCycle = tpl.cycle;
+        _isTrial = false;
+        _trialDays = 7;
+
+        // Convert template price to user's currency
+        if (tpl.currency != _editCurrency) {
+          final converted = ExchangeRateService.instance
+              .convert(tpl.price, tpl.currency, _editCurrency);
+          _priceCtrl.text = converted.toStringAsFixed(2);
+        } else {
+          _priceCtrl.text = tpl.price.toStringAsFixed(2);
+        }
       }
     });
   }
@@ -332,14 +346,30 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               itemCount: _filtered.length + (_selectedTemplate != null ? 1 : 0),
               itemBuilder: (context, index) {
-                // Last item is the edit panel when a template is selected
-                if (_selectedTemplate != null && index == _filtered.length) {
+                // Find where to insert the edit panel (right after the selected template)
+                final selectedIdx = _selectedTemplate == null
+                    ? -1
+                    : _filtered.indexWhere((t) => t.name == _selectedTemplate!.name);
+                final editPanelIdx = selectedIdx + 1;
+
+                if (_selectedTemplate != null && index == editPanelIdx) {
+                  // This slot is the edit panel
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: _buildEditPanel(),
                   );
                 }
-                final tpl = _filtered[index];
+
+                // Adjust template index: items after the edit panel slot shift by 1
+                final tplIndex = (_selectedTemplate != null && index > editPanelIdx)
+                    ? index - 1
+                    : index;
+
+                if (tplIndex >= _filtered.length) {
+                  return const SizedBox.shrink();
+                }
+
+                final tpl = _filtered[tplIndex];
                 return _TemplateRow(
                   template: tpl,
                   isSelected: _selectedTemplate?.name == tpl.name,
@@ -367,11 +397,15 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
               priceCtrl: _priceCtrl,
               currency: _editCurrency,
               cycle: _editCycle,
+              isTrial: _isTrial,
+              trialDays: _trialDays,
               onCurrencyChanged: (c) => setState(() => _editCurrency = c),
               onCycleChanged: (c) {
                 HapticService.instance.selection();
                 setState(() => _editCycle = c);
               },
+              onTrialChanged: (v) => setState(() => _isTrial = v),
+              onTrialDaysChanged: (d) => setState(() => _trialDays = d),
               onDismiss: () => setState(() => _selectedTemplate = null),
               onAdd: _quickAdd,
             ),
@@ -391,17 +425,21 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
     if (price <= 0) return;
 
     final now = DateTime.now();
+    final trialEnd = _isTrial ? now.add(Duration(days: _trialDays)) : null;
     final sub = Subscription()
       ..uid = '${tpl.name.toLowerCase().replaceAll(' ', '-')}-${now.millisecondsSinceEpoch}'
       ..name = tpl.name
       ..price = price
       ..currency = _editCurrency
       ..cycle = _editCycle
-      ..nextRenewal = now.add(Duration(days: _editCycle.approximateDays))
+      ..nextRenewal = trialEnd ?? now.add(Duration(days: _editCycle.approximateDays))
       ..category = tpl.category
       ..iconName = tpl.icon
       ..brandColor = tpl.brandColor
       ..isActive = true
+      ..isTrial = _isTrial
+      ..trialEndDate = trialEnd
+      ..trialExpiresAt = trialEnd
       ..source = SubscriptionSource.quickAdd
       ..createdAt = now;
 
@@ -428,8 +466,12 @@ class _EditPanelContent extends StatefulWidget {
   final TextEditingController priceCtrl;
   final String currency;
   final BillingCycle cycle;
+  final bool isTrial;
+  final int trialDays;
   final ValueChanged<String> onCurrencyChanged;
   final ValueChanged<BillingCycle> onCycleChanged;
+  final ValueChanged<bool> onTrialChanged;
+  final ValueChanged<int> onTrialDaysChanged;
   final VoidCallback onDismiss;
   final VoidCallback onAdd;
 
@@ -438,8 +480,12 @@ class _EditPanelContent extends StatefulWidget {
     required this.priceCtrl,
     required this.currency,
     required this.cycle,
+    required this.isTrial,
+    required this.trialDays,
     required this.onCurrencyChanged,
     required this.onCycleChanged,
+    required this.onTrialChanged,
+    required this.onTrialDaysChanged,
     required this.onDismiss,
     required this.onAdd,
   });
@@ -525,7 +571,7 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                       ),
                     ),
                     Text(
-                      widget.template.category,
+                      AppConstants.localisedCategory(widget.template.category, context.l10n),
                       style: const TextStyle(
                         fontSize: 10,
                         color: ChompdColors.textDim,
@@ -706,7 +752,7 @@ class _EditPanelContentState extends State<_EditPanelContent> {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      c.shortLabel,
+                      c.localShortLabel(context.l10n),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -718,6 +764,140 @@ class _EditPanelContentState extends State<_EditPanelContent> {
               );
             }).toList(),
           ),
+
+          const SizedBox(height: 12),
+
+          // Trial toggle
+          GestureDetector(
+            onTap: () {
+              HapticService.instance.selection();
+              widget.onTrialChanged(!widget.isTrial);
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: widget.isTrial
+                    ? ChompdColors.amber.withValues(alpha: 0.08)
+                    : ChompdColors.bgElevated,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: widget.isTrial
+                      ? ChompdColors.amber.withValues(alpha: 0.3)
+                      : ChompdColors.border,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    widget.isTrial
+                        ? Icons.timer_outlined
+                        : Icons.timer_off_outlined,
+                    size: 16,
+                    color: widget.isTrial
+                        ? ChompdColors.amber
+                        : ChompdColors.textDim,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.l10n.freeTrialToggle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: widget.isTrial
+                            ? ChompdColors.amber
+                            : ChompdColors.textDim,
+                      ),
+                    ),
+                  ),
+                  Container(
+                    width: 36,
+                    height: 20,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(10),
+                      color: widget.isTrial
+                          ? ChompdColors.amber
+                          : ChompdColors.border,
+                    ),
+                    alignment: widget.isTrial
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
+                    padding: const EdgeInsets.all(2),
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: widget.isTrial
+                            ? ChompdColors.bg
+                            : ChompdColors.textDim,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Trial duration chips
+          if (widget.isTrial) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Text(
+                  context.l10n.trialDurationLabel,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: ChompdColors.textDim,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                for (final days in [7, 14, 30])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: GestureDetector(
+                      onTap: () {
+                        HapticService.instance.selection();
+                        widget.onTrialDaysChanged(days);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: widget.trialDays == days
+                              ? ChompdColors.amber.withValues(alpha: 0.15)
+                              : ChompdColors.bgElevated,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: widget.trialDays == days
+                                ? ChompdColors.amber.withValues(alpha: 0.4)
+                                : ChompdColors.border,
+                          ),
+                        ),
+                        child: Text(
+                          days == 7
+                              ? context.l10n.trialDays7
+                              : days == 14
+                                  ? context.l10n.trialDays14
+                                  : context.l10n.trialDays30,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: widget.trialDays == days
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: widget.trialDays == days
+                                ? ChompdColors.amber
+                                : ChompdColors.textDim,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
 
           const SizedBox(height: 14),
 
@@ -825,7 +1005,7 @@ class _TemplateRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    template.category,
+                    AppConstants.localisedCategory(template.category, context.l10n),
                     style: const TextStyle(
                       fontSize: 10,
                       color: ChompdColors.textDim,
@@ -835,7 +1015,7 @@ class _TemplateRow extends StatelessWidget {
               ),
             ),
             Text(
-              '${Subscription.formatPrice(template.price, template.currency)}/${template.cycle.shortLabel}',
+              '${Subscription.formatPrice(template.price, template.currency)}/${template.cycle.localShortLabel(context.l10n)}',
               style: ChompdTypography.mono(
                 size: 12,
                 weight: FontWeight.w700,

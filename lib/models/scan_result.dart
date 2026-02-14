@@ -38,6 +38,14 @@ class ScanResult {
   /// Brief AI explanation of what was found and what's missing.
   final String? extractionNotes;
 
+  /// Whether this subscription is expiring (already cancelled) rather than renewing.
+  ///
+  /// On iOS subscriptions screens, "Expires on [date]" means the user already
+  /// cancelled and the service will stop on that date. "Renews [date]" means
+  /// it's an active subscription that will auto-charge. This field helps us
+  /// distinguish between the two so we don't track cancelled subs as active.
+  final bool isExpiring;
+
   const ScanResult({
     required this.serviceName,
     this.price,
@@ -55,6 +63,7 @@ class ScanResult {
     this.sourceType,
     this.missingFields = const [],
     this.extractionNotes,
+    this.isExpiring = false,
   });
 
   /// Parse from the Claude Haiku JSON response.
@@ -101,6 +110,7 @@ class ScanResult {
       sourceType: json['source_type'] is String ? json['source_type'] as String : null,
       missingFields: missing,
       extractionNotes: json['extraction_notes'] is String ? json['extraction_notes'] as String : null,
+      isExpiring: json['is_expiring'] == true,
     );
   }
 

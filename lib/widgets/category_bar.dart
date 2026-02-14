@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../config/constants.dart';
 import '../config/theme.dart';
 import '../models/subscription.dart';
+import '../utils/l10n_extension.dart';
 
 /// Horizontal category breakdown bar with colour-coded segments.
 ///
@@ -78,10 +80,10 @@ class CategoryBar extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  entry.key,
+                  AppConstants.localisedCategory(entry.key, context.l10n),
                   style: const TextStyle(
-                    fontSize: 10,
-                    color: ChompdColors.textDim,
+                    fontSize: 11,
+                    color: ChompdColors.textMid,
                   ),
                 ),
                 const SizedBox(width: 3),

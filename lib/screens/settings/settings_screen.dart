@@ -9,6 +9,7 @@ import '../../providers/budget_provider.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../services/haptic_service.dart';
@@ -40,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
     final prefsNotifier = ref.read(notificationPrefsProvider.notifier);
 
     return Scaffold(
-      backgroundColor: ChompdColors.bg,
+      backgroundColor: context.colors.bg,
       body: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(
@@ -86,6 +87,16 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+
+          // ─── Theme Section ───
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _ThemeSection(),
             ),
           ),
 
@@ -582,6 +593,130 @@ class SettingsScreen extends ConsumerWidget {
     if (picked != null) {
       ref.read(notificationPrefsProvider.notifier).setDigestTime(picked);
     }
+  }
+}
+
+// ──────────────────────────────────────────────
+// Theme Section
+// ──────────────────────────────────────────────
+
+class _ThemeSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentMode = ref.watch(themeModeProvider);
+    final notifier = ref.read(themeModeProvider.notifier);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.palette_outlined,
+              size: 16,
+              color: context.colors.purple,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              context.l10n.themeTitle,
+              style: ChompdTypography.sectionLabel.copyWith(
+                color: context.colors.purple,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: context.colors.bgCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: context.colors.border),
+          ),
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            children: [
+              _ThemeChip(
+                label: context.l10n.themeSystem,
+                icon: Icons.settings_suggest_outlined,
+                isSelected: currentMode == AppThemeMode.system,
+                onTap: () => notifier.setMode(AppThemeMode.system),
+              ),
+              _ThemeChip(
+                label: context.l10n.themeDark,
+                icon: Icons.dark_mode_outlined,
+                isSelected: currentMode == AppThemeMode.dark,
+                onTap: () => notifier.setMode(AppThemeMode.dark),
+              ),
+              _ThemeChip(
+                label: context.l10n.themeLight,
+                icon: Icons.light_mode_outlined,
+                isSelected: currentMode == AppThemeMode.light,
+                onTap: () => notifier.setMode(AppThemeMode.light),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ThemeChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _ThemeChip({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          HapticService.instance.selection();
+          onTap();
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? context.colors.mint.withValues(alpha: 0.15)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: isSelected
+                  ? context.colors.mint.withValues(alpha: 0.4)
+                  : Colors.transparent,
+            ),
+          ),
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                size: 18,
+                color: isSelected ? context.colors.mint : context.colors.textDim,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  color: isSelected ? context.colors.mint : context.colors.textMid,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

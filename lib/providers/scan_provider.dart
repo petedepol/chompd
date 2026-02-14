@@ -515,25 +515,15 @@ class ScanNotifier extends StateNotifier<ScanState> {
       return;
     }
 
-    // Multiple results — start one-by-one review
+    // Multiple results — show checklist for batch selection
     final messages = <ChatMessage>[
       ...state.messages,
       ChatMessage(
-        type: ChatMessageType.info,
-        text: 'Found ${validOutputs.length} subscriptions! Let\u2019s go through them one by one.',
+        type: ChatMessageType.multiReview,
+        text: 'Found ${validOutputs.length} subscriptions!',
+        multiReviewTotal: validOutputs.length,
       ),
     ];
-
-    // Add the first review card
-    final first = validOutputs.first;
-    messages.add(ChatMessage(
-      type: ChatMessageType.multiReview,
-      text: first.subscription.serviceName,
-      scanResult: first.subscription,
-      trapResult: first.trap,
-      multiReviewIndex: 0,
-      multiReviewTotal: validOutputs.length,
-    ));
 
     state = state.copyWith(
       phase: ScanPhase.multiReview,
@@ -544,88 +534,21 @@ class ScanNotifier extends StateNotifier<ScanState> {
     );
   }
 
-  /// Show the multi-review card for the subscription at [index].
-  void _showMultiReviewItem(int index) {
-    final outputs = state.multiOutputs!;
-    final output = outputs[index];
+  /// Batch-add selected subscriptions from the multi-scan checklist.
+  ///
+  /// [addedCount] is how many the user checked and added.
+  void completeMultiReview(int addedCount) {
+    final total = state.multiOutputs?.length ?? 0;
     final messages = [...state.messages];
-
     messages.add(ChatMessage(
-      type: ChatMessageType.multiReview,
-      text: output.subscription.serviceName,
-      scanResult: output.subscription,
-      trapResult: output.trap,
-      multiReviewIndex: index,
-      multiReviewTotal: outputs.length,
+      type: ChatMessageType.system,
+      text: 'All done! Added $addedCount of $total subscriptions.',
     ));
-
     state = state.copyWith(
-      phase: ScanPhase.multiReview,
+      phase: ScanPhase.result,
       messages: messages,
-      multiReviewIndex: index,
+      multiReviewAddedCount: addedCount,
     );
-  }
-
-  /// User taps "Add" on the current multi-review item.
-  void addCurrentMultiResult() {
-    final outputs = state.multiOutputs!;
-    final index = state.multiReviewIndex;
-    final output = outputs[index];
-
-    // Add confirmation message
-    final messages = [...state.messages];
-    messages.add(ChatMessage(
-      type: ChatMessageType.answer,
-      text: '\u2713 Added ${output.subscription.serviceName}',
-    ));
-
-    state = state.copyWith(
-      messages: messages,
-      multiReviewAddedCount: state.multiReviewAddedCount + 1,
-    );
-
-    // Move to next or finish
-    _advanceMultiReview();
-  }
-
-  /// User taps "Skip" on the current multi-review item.
-  void skipCurrentMultiResult() {
-    final output = state.multiOutputs![state.multiReviewIndex];
-
-    final messages = [...state.messages];
-    messages.add(ChatMessage(
-      type: ChatMessageType.answer,
-      text: 'Skipped ${output.subscription.serviceName}',
-    ));
-
-    state = state.copyWith(messages: messages);
-    _advanceMultiReview();
-  }
-
-  /// Advance to the next subscription in multi-review, or finish.
-  void _advanceMultiReview() {
-    final next = state.multiReviewIndex + 1;
-    if (next < state.multiOutputs!.length) {
-      // Show next subscription after short delay
-      Future.delayed(const Duration(milliseconds: 400), () {
-        if (state.phase == ScanPhase.multiReview) {
-          _showMultiReviewItem(next);
-        }
-      });
-    } else {
-      // All done — show summary
-      final added = state.multiReviewAddedCount;
-      final total = state.multiOutputs!.length;
-      final messages = [...state.messages];
-      messages.add(ChatMessage(
-        type: ChatMessageType.system,
-        text: 'All done! Added $added of $total subscriptions.',
-      ));
-      state = state.copyWith(
-        phase: ScanPhase.result,
-        messages: messages,
-      );
-    }
   }
 
   /// User answers a question.
@@ -1112,6 +1035,16 @@ class ScanNotifier extends StateNotifier<ScanState> {
       // If Haiku found one result but it's low confidence, escalate
       else if (outputs.length == 1 && _shouldEscalate(outputs.first.subscription)) {
         _addSystemMessage('Taking a closer look\u2026');
+        outputs = await service.analyseScreenshotMulti(
+          imageBytes: imageBytes,
+          mimeType: mimeType,
+          modelOverride: AppConstants.aiModelFallback,
+        );
+        outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
+      }
+      // For complex multi-sub screenshots (5+ items), use Sonnet for higher accuracy
+      else if (outputs.length >= 5) {
+        _addSystemMessage('Found many subscriptions, taking a closer look\u2026');
         outputs = await service.analyseScreenshotMulti(
           imageBytes: imageBytes,
           mimeType: mimeType,

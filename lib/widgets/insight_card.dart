@@ -106,12 +106,12 @@ class _InsightCardState extends State<InsightCard> {
                     widget.insights.length,
                     (i) => Container(
                       margin: const EdgeInsets.only(right: 4),
-                      width: i == _currentIndex ? 12 : 4,
+                      width: i == _currentIndex ? 12 : 6,
                       height: 4,
                       decoration: BoxDecoration(
                         color: i == _currentIndex
                             ? color
-                            : ChompdColors.border,
+                            : ChompdColors.textDim,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -119,9 +119,9 @@ class _InsightCardState extends State<InsightCard> {
                   const Spacer(),
                   Text(
                     context.l10n.tapForMore,
-                    style: TextStyle(
-                      fontSize: 9,
-                      color: ChompdColors.textDim.withValues(alpha: 0.7),
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: ChompdColors.textMid,
                     ),
                   ),
                 ],

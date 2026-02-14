@@ -68,7 +68,7 @@ class _TrialBadgeState extends State<TrialBadge>
             ? context.l10n.trialExpired
             : context.l10n.trialBadge(widget.daysRemaining),
         style: ChompdTypography.mono(
-          size: 8,
+          size: 10,
           weight: FontWeight.w700,
           color: ChompdColors.amber,
         ).copyWith(
