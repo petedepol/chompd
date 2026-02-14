@@ -221,6 +221,12 @@ class Subscription {
 
   // ─── Computed Helpers ───
 
+  /// Active reminder days for this subscription (or null = use global default).
+  List<int>? get customReminderDays {
+    if (reminders.isEmpty) return null;
+    return reminders.where((r) => r.enabled).map((r) => r.daysBefore).toList();
+  }
+
   /// Days until next renewal from now (can be negative if overdue).
   int get daysUntilRenewal {
     return nextRenewal.difference(DateTime.now()).inDays;
@@ -277,10 +283,13 @@ class Subscription {
 
   /// Total paid since subscription was added to Chompd.
   /// Counts billing cycles elapsed since [createdAt].
+  /// Always counts at least 1 payment — the user just paid when they add it.
   double get totalPaidSinceCreation {
     final daysSince = DateTime.now().difference(createdAt).inDays;
     final cyclesElapsed = (daysSince / cycle.approximateDays).floor();
-    return effectivePrice * cyclesElapsed.clamp(0, 999);
+    // If added today (daysSince=0), count 1 payment — the user just paid
+    final payments = daysSince == 0 ? 1 : cyclesElapsed.clamp(1, 999);
+    return effectivePrice * payments;
   }
 
   /// Monthly equivalent price for consistent comparisons.

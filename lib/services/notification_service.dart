@@ -195,9 +195,9 @@ class NotificationService {
 
     final l = await _getL10n();
 
-    // Determine which reminder days are available
-    final reminderDays =
-        _isPro ? AppConstants.proReminderDays : AppConstants.freeReminderDays;
+    // Use per-subscription reminders if set, otherwise fall back to tier default
+    final reminderDays = sub.customReminderDays ??
+        (_isPro ? AppConstants.proReminderDays : AppConstants.freeReminderDays);
 
     // Schedule renewal reminders
     for (final daysBefore in reminderDays) {

@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 13 Feb 2026 (Sprint 13 — iPhone Testing & Quick Add Editable Prices)
+> Last updated: 14 Feb 2026 (Sprint 14 — Five Targeted Fixes)
 
 ---
 
@@ -226,6 +226,26 @@
   - Enhanced extraction prompt for bank statements (handles AMZN DIGITAL, DD patterns)
   - `isNotFound` handling: treats "not found"/"N/A" AI responses as null
   - Expanded `_suggestPrices()` with ~20 popular service prices
+
+### Sprint 14 — Five Targeted Fixes ✅
+- **Per-Subscription Reminders** — reminder toggles are now individual per subscription, not global
+  - Added `customReminderDays` getter to `Subscription` model — returns enabled days or null (use global default)
+  - Added `toggleReminderDay(uid, day)` to `SubscriptionsNotifier` — initialises from global defaults on first use, then toggles per-sub
+  - Rewired `_RemindersCard` in detail screen to read/write per-subscription reminders (falls back to global prefs if no custom set)
+  - `NotificationService.scheduleReminders()` now checks `sub.customReminderDays` before falling back to tier defaults
+- **Alphabetical Sorting** — home screen active subscriptions now sorted A→Z by name
+- **Category-Based Card Colours** — subscription card tint/border now uses consistent category colour (via `CategoryColors.forCategory()`)
+  - Split `_brandColor` into `_categoryColor` (card accent bar + box shadow) and `_brandColor` (icon gradient only)
+  - All Productivity subs now have the same blue surround; icons still show their own AI-detected brand colours
+- **Same-Day Spend Inclusion** — `totalPaidSinceCreation` now counts at least 1 payment on the day a subscription is added (was 0 before due to floor division)
+- **Calendar Multi-Currency Fix** — all calendar total calculations now use `sub.priceIn(_currencyCode)` instead of raw `sub.price`
+  - Fixed: `daySpendProvider` in calendar_provider.dart
+  - Fixed: day detail total, monthly summary total, priciest day calc, busiest day display, and day cell glow threshold in calendar_screen.dart
+- **AI Prompt Fix: Expires + Trial plan name** — tightened the exception clause in both Haiku and Sonnet prompts
+  - Problem: "Annual Premium (7 Day Trial)" + "Expires on 7 October" was misclassified as Trial instead of Expiring
+  - The "(7 Day Trial)" in plan name was confusing the AI despite the "Expires" keyword
+  - Fix: emphasised "≤7 calendar days" requirement, added concrete example showing that months-away dates do NOT qualify for the exception
+  - Changed in both Haiku prompt (line ~632) and Sonnet prompt (line ~822) — identical edits
 
 ---
 

@@ -229,7 +229,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             final daySubs = calendar[key] ?? [];
             final hasRenewal = daySubs.isNotEmpty;
             final daySpend =
-                daySubs.fold(0.0, (sum, s) => sum + s.price);
+                daySubs.fold(0.0, (sum, s) => sum + s.priceIn(_currencyCode));
 
             // High-cost day glow: ≥£50 red, ≥£30 amber
             Color? glowColor;
@@ -362,7 +362,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       _selectedDay!.day,
     );
     final subs = calendar[key] ?? [];
-    final dayTotal = subs.fold(0.0, (sum, s) => sum + s.price);
+    final dayTotal = subs.fold(0.0, (sum, s) => sum + s.priceIn(_currencyCode));
     final isToday = isSameDay(_selectedDay!, DateTime.now());
 
     return Column(
@@ -547,7 +547,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         monthEntries.fold(0, (sum, e) => sum + e.value.length);
     final totalSpend = monthEntries.fold(
       0.0,
-      (sum, e) => sum + e.value.fold(0.0, (s, sub) => s + sub.price),
+      (sum, e) => sum + e.value.fold(0.0, (s, sub) => s + sub.priceIn(_currencyCode)),
     );
 
     // Busiest day
@@ -563,7 +563,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     double priciestSpend = 0;
     for (final entry in monthEntries) {
       final daySpend =
-          entry.value.fold(0.0, (sum, s) => sum + s.price);
+          entry.value.fold(0.0, (sum, s) => sum + s.priceIn(_currencyCode));
       if (daySpend > priciestSpend) {
         priciestSpend = daySpend;
         priciest = entry;
@@ -627,7 +627,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       context.l10n.renewalsOnDay(
                         busiest.value.length,
                         DateHelpers.shortDate(busiest.key),
-                        Subscription.formatPrice(busiest.value.fold(0.0, (s, sub) => s + sub.price), _currencyCode),
+                        Subscription.formatPrice(busiest.value.fold(0.0, (s, sub) => s + sub.priceIn(_currencyCode)), _currencyCode),
                       ),
                       style: const TextStyle(
                         fontSize: 11,

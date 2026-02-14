@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../config/constants.dart';
 import '../models/subscription.dart';
 import 'currency_provider.dart';
 
@@ -83,6 +84,32 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
       for (final s in state)
         if (s.uid == updated.uid) updated else s,
     ];
+  }
+
+  /// Toggle a reminder day for a specific subscription.
+  ///
+  /// Initialises the subscription's reminder list from global defaults
+  /// on first use, then toggles the specified day.
+  void toggleReminderDay(String uid, int day) {
+    final sub = state.firstWhere((s) => s.uid == uid);
+    // If reminders list is empty, initialise from global defaults
+    if (sub.reminders.isEmpty) {
+      for (final d in AppConstants.proReminderDays) {
+        sub.reminders.add(ReminderConfig()
+          ..daysBefore = d
+          ..enabled = d == 0);
+      }
+    }
+    // Toggle the specific day
+    final idx = sub.reminders.indexWhere((r) => r.daysBefore == day);
+    if (idx >= 0) {
+      sub.reminders[idx].enabled = !sub.reminders[idx].enabled;
+    } else {
+      sub.reminders.add(ReminderConfig()
+        ..daysBefore = day
+        ..enabled = true);
+    }
+    update(sub);
   }
 
   void cancel(String uid) {

@@ -691,7 +691,11 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
-/// Interactive reminders card — shows scheduled reminders and upcoming alerts.
+/// Interactive reminders card — shows per-subscription reminder toggles.
+///
+/// Each subscription has its own reminder schedule stored in
+/// `Subscription.reminders`. Falls back to global defaults (morning-of only)
+/// when the reminders list is empty (i.e. user hasn't customised yet).
 class _RemindersCard extends StatelessWidget {
   final String subscriptionUid;
   final WidgetRef ref;
@@ -701,9 +705,24 @@ class _RemindersCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final prefs = ref.watch(notificationPrefsProvider);
+    final subs = ref.watch(subscriptionsProvider);
+    final sub = subs.where((s) => s.uid == subscriptionUid).firstOrNull;
     final scheduled =
         NotificationService.instance.getForSubscription(subscriptionUid);
     final isPro = prefs.isPro;
+
+    // Determine which days are active for THIS subscription.
+    // If the sub has custom reminders, use those; otherwise fall back to
+    // global prefs (morning-of for free, all for pro).
+    final hasCustom = sub != null && sub.reminders.isNotEmpty;
+    bool isDayEnabled(int day) {
+      if (hasCustom) {
+        return sub.reminders.any((r) => r.daysBefore == day && r.enabled);
+      }
+      // Global fallback
+      return prefs.renewalRemindersEnabled &&
+          prefs.activeReminderDays.contains(day);
+    }
 
     return _InfoCard(
       label: context.l10n.sectionReminders,
@@ -734,48 +753,44 @@ class _RemindersCard extends StatelessWidget {
 
           _ReminderRow(
             label: context.l10n.reminderDaysBefore7,
-            enabled: prefs.renewalRemindersEnabled &&
-                prefs.activeReminderDays.contains(7),
+            enabled: isDayEnabled(7),
             isPro: true,
             isLocked: !isPro,
             onChanged: isPro ? (_) {
-              ref.read(notificationPrefsProvider.notifier).toggleReminderDay(7);
+              ref.read(subscriptionsProvider.notifier).toggleReminderDay(subscriptionUid, 7);
               HapticService.instance.selection();
             } : null,
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
             label: context.l10n.reminderDaysBefore3,
-            enabled: prefs.renewalRemindersEnabled &&
-                prefs.activeReminderDays.contains(3),
+            enabled: isDayEnabled(3),
             isPro: true,
             isLocked: !isPro,
             onChanged: isPro ? (_) {
-              ref.read(notificationPrefsProvider.notifier).toggleReminderDay(3);
+              ref.read(subscriptionsProvider.notifier).toggleReminderDay(subscriptionUid, 3);
               HapticService.instance.selection();
             } : null,
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
             label: context.l10n.reminderDaysBefore1,
-            enabled: prefs.renewalRemindersEnabled &&
-                prefs.activeReminderDays.contains(1),
+            enabled: isDayEnabled(1),
             isPro: true,
             isLocked: !isPro,
             onChanged: isPro ? (_) {
-              ref.read(notificationPrefsProvider.notifier).toggleReminderDay(1);
+              ref.read(subscriptionsProvider.notifier).toggleReminderDay(subscriptionUid, 1);
               HapticService.instance.selection();
             } : null,
           ),
           const Divider(height: 1, color: ChompdColors.border),
           _ReminderRow(
             label: context.l10n.reminderMorningOf,
-            enabled: prefs.renewalRemindersEnabled &&
-                prefs.activeReminderDays.contains(0),
+            enabled: isDayEnabled(0),
             isPro: false,
             isLocked: false,
             onChanged: (_) {
-              ref.read(notificationPrefsProvider.notifier).toggleReminderDay(0);
+              ref.read(subscriptionsProvider.notifier).toggleReminderDay(subscriptionUid, 0);
               HapticService.instance.selection();
             },
           ),

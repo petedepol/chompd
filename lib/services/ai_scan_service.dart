@@ -629,9 +629,13 @@ keyword to determine the actual status.
    → This applies REGARDLESS of whether the plan name contains "Trial", "7 Day Trial",
      "Free Trial", "Intro Offer", etc. Those are just historical plan name labels.
    → Do NOT flag as a trap — the user already cancelled, they are safe.
-   → ONLY exception: if the date is within 7 days from today AND the plan name says "Trial"
-     AND no regular price is visible, it MIGHT be an active trial about to end.
-     In this rare case: set is_trial: true, is_expiring: false, flag as trap.
+   → ONLY exception: if the expiry date is within 7 days from TODAY (not months away — literally
+     ≤7 calendar days) AND the plan name says "Trial" AND no regular price is visible anywhere,
+     it MIGHT be an active trial about to end. In this rare case ONLY: set is_trial: true,
+     is_expiring: false, flag as trap.
+   → Example: "Annual Premium (7 Day Trial)" + "Expires on 7 October" (months away)
+     → is_expiring: true, is_trial: false. The "(7 Day Trial)" is just a historical plan name.
+     The date is months away, NOT within 7 days, so the exception does NOT apply.
 
 2. "Renews [date]" = ACTIVE subscription that will auto-charge.
    → set is_expiring: false
@@ -815,9 +819,13 @@ keyword to determine the actual status.
    → This applies REGARDLESS of whether the plan name contains "Trial", "7 Day Trial",
      "Free Trial", "Intro Offer", etc. Those are just historical plan name labels.
    → Do NOT flag as a trap — the user already cancelled, they are safe.
-   → ONLY exception: if the date is within 7 days from today AND the plan name says "Trial"
-     AND no regular price is visible, it MIGHT be an active trial about to end.
-     In this rare case: set is_trial: true, is_expiring: false, flag as trap.
+   → ONLY exception: if the expiry date is within 7 days from TODAY (not months away — literally
+     ≤7 calendar days) AND the plan name says "Trial" AND no regular price is visible anywhere,
+     it MIGHT be an active trial about to end. In this rare case ONLY: set is_trial: true,
+     is_expiring: false, flag as trap.
+   → Example: "Annual Premium (7 Day Trial)" + "Expires on 7 October" (months away)
+     → is_expiring: true, is_trial: false. The "(7 Day Trial)" is just a historical plan name.
+     The date is months away, NOT within 7 days, so the exception does NOT apply.
 
 2. "Renews [date]" = ACTIVE subscription that will auto-charge.
    → set is_expiring: false

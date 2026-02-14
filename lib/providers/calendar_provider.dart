@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/subscription.dart';
+import 'currency_provider.dart';
 import 'subscriptions_provider.dart';
 
 /// Maps a normalised date (year-month-day, no time) to the list of
@@ -26,14 +27,15 @@ final renewalCalendarProvider =
   return map;
 });
 
-/// Provider: total spend for a given day.
+/// Provider: total spend for a given day (converted to display currency).
 final daySpendProvider =
     Provider.family<double, DateTime>((ref, day) {
   final calendar = ref.watch(renewalCalendarProvider);
+  final currency = ref.watch(currencyProvider);
   final key = _normalise(day);
   final subs = calendar[key];
   if (subs == null || subs.isEmpty) return 0;
-  return subs.fold(0.0, (sum, s) => sum + s.price);
+  return subs.fold(0.0, (sum, s) => sum + s.priceIn(currency));
 });
 
 /// Projects future renewal dates for a subscription across N months.

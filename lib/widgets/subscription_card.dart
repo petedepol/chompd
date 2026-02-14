@@ -33,6 +33,11 @@ class SubscriptionCard extends StatefulWidget {
 class _SubscriptionCardState extends State<SubscriptionCard> {
   bool _pressed = false;
 
+  /// Category colour for card tint/border — consistent across same-category subs.
+  Color get _categoryColor =>
+      CategoryColors.forCategory(widget.subscription.category);
+
+  /// Brand colour for the icon badge only. Falls back to category colour.
   Color get _brandColor {
     if (widget.subscription.brandColor != null &&
         widget.subscription.brandColor!.isNotEmpty) {
@@ -42,8 +47,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
         // Fall through to category colour
       }
     }
-    // Fall back to category colour
-    return CategoryColors.forCategory(widget.subscription.category);
+    return _categoryColor;
   }
 
   static Color _parseHexColor(String hex) {
@@ -80,7 +84,8 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
     final subscription = widget.subscription;
     final trialDays = subscription.trialDaysRemaining;
     final isTrialUrgent = trialDays != null && trialDays <= 3;
-    final color = _brandColor;
+    final catColor = _categoryColor;
+    final iconColor = _brandColor;
 
     final borderColor = isTrialUrgent
         ? ChompdColors.amber.withValues(alpha: 0.27)
@@ -88,7 +93,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
 
     final accentColor = isTrialUrgent
         ? ChompdColors.amber.withValues(alpha: 0.6)
-        : color.withValues(alpha: 0.5);
+        : catColor.withValues(alpha: 0.5);
 
     Widget card = GestureDetector(
       onTap: () {
@@ -112,7 +117,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
               offset: const Offset(0, 2),
             ),
             BoxShadow(
-              color: color.withValues(alpha: _pressed ? 0.0 : 0.06),
+              color: catColor.withValues(alpha: _pressed ? 0.0 : 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),
@@ -167,13 +172,13 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          color.withValues(alpha: 0.87),
-                          color.withValues(alpha: 0.53),
+                          iconColor.withValues(alpha: 0.87),
+                          iconColor.withValues(alpha: 0.53),
                         ],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: color.withValues(alpha: 0.2),
+                          color: iconColor.withValues(alpha: 0.2),
                           blurRadius: 12,
                           offset: const Offset(0, 4),
                         ),

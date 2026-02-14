@@ -208,7 +208,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final expiringTrials = ref.watch(expiringTrialsProvider);
     final totalSaved = ref.watch(totalSavedProvider);
 
-    final activeSubs = subscriptions.where((s) => s.isActive).toList();
+    final activeSubs = subscriptions.where((s) => s.isActive).toList()
+      ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 
     return Scaffold(
       backgroundColor: ChompdColors.bg,
