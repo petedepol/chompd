@@ -449,6 +449,10 @@ class ChompdTypography {
   ChompdTypography._();
 
   // Space Mono via Google Fonts — for prices, dates, counters, labels
+  // fontFamilyFallback ensures €/zł render consistently when Space Mono
+  // lacks the glyph.
+  static const _fallback = ['SF Pro Text', 'Roboto', 'Helvetica'];
+
   static TextStyle mono({
     double size = 14,
     FontWeight weight = FontWeight.w400,
@@ -460,7 +464,7 @@ class ChompdTypography {
       fontWeight: weight,
       color: color,
       letterSpacing: letterSpacing,
-    );
+    ).copyWith(fontFamilyFallback: _fallback);
   }
 
   // Section header labels (e.g. "ACTIVE SUBSCRIPTIONS")
@@ -470,7 +474,7 @@ class ChompdTypography {
     fontWeight: FontWeight.w400,
     color: ChompdColors.textDim,
     letterSpacing: 1.5,
-  );
+  ).copyWith(fontFamilyFallback: _fallback);
 
   // Price display (large)
   // NOTE: Hardcoded colour — callers should override with context.colors
@@ -479,7 +483,7 @@ class ChompdTypography {
     fontWeight: FontWeight.w700,
     color: ChompdColors.text,
     letterSpacing: -0.5,
-  );
+  ).copyWith(fontFamilyFallback: _fallback);
 
   // Price in cards
   // NOTE: Hardcoded colour — callers should override with context.colors
@@ -487,7 +491,7 @@ class ChompdTypography {
     fontSize: 14,
     fontWeight: FontWeight.w700,
     color: ChompdColors.text,
-  );
+  ).copyWith(fontFamilyFallback: _fallback);
 
   // Cycle label (/mo, /yr)
   // NOTE: Hardcoded colour — callers should override with context.colors

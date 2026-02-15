@@ -1,17 +1,17 @@
-import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/theme.dart';
 import '../../utils/l10n_extension.dart';
-import '../../models/nudge_candidate.dart';
 import '../../models/subscription.dart';
+import '../../providers/annual_savings_provider.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/insights_provider.dart';
 import '../../providers/nudge_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/subscriptions_provider.dart';
+import '../../providers/trap_stats_provider.dart';
 import '../../widgets/share_card_builder.dart';
 import '../../services/haptic_service.dart';
 import '../../widgets/animated_list_item.dart';
@@ -57,6 +57,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _showConfetti = false;
   final Set<String> _dismissedCards = {};
+  int _carouselPage = 0;
 
   void _showAddOptions(BuildContext context, WidgetRef ref) {
     HapticService.instance.selection();
@@ -334,6 +335,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
+              // ─── Scan Button (right-aligned, below header) ───
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: GestureDetector(
+                      onTap: () => _showAddOptions(context, ref),
+                      child: Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [c.mint, c.mintDark],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: c.mint.withValues(alpha: 0.30),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.camera_alt_rounded,
+                          size: 24,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
               // ─── Spending Ring ───
               SliverToBoxAdapter(
                 child: Padding(
@@ -421,20 +460,104 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-              // ─── Yearly Burn Banner ───
-              if (activeSubs.isNotEmpty)
-                SliverToBoxAdapter(
+              // ─── Insight Carousel ───
+              Builder(builder: (context) {
+                final c = context.colors;
+                final currency = ref.watch(currencyProvider);
+                final insights = ref.watch(insightsProvider);
+                final nudges = ref.watch(nudgesProvider);
+                final annualSavings = ref.watch(annualSavingsProvider);
+                final trapStats = ref.watch(trapStatsProvider);
+
+                // Build the list of carousel cards
+                final cards = <Widget>[];
+
+                // 1. Yearly Burn
+                if (activeSubs.isNotEmpty) {
+                  cards.add(_YearlyBurnBanner(
+                    yearlyTotal: ref.watch(yearlySpendProvider),
+                    subCount: activeSubs.length,
+                    totalSaved: totalSaved,
+                    cancelledCount: cancelledSubs.length,
+                    currencyCode: currency,
+                  ));
+                }
+
+                // 2. Annual Savings (switch to annual)
+                if (!annualSavings.isEmpty) {
+                  cards.add(const AnnualSavingsCard());
+                }
+
+                // 3. Trap Stats (Unchompd)
+                if (trapStats.hasStats && !_dismissedCards.contains('trap_stats')) {
+                  cards.add(const TrapStatsCard(embedded: true));
+                }
+
+                // 4. Smart Insights
+                if (insights.isNotEmpty && !_dismissedCards.contains('insights')) {
+                  cards.add(InsightCard(insights: insights));
+                }
+
+                // 5. Nudge cards
+                for (final nudge in nudges) {
+                  cards.add(NudgeCard(nudge: nudge, embedded: true));
+                }
+
+                if (cards.isEmpty) {
+                  return const SliverToBoxAdapter(child: SizedBox.shrink());
+                }
+
+                // Clamp page index
+                if (_carouselPage >= cards.length) {
+                  _carouselPage = cards.length - 1;
+                }
+
+                return SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                    child: _YearlyBurnBanner(
-                      yearlyTotal: ref.watch(yearlySpendProvider),
-                      subCount: activeSubs.length,
-                      totalSaved: totalSaved,
-                      cancelledCount: cancelledSubs.length,
-                      currencyCode: ref.watch(currencyProvider),
+                    padding: const EdgeInsets.fromLTRB(0, 4, 0, 12),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                          height: 200,
+                          child: PageView.builder(
+                            itemCount: cards.length,
+                            controller: PageController(
+                              viewportFraction: 0.9,
+                            ),
+                            onPageChanged: (i) => setState(() => _carouselPage = i),
+                            itemBuilder: (context, index) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 4),
+                                child: cards[index],
+                              );
+                            },
+                          ),
+                        ),
+                        if (cards.length > 1) ...[
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(cards.length, (i) {
+                              final isActive = i == _carouselPage;
+                              return Container(
+                                width: isActive ? 18 : 6,
+                                height: 6,
+                                margin: const EdgeInsets.symmetric(horizontal: 3),
+                                decoration: BoxDecoration(
+                                  color: isActive
+                                      ? c.mint
+                                      : c.textDim.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              );
+                            }),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ),
+                );
+              }),
 
               // ─── Compact Savings Counter ───
               if (cancelledSubs.isNotEmpty)
@@ -446,71 +569,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       cancelledCount: cancelledSubs.length,
                       currencyCode: ref.watch(currencyProvider),
                     ),
-                  ),
-                ),
-
-              // ─── Annual Savings Card ───
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                  child: const AnnualSavingsCard(),
-                ),
-              ),
-
-              // ─── Smart Insights ───
-              Builder(builder: (context) {
-                final c = context.colors;
-                final insights = ref.watch(insightsProvider);
-                if (insights.isEmpty || _dismissedCards.contains('insights')) {
-                  return const SliverToBoxAdapter(child: SizedBox.shrink());
-                }
-                return SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-                    child: Dismissible(
-                      key: const ValueKey('insights_dismiss'),
-                      direction: DismissDirection.horizontal,
-                      onDismissed: (_) {
-                        HapticService.instance.light();
-                        setState(() => _dismissedCards.add('insights'));
-                      },
-                      background: Container(
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.only(left: 20),
-                        child: Icon(Icons.close_rounded, color: c.textDim, size: 20),
-                      ),
-                      secondaryBackground: Container(
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        child: Icon(Icons.close_rounded, color: c.textDim, size: 20),
-                      ),
-                      child: InsightCard(insights: insights),
-                    ),
-                  ),
-                );
-              }),
-
-              // ─── Trap Stats Card (Saved from Traps) ───
-              if (!_dismissedCards.contains('trap_stats'))
-                SliverToBoxAdapter(
-                  child: Dismissible(
-                    key: const ValueKey('trap_stats_dismiss'),
-                    direction: DismissDirection.horizontal,
-                    onDismissed: (_) {
-                      HapticService.instance.light();
-                      setState(() => _dismissedCards.add('trap_stats'));
-                    },
-                    background: Container(
-                      alignment: Alignment.centerLeft,
-                      padding: const EdgeInsets.only(left: 20),
-                      child: Icon(Icons.close_rounded, color: c.textDim, size: 20),
-                    ),
-                    secondaryBackground: Container(
-                      alignment: Alignment.centerRight,
-                      padding: const EdgeInsets.only(right: 20),
-                      child: Icon(Icons.close_rounded, color: c.textDim, size: 20),
-                    ),
-                    child: const TrapStatsCard(),
                   ),
                 ),
 
@@ -533,12 +591,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
                     child: _TrialAlertBanner(trials: expiringTrials),
                   ),
-                ),
-
-              // ─── AI Nudge Cards ───
-              if (ref.watch(nudgesProvider).isNotEmpty)
-                SliverToBoxAdapter(
-                  child: _NudgeCarousel(nudges: ref.watch(nudgesProvider)),
                 ),
 
               // ─── Section: Active Subscriptions ───
@@ -684,45 +736,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ],
 
-              // Bottom padding (extra space for FAB)
+              // Bottom padding
               const SliverToBoxAdapter(
-                child: SizedBox(height: 100),
+                child: SizedBox(height: 32),
               ),
             ],
-          ),
-
-          // ─── Floating Scan Button (FAB) ───
-          Positioned(
-            right: 20,
-            bottom: MediaQuery.of(context).padding.bottom + 20,
-            child: GestureDetector(
-              onTap: () => _showAddOptions(context, ref),
-              child: Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [c.mint, c.mintDark],
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  boxShadow: [
-                    BoxShadow(
-                      color: c.mint.withValues(alpha: 0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.camera_alt_rounded,
-                  size: 26,
-                  color: Colors.white,
-                ),
-              ),
-            ),
           ),
 
           // ─── Confetti Overlay ───
@@ -1270,97 +1288,3 @@ class _CompactSavings extends StatelessWidget {
   }
 }
 
-/// Horizontal carousel for multiple nudge cards with dot indicators.
-class _NudgeCarousel extends StatefulWidget {
-  final List<NudgeCandidate> nudges;
-  const _NudgeCarousel({required this.nudges});
-
-  @override
-  State<_NudgeCarousel> createState() => _NudgeCarouselState();
-}
-
-class _NudgeCarouselState extends State<_NudgeCarousel> {
-  int _currentPage = 0;
-
-  static String _nudgeEmoji(NudgeReason reason) {
-    switch (reason) {
-      case NudgeReason.expensiveUnreviewed:
-        return '\uD83D\uDCB8'; // 💸
-      case NudgeReason.trialConverted:
-        return '\u26A0\uFE0F'; // ⚠️
-      case NudgeReason.renewalApproaching:
-        return '\uD83D\uDD14'; // 🔔
-      case NudgeReason.duplicateCategory:
-        return '\uD83D\uDCE6'; // 📦
-      case NudgeReason.annualRenewalSoon:
-        return '\uD83D\uDCC5'; // 📅
-    }
-  }
-
-  static String _nudgeTitle(NudgeReason reason) {
-    switch (reason) {
-      case NudgeReason.expensiveUnreviewed:
-        return 'Big Spender';
-      case NudgeReason.trialConverted:
-        return 'Trial Trap';
-      case NudgeReason.renewalApproaching:
-        return 'Renewing Soon';
-      case NudgeReason.duplicateCategory:
-        return 'Overlap Alert';
-      case NudgeReason.annualRenewalSoon:
-        return 'Annual Renewal';
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final nudges = widget.nudges;
-
-    // Single nudge — no carousel needed
-    if (nudges.length == 1) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: NudgeCard(nudge: nudges.first),
-      );
-    }
-
-    // Multiple nudges — carousel
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 160,
-            child: PageView.builder(
-              itemCount: nudges.length,
-              onPageChanged: (i) => setState(() => _currentPage = i),
-              itemBuilder: (context, index) {
-                return NudgeCard(nudge: nudges[index]);
-              },
-            ),
-          ),
-          const SizedBox(height: 8),
-          // Dot indicators
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(nudges.length, (i) {
-              final isActive = i == _currentPage;
-              return Container(
-                width: isActive ? 18 : 6,
-                height: 6,
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? c.purple
-                      : c.textDim.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              );
-            }),
-          ),
-        ],
-      ),
-    );
-  }
-}

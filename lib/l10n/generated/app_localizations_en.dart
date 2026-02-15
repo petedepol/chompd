@@ -69,6 +69,12 @@ class SEn extends S {
   }
 
   @override
+  String get onboardingEaseTag => 'No typing. Just snap and track.';
+
+  @override
+  String get onboardingTitle2 => 'How It Works';
+
+  @override
   String get onboardingStep1Title => 'Snap a screenshot';
 
   @override
@@ -113,7 +119,7 @@ class SEn extends S {
 
   @override
   String get onboardingSubtitle4 =>
-      'Most people find forgotten subscriptions in their first scan. Let’s see what you’re paying for.';
+      'Most people find forgotten subscriptions in their first scan. Let’s see what’s eating your money.';
 
   @override
   String get scanAScreenshot => 'Scan a Screenshot';

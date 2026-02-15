@@ -25,6 +25,8 @@
   "@onboardingStatWaste": {
     "placeholders": { "amount": {"type": "String"} }
   },
+  "onboardingEaseTag": "No typing. Just snap and track.",
+  "onboardingTitle2": "How It Works",
   "onboardingStep1Title": "Snap a screenshot",
   "onboardingStep1Subtitle": "Receipt, email, or bank statement",
   "onboardingStep2Title": "AI reads it instantly",
@@ -39,7 +41,7 @@
   "allowNotifications": "Allow Notifications",
   "maybeLater": "Maybe Later",
   "onboardingTitle4": "Add Your First Subscription",
-  "onboardingSubtitle4": "Most people find forgotten subscriptions in their first scan. Let\u2019s see what you\u2019re paying for.",
+  "onboardingSubtitle4": "Most people find forgotten subscriptions in their first scan. Let\u2019s see what\u2019s eating your money.",
   "scanAScreenshot": "Scan a Screenshot",
   "addManually": "Add Manually",
   "skipForNow": "Skip for now",

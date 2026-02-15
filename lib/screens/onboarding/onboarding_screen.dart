@@ -8,6 +8,22 @@ import '../../providers/currency_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/mascot_image.dart';
 
+/// Approximate annual subscription waste stat per currency.
+/// These are localised marketing numbers — not live-converted.
+const _localStatAmount = <String, double>{
+  'GBP': 240,
+  'USD': 300,
+  'EUR': 280,
+  'PLN': 960,
+  'AUD': 400,
+  'CAD': 380,
+  'SEK': 3200,
+  'NOK': 3200,
+  'DKK': 2100,
+  'CHF': 290,
+  'JPY': 40000,
+};
+
 class OnboardingScreen extends ConsumerStatefulWidget {
   /// Called when the user finishes or skips onboarding.
   /// [openScan] is true when the user tapped "Scan a Screenshot".
@@ -107,23 +123,28 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   // ─── Page 1: Welcome ───
   Widget _buildWelcomePage() {
     final c = context.colors;
+    final currency = ref.watch(currencyProvider);
+    final statAmount = _localStatAmount[currency] ?? 240.0;
+
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Center(
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                const SizedBox(height: 48),
                 // Piranha mascot with subtle glow behind
                 Stack(
                   alignment: Alignment.center,
                   children: [
                     // Background glow
                     Container(
-                      width: 180,
-                      height: 180,
+                      width: 220,
+                      height: 220,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
@@ -136,12 +157,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     ),
                     const MascotImage(
                       asset: 'piranha_wave.png',
-                      size: 220,
+                      size: 280,
                       fadeIn: true,
                     ),
                   ],
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 16),
                 // Title
                 Text(
                   context.l10n.onboardingTitle1,
@@ -164,8 +185,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 24),
-                // Confronting stat
+                const SizedBox(height: 16),
+                // Confronting stat — localised amount
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -183,7 +204,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                       const SizedBox(width: 10),
                       Flexible(
                         child: Text(
-                          context.l10n.onboardingStatWaste(Subscription.formatPrice(240, ref.watch(currencyProvider), decimals: 0)),
+                          context.l10n.onboardingStatWaste(Subscription.formatPrice(statAmount, currency, decimals: 0)),
                           style: TextStyle(
                             fontSize: 12,
                             color: c.textMid,
@@ -194,6 +215,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                     ],
                   ),
                 ),
+                const SizedBox(height: 16),
+                // Ease-of-use tag
+                Text(
+                  '📸 ${context.l10n.onboardingEaseTag}',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: c.mint,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                // Bottom clearance so content doesn't hide behind nav
+                const SizedBox(height: 100),
               ],
             ),
           ),
@@ -207,20 +241,33 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Center(
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                const SizedBox(height: 48),
                 // Piranha mascot — with phone (scan tutorial)
                 const MascotImage(
                   asset: 'piranha_full.png',
                   size: 120,
                   fadeIn: true,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
+                // "How It Works" headline
+                Text(
+                  context.l10n.onboardingTitle2,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                        color: c.text,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
                 _buildStep(
                   number: 1,
                   icon: Icons.camera_alt,
@@ -245,6 +292,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   subtitle: context.l10n.onboardingStep3Subtitle,
                   isLast: true,
                 ),
+                // Bottom clearance
+                const SizedBox(height: 100),
               ],
             ),
           ),
@@ -315,7 +364,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         ),
         if (!isLast) ...[
           const SizedBox(height: 12),
-          // Dotted connector line
+          // Dotted connector line — more visible
           SizedBox(
             height: 24,
             child: Stack(
@@ -326,8 +375,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   top: index * 6.0,
                   child: Container(
                     width: 2,
-                    height: 4,
-                    color: c.border,
+                    height: 5,
+                    color: c.textDim,
                   ),
                 ),
               ),
@@ -345,13 +394,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 48),
+              Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
@@ -386,7 +436,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 20),
-                      // What you get — compact feature pills
+                      // What you get — compact feature pills (mint)
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -401,50 +451,50 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   ),
                 ),
               ),
-            ),
-            // Action buttons
-            Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () async {
-                      await NotificationService.instance.requestPermission();
-                      _nextPage();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: c.mint,
-                      foregroundColor: c.bg,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+              // Action buttons
+              Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        await NotificationService.instance.requestPermission();
+                        _nextPage();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: c.mint,
+                        foregroundColor: c.bg,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        context.l10n.allowNotifications,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: _nextPage,
                     child: Text(
-                      context.l10n.allowNotifications,
-                      style: const TextStyle(
+                      context.l10n.maybeLater,
+                      style: TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
+                        color: c.textDim,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: _nextPage,
-                  child: Text(
-                    context.l10n.maybeLater,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: c.textDim,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -455,23 +505,24 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 48),
+              Expanded(
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Piranha mascot — celebrate
+                      // Piranha mascot — celebrate (static PNG for now — GIF has dark background)
                       const MascotImage(
                         asset: 'piranha_celebrate.png',
                         size: 160,
                         fadeIn: true,
                       ),
-                      const SizedBox(height: 28),
+                      const SizedBox(height: 16),
                       // Title
                       Text(
                         context.l10n.onboardingTitle4,
@@ -495,98 +546,123 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      const SizedBox(height: 20),
+                      // Scan preview — shows what the scan result looks like
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final width = constraints.maxWidth * 0.65;
+                          return Container(
+                            width: width,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: Image.asset(
+                              'assets/mascot/6_subs_found.png',
+                              fit: BoxFit.contain,
+                            ),
+                          );
+                        },
+                      ),
                     ],
                   ),
                 ),
               ),
-            ),
-            // Action buttons
-            Column(
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          c.mint,
-                          c.mintDark,
-                        ],
+              // Action buttons
+              Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            c.mint,
+                            c.mintDark,
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
                       ),
-                      borderRadius: BorderRadius.circular(14),
+                      child: ElevatedButton(
+                        onPressed: () => _completeOnboarding(openScan: true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.transparent,
+                          foregroundColor: c.bg,
+                          elevation: 0,
+                          shadowColor: Colors.transparent,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.camera_alt, size: 18),
+                            const SizedBox(width: 8),
+                            Text(
+                              context.l10n.scanAScreenshot,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: ElevatedButton(
-                      onPressed: () => _completeOnboarding(openScan: true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        foregroundColor: c.bg,
-                        elevation: 0,
-                        shadowColor: Colors.transparent,
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () => _completeOnboarding(openManualAdd: true),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: c.textMid,
+                        side: BorderSide(
+                          color: c.border,
+                          width: 1,
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.camera_alt, size: 18),
-                          const SizedBox(width: 8),
-                          Text(
-                            context.l10n.scanAScreenshot,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+                      child: Text(
+                        context.l10n.addManually,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => _completeOnboarding(openManualAdd: true),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: c.textMid,
-                      side: BorderSide(
-                        color: c.border,
-                        width: 1,
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                    ),
+                  const SizedBox(height: 16),
+                  TextButton(
+                    onPressed: _completeOnboarding,
                     child: Text(
-                      context.l10n.addManually,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                      context.l10n.skipForNow,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: c.textDim,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: _completeOnboarding,
-                  child: Text(
-                    context.l10n.skipForNow,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: c.textDim,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
         ),
       ),
     );
@@ -597,10 +673,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: c.amber.withValues(alpha: 0.08),
+        color: c.mint.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: c.amber.withValues(alpha: 0.2),
+          color: c.mint.withValues(alpha: 0.2),
         ),
       ),
       child: Text(
@@ -608,7 +684,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: c.amber,
+          color: c.mint,
         ),
       ),
     );

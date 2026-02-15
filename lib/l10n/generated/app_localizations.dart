@@ -211,6 +211,18 @@ abstract class S {
   /// **'The average person wastes {amount}/year on forgotten subscriptions'**
   String onboardingStatWaste(String amount);
 
+  /// No description provided for @onboardingEaseTag.
+  ///
+  /// In en, this message translates to:
+  /// **'No typing. Just snap and track.'**
+  String get onboardingEaseTag;
+
+  /// No description provided for @onboardingTitle2.
+  ///
+  /// In en, this message translates to:
+  /// **'How It Works'**
+  String get onboardingTitle2;
+
   /// No description provided for @onboardingStep1Title.
   ///
   /// In en, this message translates to:
@@ -298,7 +310,7 @@ abstract class S {
   /// No description provided for @onboardingSubtitle4.
   ///
   /// In en, this message translates to:
-  /// **'Most people find forgotten subscriptions in their first scan. Let’s see what you’re paying for.'**
+  /// **'Most people find forgotten subscriptions in their first scan. Let’s see what’s eating your money.'**
   String get onboardingSubtitle4;
 
   /// No description provided for @scanAScreenshot.

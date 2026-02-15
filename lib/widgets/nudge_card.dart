@@ -17,8 +17,9 @@ import 'mascot_image.dart';
 class NudgeCard extends ConsumerWidget {
   final NudgeCandidate nudge;
   final VoidCallback? onDismissed;
+  final bool embedded;
 
-  const NudgeCard({super.key, required this.nudge, this.onDismissed});
+  const NudgeCard({super.key, required this.nudge, this.onDismissed, this.embedded = false});
 
   void _dismiss(WidgetRef ref) {
     HapticService.instance.light();
@@ -38,7 +39,7 @@ class NudgeCard extends ConsumerWidget {
       direction: DismissDirection.horizontal,
       onDismissed: (_) => _dismiss(ref),
       child: Container(
-        margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        margin: embedded ? EdgeInsets.zero : const EdgeInsets.fromLTRB(20, 0, 20, 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: c.bgCard,

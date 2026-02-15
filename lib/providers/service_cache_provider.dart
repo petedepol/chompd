@@ -41,6 +41,14 @@ class ServiceCacheNotifier extends StateNotifier<List<ServiceCache>> {
 
   // ─── Lookup methods (replace static helpers) ───
 
+  /// Find a [ServiceCache] by its Supabase UUID.
+  ServiceCache? findById(String supabaseId) {
+    for (final s in state) {
+      if (s.supabaseId == supabaseId) return s;
+    }
+    return null;
+  }
+
   /// Find a [ServiceCache] by subscription name (fuzzy matching).
   ServiceCache? findByName(String name) {
     final normalised = name.toLowerCase().trim();

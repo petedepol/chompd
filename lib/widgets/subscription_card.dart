@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../config/theme.dart';
 import '../models/subscription.dart';
+import '../providers/service_cache_provider.dart';
 import '../services/haptic_service.dart';
 import '../utils/l10n_extension.dart';
 import 'trial_badge.dart';
@@ -12,7 +13,7 @@ import 'trial_badge.dart';
 /// Shows service icon, name, trial badge (if applicable),
 /// renewal info, and price. Supports swipe-to-delete and
 /// swipe-to-edit with spring physics.
-class SubscriptionCard extends StatefulWidget {
+class SubscriptionCard extends ConsumerStatefulWidget {
   final Subscription subscription;
   final VoidCallback? onTap;
   final VoidCallback? onDelete;
@@ -27,11 +28,20 @@ class SubscriptionCard extends StatefulWidget {
   });
 
   @override
-  State<SubscriptionCard> createState() => _SubscriptionCardState();
+  ConsumerState<SubscriptionCard> createState() => _SubscriptionCardState();
 }
 
-class _SubscriptionCardState extends State<SubscriptionCard> {
+class _SubscriptionCardState extends ConsumerState<SubscriptionCard> {
   bool _pressed = false;
+
+  /// Service description from the cached service database.
+  String? get _serviceDescription {
+    final id = widget.subscription.matchedServiceId;
+    if (id == null) return null;
+    final service = ref.read(serviceCacheProvider.notifier).findById(id);
+    final desc = service?.description;
+    return (desc != null && desc.isNotEmpty) ? desc : null;
+  }
 
   /// Category colour for card tint/border — consistent across same-category subs.
   Color get _categoryColor =>
@@ -191,7 +201,7 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
 
                   const SizedBox(width: 12),
 
-                  // ─── Name + Renewal ───
+                  // ─── Name + Description + Renewal ───
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -219,6 +229,18 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                             ],
                           ],
                         ),
+                        if (_serviceDescription != null) ...[
+                          const SizedBox(height: 1),
+                          Text(
+                            _serviceDescription!,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: c.textMid,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                         const SizedBox(height: 1),
                         Text(
                           subscription.localRenewalLabel(context.l10n),
@@ -262,9 +284,9 @@ class _SubscriptionCardState extends State<SubscriptionCard> {
                           subscription.realPrice != null)
                         Text(
                           '\u2192 ${Subscription.formatPrice(subscription.realPrice!, subscription.currency)}',
-                          style: GoogleFonts.spaceMono(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                          style: ChompdTypography.mono(
+                            size: 13,
+                            weight: FontWeight.w700,
                             color: subscription.trapSeverity == 'high'
                                 ? c.red
                                 : c.amber,
@@ -391,9 +413,9 @@ class _TrapBadge extends StatelessWidget {
             subscription.trialDurationDays != null
                 ? context.l10n.trapDays(subscription.trialDurationDays!)
                 : context.l10n.trapBadge,
-            style: GoogleFonts.spaceMono(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
+            style: ChompdTypography.mono(
+              size: 10,
+              weight: FontWeight.w700,
               color: color,
             ),
           ),

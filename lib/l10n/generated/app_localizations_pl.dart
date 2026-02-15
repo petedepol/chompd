@@ -69,6 +69,12 @@ class SPl extends S {
   }
 
   @override
+  String get onboardingEaseTag => 'Bez wpisywania. Zrób zdjęcie i gotowe.';
+
+  @override
+  String get onboardingTitle2 => 'Jak to działa';
+
+  @override
   String get onboardingStep1Title => 'Zrób zrzut ekranu';
 
   @override
@@ -116,7 +122,7 @@ class SPl extends S {
 
   @override
   String get onboardingSubtitle4 =>
-      'Większość ludzi odkrywa zapomniane subskrypcje przy pierwszym skanie. Sprawdźmy, za co płacisz.';
+      'Większość ludzi odkrywa zapomniane subskrypcje przy pierwszym skanie. Sprawdźmy, co pożera twoje pieniądze.';
 
   @override
   String get scanAScreenshot => 'Skanuj zrzut ekranu';

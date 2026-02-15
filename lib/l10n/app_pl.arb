@@ -25,6 +25,8 @@
   "@onboardingStatWaste": {
     "placeholders": { "amount": {"type": "String"} }
   },
+  "onboardingEaseTag": "Bez wpisywania. Zrób zdjęcie i gotowe.",
+  "onboardingTitle2": "Jak to działa",
   "onboardingStep1Title": "Zrób zrzut ekranu",
   "onboardingStep1Subtitle": "Potwierdzenie, e-mail lub wyciąg bankowy",
   "onboardingStep2Title": "AI odczytuje natychmiast",
@@ -39,7 +41,7 @@
   "allowNotifications": "Włącz powiadomienia",
   "maybeLater": "Może później",
   "onboardingTitle4": "Dodaj pierwszą subskrypcję",
-  "onboardingSubtitle4": "Większość ludzi odkrywa zapomniane subskrypcje przy pierwszym skanie. Sprawdźmy, za co płacisz.",
+  "onboardingSubtitle4": "Większość ludzi odkrywa zapomniane subskrypcje przy pierwszym skanie. Sprawdźmy, co pożera twoje pieniądze.",
   "scanAScreenshot": "Skanuj zrzut ekranu",
   "addManually": "Dodaj ręcznie",
   "skipForNow": "Pomiń na razie",

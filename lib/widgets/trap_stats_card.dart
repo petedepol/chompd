@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../config/theme.dart';
 import '../models/subscription.dart';
 import '../providers/currency_provider.dart';
@@ -9,7 +8,8 @@ import '../utils/l10n_extension.dart';
 import 'mascot_image.dart';
 
 class TrapStatsCard extends ConsumerWidget {
-  const TrapStatsCard({Key? key}) : super(key: key);
+  final bool embedded;
+  const TrapStatsCard({Key? key, this.embedded = false}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,9 +34,7 @@ class TrapStatsCard extends ConsumerWidget {
 
     final breakdownText = breakdownItems.join(' · ');
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: Container(
+    final card = Container(
       decoration: BoxDecoration(
         color: c.bgCard,
         borderRadius: BorderRadius.circular(16),
@@ -69,10 +67,10 @@ class TrapStatsCard extends ConsumerWidget {
           const SizedBox(height: 8),
           Text(
             Subscription.formatPrice(trapStats.totalSaved, currency),
-            style: GoogleFonts.spaceMono(
+            style: ChompdTypography.mono(
+              size: 28,
+              weight: FontWeight.bold,
               color: c.mint,
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 4),
@@ -86,14 +84,20 @@ class TrapStatsCard extends ConsumerWidget {
           const SizedBox(height: 12),
           Text(
             breakdownText,
-            style: GoogleFonts.spaceMono(
+            style: ChompdTypography.mono(
+              size: 10,
               color: c.textDim,
-              fontSize: 10,
             ),
           ),
         ],
       ),
-      ),
+    );
+
+    if (embedded) return card;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      child: card,
     );
   }
 }
