@@ -16,7 +16,6 @@ import '../../data/generic_cancel_guides.dart';
 import '../../widgets/mascot_image.dart';
 import '../cancel/cancel_guide_screen.dart';
 import '../paywall/paywall_screen.dart';
-import '../refund/refund_rescue_screen.dart';
 import 'add_edit_screen.dart';
 
 /// Subscription detail screen — matches the visual design prototype.
@@ -546,40 +545,6 @@ class DetailScreen extends ConsumerWidget {
                 ),
               ),
             ),
-
-          // ─── Refund Rescue Button ───
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => RefundRescueScreen(subscription: sub),
-                  ),
-                ),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  decoration: BoxDecoration(
-                    color: c.purple.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: c.purple.withValues(alpha: 0.2),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    context.l10n.requestRefund,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: c.purple,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
 
           SliverToBoxAdapter(
             child: SizedBox(

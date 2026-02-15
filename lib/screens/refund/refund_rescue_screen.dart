@@ -255,11 +255,13 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
         const SliverToBoxAdapter(child: SizedBox(height: 12)),
 
         // Service-specific templates (from Supabase cache) OR generic fallback
-        if (_serviceTemplates.isNotEmpty) ...[
+        // Only use service-specific if they actually have steps populated
+        if (_serviceTemplates.any((t) => t.steps.isNotEmpty)) ...[
           SliverList(
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                final template = _serviceTemplates[index];
+                final usable = _serviceTemplates.where((t) => t.steps.isNotEmpty).toList();
+                final template = usable[index];
                 return Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
@@ -269,7 +271,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   ),
                 );
               },
-              childCount: _serviceTemplates.length,
+              childCount: _serviceTemplates.where((t) => t.steps.isNotEmpty).length,
             ),
           ),
         ] else ...[
