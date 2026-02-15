@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/constants.dart';
 import '../../config/theme.dart';
+import '../../models/cancel_guide_v2.dart';
 import '../../models/subscription.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
@@ -117,6 +118,11 @@ class DetailScreen extends ConsumerWidget {
                             color.withValues(alpha: 0.53),
                           ],
                         ),
+                        border: Theme.of(context).brightness == Brightness.light
+                            ? Border.all(
+                                color: Colors.black.withValues(alpha: 0.08),
+                              )
+                            : null,
                         boxShadow: [
                           BoxShadow(
                             color: color.withValues(alpha: 0.27),
@@ -346,35 +352,41 @@ class DetailScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _InfoCard(
                 label: context.l10n.sectionPaymentHistory,
-                child: Column(
-                  children: [
-                    ..._buildPaymentHistory(sub, context),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            context.l10n.totalPaid,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: c.textMid,
-                            ),
+                child: Builder(builder: (context) {
+                  final historyWidgets = _buildPaymentHistory(sub, context);
+                  final pastPaymentCount = _countPastPayments(sub);
+                  return Column(
+                    children: [
+                      ...historyWidgets,
+                      if (pastPaymentCount > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                context.l10n.totalPaid,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: c.textMid,
+                                ),
+                              ),
+                              Text(
+                                Subscription.formatPrice(
+                                    sub.price * pastPaymentCount, sub.currency),
+                                style: ChompdTypography.mono(
+                                  size: 13,
+                                  weight: FontWeight.w700,
+                                  color: c.mint,
+                                ),
+                              ),
+                            ],
                           ),
-                          Text(
-                            Subscription.formatPrice(sub.totalPaidSinceCreation, sub.currency),
-                            style: ChompdTypography.mono(
-                              size: 13,
-                              weight: FontWeight.w700,
-                              color: c.mint,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                        ),
+                    ],
+                  );
+                }),
               ),
             ),
           ),
@@ -642,8 +654,7 @@ class DetailScreen extends ConsumerWidget {
       ];
     }
 
-    return payments.asMap().entries.map((entry) {
-      final isLast = entry.key == payments.length - 1;
+    final rows = payments.asMap().entries.map((entry) {
       final date = entry.value;
       return Column(
         children: [
@@ -669,10 +680,61 @@ class DetailScreen extends ConsumerWidget {
               ],
             ),
           ),
-          if (!isLast) _divider(context),
+          _divider(context),
         ],
       );
     }).toList();
+
+    // Upcoming renewal — visually distinct
+    rows.add(Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 7),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    DateHelpers.shortDate(sub.nextRenewal),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: c.textDim,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: c.amber.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      context.l10n.upcoming,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w600,
+                        color: c.amber,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                Subscription.formatPrice(sub.price, sub.currency),
+                style: ChompdTypography.mono(
+                  size: 12,
+                  color: c.textDim,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ));
+
+    return rows;
   }
 
   /// Subtract one billing cycle from a date.
@@ -687,6 +749,18 @@ class DetailScreen extends ConsumerWidget {
       case BillingCycle.yearly:
         return DateTime(date.year - 1, date.month, date.day);
     }
+  }
+
+  /// Count past payments only (on or before today).
+  static int _countPastPayments(Subscription sub) {
+    final now = DateTime.now();
+    DateTime cursor = _subtractCycle(sub.nextRenewal, sub.cycle);
+    int count = 0;
+    while (!cursor.isBefore(sub.createdAt) && count < 999) {
+      if (!cursor.isAfter(now)) count++;
+      cursor = _subtractCycle(cursor, sub.cycle);
+    }
+    return count;
   }
 
   void _openEditForm(BuildContext context, WidgetRef ref, Subscription sub) {
@@ -705,10 +779,10 @@ class DetailScreen extends ConsumerWidget {
     Subscription sub,
   ) {
     final cacheNotifier = ref.read(serviceCacheProvider.notifier);
-    final guide = cacheNotifier.findCancelGuide(sub.name);
+    final allGuides = cacheNotifier.findAllCancelGuides(sub.name);
     final difficulty = cacheNotifier.getCancelDifficulty(sub.name);
 
-    if (guide != null) {
+    void openGuide(CancelGuideData guide) {
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => CancelGuideScreen(
@@ -718,22 +792,151 @@ class DetailScreen extends ConsumerWidget {
           ),
         ),
       );
-    } else {
-      // Fallback: show generic platform-based cancel guide
-      final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-      final genericGuide = findGenericCancelGuide(isIOS: isIOS);
-      if (genericGuide != null) {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => CancelGuideScreen(
-              subscription: sub,
-              guideData: genericGuide,
-              cancelDifficulty: null, // No difficulty score for generic
-            ),
-          ),
-        );
+    }
+
+    // If exactly one guide, skip picker
+    if (allGuides.length == 1) {
+      openGuide(allGuides.first);
+      return;
+    }
+
+    // If multiple guides, show platform picker
+    if (allGuides.length > 1) {
+      _showPlatformPicker(context, sub, allGuides, difficulty);
+      return;
+    }
+
+    // No service-specific guides — show generic platform-based guide
+    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
+    final genericGuide = findGenericCancelGuide(isIOS: isIOS);
+    if (genericGuide != null) {
+      openGuide(genericGuide);
+    }
+  }
+
+  void _showPlatformPicker(
+    BuildContext context,
+    Subscription sub,
+    List<CancelGuideData> guides,
+    int? difficulty,
+  ) {
+    final c = context.colors;
+
+    String platformLabel(String platform) {
+      switch (platform) {
+        case 'ios':
+          return context.l10n.cancelPlatformIos;
+        case 'android':
+          return context.l10n.cancelPlatformAndroid;
+        case 'web':
+          return context.l10n.cancelPlatformWeb;
+        default:
+          return platform;
       }
     }
+
+    IconData platformIcon(String platform) {
+      switch (platform) {
+        case 'ios':
+          return Icons.apple;
+        case 'android':
+          return Icons.android;
+        case 'web':
+          return Icons.language;
+        default:
+          return Icons.help_outline;
+      }
+    }
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: c.bgCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: c.textDim.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                context.l10n.cancelPlatformPickerTitle(sub.name),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: c.text,
+                ),
+              ),
+              const SizedBox(height: 16),
+              ...guides.map((guide) => Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.of(ctx).pop();
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => CancelGuideScreen(
+                              subscription: sub,
+                              guideData: guide,
+                              cancelDifficulty: difficulty,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: c.bgElevated,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: c.border),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              platformIcon(guide.platform),
+                              size: 22,
+                              color: c.text,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                platformLabel(guide.platform),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: c.text,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              Icons.chevron_right_rounded,
+                              size: 18,
+                              color: c.textDim,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showDeleteDialog(

@@ -105,6 +105,13 @@ class ServiceCacheNotifier extends StateNotifier<List<ServiceCache>> {
     return null;
   }
 
+  /// Find ALL cancel guides for a service (all platforms).
+  List<CancelGuideData> findAllCancelGuides(String name) {
+    final service = findByName(name);
+    if (service == null) return [];
+    return service.parsedCancelGuides;
+  }
+
   /// Find service-specific refund templates.
   List<RefundTemplateData> findRefundTemplates(String name) {
     final service = findByName(name);

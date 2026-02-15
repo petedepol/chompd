@@ -460,14 +460,30 @@ class _QuickAddSheetState extends ConsumerState<_QuickAddSheet> {
 
     HapticService.instance.success();
     ref.read(subscriptionsProvider.notifier).add(sub);
+
+    // Capture messenger before popping (sheet context won't be valid after pop)
+    final c = context.colors;
+    final messenger = ScaffoldMessenger.of(context);
     Navigator.of(context).pop();
 
-    final c = context.colors;
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
-        content: Text('${tpl.name} added!'),
+        content: Row(
+          children: [
+            Icon(Icons.check_circle_rounded, size: 18, color: c.mint),
+            const SizedBox(width: 8),
+            Text(
+              '${tpl.name} added!',
+              style: TextStyle(
+                color: c.text,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
         backgroundColor: c.bgElevated,
         behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 2),
       ),

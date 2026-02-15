@@ -379,20 +379,27 @@ class CategoryColors {
   CategoryColors._();
 
   static const Map<String, Color> map = {
+    // Supabase service_category enum
     'streaming': Color(0xFFE50914),      // Netflix red
     'music': Color(0xFF1DB954),          // Spotify green
-    'ai': Color(0xFF8B5CF6),             // Violet
+    'gaming': Color(0xFF107C10),         // Xbox green
     'productivity': Color(0xFF00A4EF),   // Light blue
     'storage': Color(0xFF4285F4),        // Google blue
     'fitness': Color(0xFFFC6719),        // Orange
-    'gaming': Color(0xFF107C10),         // Xbox green
+    'education': Color(0xFFFF6D00),      // Deep orange
+    'news': Color(0xFF1DA1F2),           // Twitter blue
+    'vpn': Color(0xFF2962FF),            // Bold blue
+    'finance': Color(0xFF00C853),        // Money green
+    'food': Color(0xFFFF8A65),           // Warm coral
+    'shopping': Color(0xFF26A69A),       // Teal
+    'social': Color(0xFFEC4899),         // Pink
+    'design': Color(0xFFE040FB),         // Magenta
+    'developer': Color(0xFF78909C),      // Blue grey
+    'other': Color(0xFF9E9E9E),          // Neutral grey
+    // Legacy categories (backward compat)
+    'ai': Color(0xFF8B5CF6),             // Violet
     'reading': Color(0xFFE8B341),        // Amber
     'communication': Color(0xFFA259FF),  // Purple
-    'news': Color(0xFF1DA1F2),           // Twitter blue
-    'finance': Color(0xFF00C853),        // Money green
-    'education': Color(0xFFFF6D00),      // Deep orange
-    'vpn': Color(0xFF2962FF),            // Bold blue
-    'developer': Color(0xFF78909C),      // Blue grey
     'bundle': Color(0xFF6D4C41),         // Brown
   };
 
@@ -406,20 +413,27 @@ class CategoryIcons {
   CategoryIcons._();
 
   static const Map<String, IconData> map = {
+    // Supabase service_category enum
     'streaming': Icons.movie_outlined,
     'music': Icons.music_note_outlined,
-    'ai': Icons.auto_awesome_outlined,
+    'gaming': Icons.sports_esports_outlined,
     'productivity': Icons.work_outline,
     'storage': Icons.cloud_outlined,
     'fitness': Icons.fitness_center_outlined,
-    'gaming': Icons.sports_esports_outlined,
+    'education': Icons.school_outlined,
+    'news': Icons.newspaper_outlined,
+    'vpn': Icons.vpn_key_outlined,
+    'finance': Icons.account_balance_outlined,
+    'food': Icons.restaurant_outlined,
+    'shopping': Icons.shopping_bag_outlined,
+    'social': Icons.people_outlined,
+    'design': Icons.palette_outlined,
+    'developer': Icons.code_outlined,
+    'other': Icons.more_horiz_outlined,
+    // Legacy categories (backward compat)
+    'ai': Icons.auto_awesome_outlined,
     'reading': Icons.auto_stories_outlined,
     'communication': Icons.chat_outlined,
-    'news': Icons.newspaper_outlined,
-    'finance': Icons.account_balance_outlined,
-    'education': Icons.school_outlined,
-    'vpn': Icons.vpn_key_outlined,
-    'developer': Icons.code_outlined,
     'bundle': Icons.inventory_2_outlined,
   };
 

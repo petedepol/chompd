@@ -116,6 +116,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         border: Border.all(color: c.border),
       ),
       child: TableCalendar<Subscription>(
+        locale: Localizations.localeOf(context).toString(),
         firstDay: DateTime.now().subtract(const Duration(days: 30)),
         lastDay: DateTime.now().add(const Duration(days: 365)),
         focusedDay: _focusedDay,

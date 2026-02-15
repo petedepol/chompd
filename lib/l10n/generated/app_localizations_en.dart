@@ -496,6 +496,9 @@ class SEn extends S {
   }
 
   @override
+  String get upcoming => 'Upcoming';
+
+  @override
   String get sectionDetails => 'DETAILS';
 
   @override
@@ -526,6 +529,23 @@ class SEn extends S {
 
   @override
   String get cancelSubscription => 'Cancel Subscription';
+
+  @override
+  String cancelPlatformPickerTitle(String name) {
+    return 'How do you pay for $name?';
+  }
+
+  @override
+  String get cancelPlatformIos => 'Apple App Store';
+
+  @override
+  String get cancelPlatformAndroid => 'Google Play';
+
+  @override
+  String get cancelPlatformWeb => 'Website / Direct';
+
+  @override
+  String get cancelPlatformNotSure => 'Not sure';
 
   @override
   String get requestRefund => 'Request Refund';

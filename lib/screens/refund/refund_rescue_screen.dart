@@ -353,19 +353,23 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: c.mint.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      context.l10n.successRate(template.successRate),
-                      style: ChompdTypography.mono(
-                        size: 11,
-                        weight: FontWeight.w600,
-                        color: c.mint,
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: c.mint.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        context.l10n.successRate(template.successRate),
+                        style: ChompdTypography.mono(
+                          size: 11,
+                          weight: FontWeight.w600,
+                          color: c.mint,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
@@ -578,19 +582,23 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
               child: Row(
                 children: [
                   if (template.successRatePct != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: c.mint.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        template.successRateLabel,
-                        style: ChompdTypography.mono(
-                          size: 11,
-                          weight: FontWeight.w600,
-                          color: c.mint,
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: c.mint.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          template.successRateLabel,
+                          style: ChompdTypography.mono(
+                            size: 11,
+                            weight: FontWeight.w600,
+                            color: c.mint,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ),
@@ -892,15 +900,22 @@ class _PathCard extends StatelessWidget {
                       size: 11,
                       color: c.mint,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
             ),
-            Text(
-              template.timeframe,
-              style: TextStyle(
-                fontSize: 10,
-                color: c.textDim,
+            Flexible(
+              flex: 0,
+              child: Text(
+                template.timeframe,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: c.textDim,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 6),

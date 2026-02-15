@@ -179,7 +179,7 @@ class _SpendingRingState extends ConsumerState<SpendingRing>
                               ? c.red
                               : percentage > 0.9
                                   ? c.amber
-                                  : Colors.white.withValues(alpha: 0.7),
+                                  : c.textDim,
                         ),
                       ),
                     ),

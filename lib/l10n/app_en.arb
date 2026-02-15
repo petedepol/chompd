@@ -217,6 +217,7 @@
   "@noPaymentsYet": {
     "placeholders": { "date": {"type": "String"} }
   },
+  "upcoming": "Upcoming",
   "sectionDetails": "DETAILS",
   "detailCategory": "Category",
   "detailCurrency": "Currency",
@@ -230,6 +231,14 @@
   "sourceQuickAdd": "Quick Add",
   "sourceManual": "Manual",
   "cancelSubscription": "Cancel Subscription",
+  "cancelPlatformPickerTitle": "How do you pay for {name}?",
+  "@cancelPlatformPickerTitle": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "cancelPlatformIos": "Apple App Store",
+  "cancelPlatformAndroid": "Google Play",
+  "cancelPlatformWeb": "Website / Direct",
+  "cancelPlatformNotSure": "Not sure",
   "requestRefund": "Request Refund",
   "deleteNameTitle": "Delete {name}?",
   "@deleteNameTitle": {

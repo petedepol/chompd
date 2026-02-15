@@ -901,6 +901,12 @@ abstract class S {
   /// **'No payments yet — started {date}'**
   String noPaymentsYet(String date);
 
+  /// No description provided for @upcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get upcoming;
+
   /// No description provided for @sectionDetails.
   ///
   /// In en, this message translates to:
@@ -960,6 +966,36 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Cancel Subscription'**
   String get cancelSubscription;
+
+  /// No description provided for @cancelPlatformPickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you pay for {name}?'**
+  String cancelPlatformPickerTitle(String name);
+
+  /// No description provided for @cancelPlatformIos.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple App Store'**
+  String get cancelPlatformIos;
+
+  /// No description provided for @cancelPlatformAndroid.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Play'**
+  String get cancelPlatformAndroid;
+
+  /// No description provided for @cancelPlatformWeb.
+  ///
+  /// In en, this message translates to:
+  /// **'Website / Direct'**
+  String get cancelPlatformWeb;
+
+  /// No description provided for @cancelPlatformNotSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure'**
+  String get cancelPlatformNotSure;
 
   /// No description provided for @requestRefund.
   ///

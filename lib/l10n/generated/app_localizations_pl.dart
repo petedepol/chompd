@@ -505,6 +505,9 @@ class SPl extends S {
   }
 
   @override
+  String get upcoming => 'Nadchodzące';
+
+  @override
   String get sectionDetails => 'SZCZEGÓŁY';
 
   @override
@@ -535,6 +538,23 @@ class SPl extends S {
 
   @override
   String get cancelSubscription => 'Anuluj subskrypcję';
+
+  @override
+  String cancelPlatformPickerTitle(String name) {
+    return 'Jak płacisz za $name?';
+  }
+
+  @override
+  String get cancelPlatformIos => 'Apple App Store';
+
+  @override
+  String get cancelPlatformAndroid => 'Google Play';
+
+  @override
+  String get cancelPlatformWeb => 'Strona internetowa';
+
+  @override
+  String get cancelPlatformNotSure => 'Nie wiem';
 
   @override
   String get requestRefund => 'Zażądaj zwrotu';

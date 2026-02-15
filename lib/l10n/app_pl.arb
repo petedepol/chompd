@@ -217,6 +217,7 @@
   "@noPaymentsYet": {
     "placeholders": { "date": {"type": "String"} }
   },
+  "upcoming": "Nadchodzące",
   "sectionDetails": "SZCZEGÓŁY",
   "detailCategory": "Kategoria",
   "detailCurrency": "Waluta",
@@ -230,6 +231,14 @@
   "sourceQuickAdd": "Szybkie dodawanie",
   "sourceManual": "Ręcznie",
   "cancelSubscription": "Anuluj subskrypcję",
+  "cancelPlatformPickerTitle": "Jak płacisz za {name}?",
+  "@cancelPlatformPickerTitle": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "cancelPlatformIos": "Apple App Store",
+  "cancelPlatformAndroid": "Google Play",
+  "cancelPlatformWeb": "Strona internetowa",
+  "cancelPlatformNotSure": "Nie wiem",
   "requestRefund": "Zażądaj zwrotu",
   "deleteNameTitle": "Usunąć {name}?",
   "@deleteNameTitle": {
