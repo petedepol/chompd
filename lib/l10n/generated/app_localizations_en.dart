@@ -548,6 +548,22 @@ class SEn extends S {
   String get cancelPlatformNotSure => 'Not sure';
 
   @override
+  String get difficultyEasy => 'Easy — straightforward cancel';
+
+  @override
+  String get difficultyModerate => 'Moderate — a few steps required';
+
+  @override
+  String get difficultyMedium => 'Medium — takes a few minutes';
+
+  @override
+  String get difficultyHard => 'Hard — they make this deliberately difficult';
+
+  @override
+  String get difficultyVeryHard =>
+      'Very hard — multiple retention screens or fees';
+
+  @override
   String get requestRefund => 'Request Refund';
 
   @override

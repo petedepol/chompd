@@ -557,6 +557,21 @@ class SPl extends S {
   String get cancelPlatformNotSure => 'Nie wiem';
 
   @override
+  String get difficultyEasy => 'Łatwe — prosta rezygnacja';
+
+  @override
+  String get difficultyModerate => 'Umiarkowane — kilka kroków';
+
+  @override
+  String get difficultyMedium => 'Średnie — zajmie kilka minut';
+
+  @override
+  String get difficultyHard => 'Trudne — celowo utrudnione';
+
+  @override
+  String get difficultyVeryHard => 'Bardzo trudne — wiele ekranów retencji';
+
+  @override
   String get requestRefund => 'Zażądaj zwrotu';
 
   @override

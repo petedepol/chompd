@@ -239,6 +239,11 @@
   "cancelPlatformAndroid": "Google Play",
   "cancelPlatformWeb": "Website / Direct",
   "cancelPlatformNotSure": "Not sure",
+  "difficultyEasy": "Easy — straightforward cancel",
+  "difficultyModerate": "Moderate — a few steps required",
+  "difficultyMedium": "Medium — takes a few minutes",
+  "difficultyHard": "Hard — they make this deliberately difficult",
+  "difficultyVeryHard": "Very hard — multiple retention screens or fees",
   "requestRefund": "Request Refund",
   "deleteNameTitle": "Delete {name}?",
   "@deleteNameTitle": {

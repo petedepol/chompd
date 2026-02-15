@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/theme.dart';
 import '../../utils/l10n_extension.dart';
+import '../../models/nudge_candidate.dart';
 import '../../models/subscription.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/insights_provider.dart';
@@ -273,28 +274,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       Row(
                         children: [
-                          // Scan / Add button
-                          GestureDetector(
-                            onTap: () => _showAddOptions(context, ref),
-                            child: Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: c.mint.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: c.mint.withValues(alpha: 0.25),
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: Icon(
-                                Icons.camera_alt_rounded,
-                                size: 18,
-                                color: c.mint,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
                           // Calendar button
                           GestureDetector(
                             onTap: () {
@@ -556,13 +535,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
 
-              // ─── AI Nudge Card ───
-              if (ref.watch(nudgeProvider) != null)
+              // ─── AI Nudge Cards ───
+              if (ref.watch(nudgesProvider).isNotEmpty)
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: NudgeCard(nudge: ref.watch(nudgeProvider)!),
-                  ),
+                  child: _NudgeCarousel(nudges: ref.watch(nudgesProvider)),
                 ),
 
               // ─── Section: Active Subscriptions ───
@@ -708,11 +684,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ],
 
-              // Bottom padding
+              // Bottom padding (extra space for FAB)
               const SliverToBoxAdapter(
-                child: SizedBox(height: 32),
+                child: SizedBox(height: 100),
               ),
             ],
+          ),
+
+          // ─── Floating Scan Button (FAB) ───
+          Positioned(
+            right: 20,
+            bottom: MediaQuery.of(context).padding.bottom + 20,
+            child: GestureDetector(
+              onTap: () => _showAddOptions(context, ref),
+              child: Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [c.mint, c.mintDark],
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: c.mint.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  size: 26,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ),
 
           // ─── Confetti Overlay ───
@@ -1253,6 +1263,101 @@ class _CompactSavings extends StatelessWidget {
               fontSize: 11,
               color: c.textDim,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Horizontal carousel for multiple nudge cards with dot indicators.
+class _NudgeCarousel extends StatefulWidget {
+  final List<NudgeCandidate> nudges;
+  const _NudgeCarousel({required this.nudges});
+
+  @override
+  State<_NudgeCarousel> createState() => _NudgeCarouselState();
+}
+
+class _NudgeCarouselState extends State<_NudgeCarousel> {
+  int _currentPage = 0;
+
+  static String _nudgeEmoji(NudgeReason reason) {
+    switch (reason) {
+      case NudgeReason.expensiveUnreviewed:
+        return '\uD83D\uDCB8'; // 💸
+      case NudgeReason.trialConverted:
+        return '\u26A0\uFE0F'; // ⚠️
+      case NudgeReason.renewalApproaching:
+        return '\uD83D\uDD14'; // 🔔
+      case NudgeReason.duplicateCategory:
+        return '\uD83D\uDCE6'; // 📦
+      case NudgeReason.annualRenewalSoon:
+        return '\uD83D\uDCC5'; // 📅
+    }
+  }
+
+  static String _nudgeTitle(NudgeReason reason) {
+    switch (reason) {
+      case NudgeReason.expensiveUnreviewed:
+        return 'Big Spender';
+      case NudgeReason.trialConverted:
+        return 'Trial Trap';
+      case NudgeReason.renewalApproaching:
+        return 'Renewing Soon';
+      case NudgeReason.duplicateCategory:
+        return 'Overlap Alert';
+      case NudgeReason.annualRenewalSoon:
+        return 'Annual Renewal';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final nudges = widget.nudges;
+
+    // Single nudge — no carousel needed
+    if (nudges.length == 1) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: NudgeCard(nudge: nudges.first),
+      );
+    }
+
+    // Multiple nudges — carousel
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        children: [
+          SizedBox(
+            height: 160,
+            child: PageView.builder(
+              itemCount: nudges.length,
+              onPageChanged: (i) => setState(() => _currentPage = i),
+              itemBuilder: (context, index) {
+                return NudgeCard(nudge: nudges[index]);
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          // Dot indicators
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(nudges.length, (i) {
+              final isActive = i == _currentPage;
+              return Container(
+                width: isActive ? 18 : 6,
+                height: 6,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? c.purple
+                      : c.textDim.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              );
+            }),
           ),
         ],
       ),

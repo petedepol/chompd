@@ -997,6 +997,36 @@ abstract class S {
   /// **'Not sure'**
   String get cancelPlatformNotSure;
 
+  /// No description provided for @difficultyEasy.
+  ///
+  /// In en, this message translates to:
+  /// **'Easy — straightforward cancel'**
+  String get difficultyEasy;
+
+  /// No description provided for @difficultyModerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate — a few steps required'**
+  String get difficultyModerate;
+
+  /// No description provided for @difficultyMedium.
+  ///
+  /// In en, this message translates to:
+  /// **'Medium — takes a few minutes'**
+  String get difficultyMedium;
+
+  /// No description provided for @difficultyHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Hard — they make this deliberately difficult'**
+  String get difficultyHard;
+
+  /// No description provided for @difficultyVeryHard.
+  ///
+  /// In en, this message translates to:
+  /// **'Very hard — multiple retention screens or fees'**
+  String get difficultyVeryHard;
+
   /// No description provided for @requestRefund.
   ///
   /// In en, this message translates to:

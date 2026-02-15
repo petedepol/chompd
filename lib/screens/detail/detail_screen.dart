@@ -45,6 +45,8 @@ class DetailScreen extends ConsumerWidget {
     final color = sub.brandColor != null
         ? _parseHex(sub.brandColor!)
         : c.textDim;
+    final serviceDescription = ref.read(serviceCacheProvider.notifier)
+        .findByName(sub.name)?.description;
     final daysLeft = sub.daysUntilRenewal;
     final renewalPct = (1 - (daysLeft / sub.cycle.approximateDays)).clamp(0.0, 1.0);
 
@@ -106,51 +108,76 @@ class DetailScreen extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    // Icon
-                    Container(
-                      width: 64,
-                      height: 64,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(18),
-                        gradient: LinearGradient(
-                          colors: [
-                            color.withValues(alpha: 0.87),
-                            color.withValues(alpha: 0.53),
-                          ],
-                        ),
-                        border: Theme.of(context).brightness == Brightness.light
-                            ? Border.all(
-                                color: Colors.black.withValues(alpha: 0.08),
-                              )
-                            : null,
-                        boxShadow: [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.27),
-                            blurRadius: 24,
-                            offset: const Offset(0, 8),
+                    // Icon + Name + Description (horizontal layout)
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(14),
+                            gradient: LinearGradient(
+                              colors: [
+                                color.withValues(alpha: 0.87),
+                                color.withValues(alpha: 0.53),
+                              ],
+                            ),
+                            border: Theme.of(context).brightness == Brightness.light
+                                ? Border.all(
+                                    color: Colors.black.withValues(alpha: 0.08),
+                                  )
+                                : null,
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.27),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        sub.iconName ?? sub.name[0],
-                        style: const TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          alignment: Alignment.center,
+                          child: Text(
+                            sub.iconName ?? sub.name[0],
+                            style: const TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                sub.name,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: c.text,
+                                ),
+                              ),
+                              if (serviceDescription != null) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  serviceDescription,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: c.textDim,
+                                    height: 1.3,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 14),
-                    Text(
-                      sub.name,
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: c.text,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
                     RichText(
                       text: TextSpan(
                         children: [

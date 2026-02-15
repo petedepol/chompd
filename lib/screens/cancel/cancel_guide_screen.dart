@@ -50,11 +50,11 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   }
 
   String _getDifficultyLabel() {
-    if (_difficulty <= 2) return 'Easy — straightforward cancel';
-    if (_difficulty <= 4) return 'Moderate — a few steps required';
-    if (_difficulty <= 6) return 'Medium — takes a few minutes';
-    if (_difficulty <= 8) return 'Hard — they make this deliberately difficult';
-    return 'Very hard — multiple retention screens or fees';
+    if (_difficulty <= 2) return context.l10n.difficultyEasy;
+    if (_difficulty <= 4) return context.l10n.difficultyModerate;
+    if (_difficulty <= 6) return context.l10n.difficultyMedium;
+    if (_difficulty <= 8) return context.l10n.difficultyHard;
+    return context.l10n.difficultyVeryHard;
   }
 
   void _toggleStep(int index) {

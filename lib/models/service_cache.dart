@@ -31,6 +31,9 @@ class ServiceCache {
   late String iconLetter;
   String? iconUrl;
 
+  /// Short 1-2 sentence service description (nullable — populated via SQL).
+  String? description;
+
   /// URLs.
   String? websiteUrl;
   String? cancelUrl;
@@ -161,6 +164,7 @@ class ServiceCache {
       ..brandColor = json['brand_color'] as String? ?? '#6A6A82'
       ..iconLetter = json['icon_letter'] as String? ?? '?'
       ..iconUrl = json['icon_url'] as String?
+      ..description = json['description'] as String?
       ..websiteUrl = json['website_url'] as String?
       ..cancelUrl = json['cancel_url'] as String?
       ..pricingUrl = json['pricing_url'] as String?
