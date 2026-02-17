@@ -2736,6 +2736,42 @@ abstract class S {
   /// In en, this message translates to:
   /// **'/yr'**
   String get perYear;
+
+  /// No description provided for @insightDidYouKnow.
+  ///
+  /// In en, this message translates to:
+  /// **'DID YOU KNOW?'**
+  String get insightDidYouKnow;
+
+  /// No description provided for @insightSaveMoney.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVE MONEY'**
+  String get insightSaveMoney;
+
+  /// No description provided for @insightLearnMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Learn more'**
+  String get insightLearnMore;
+
+  /// No description provided for @insightUnlockPro.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock with Pro'**
+  String get insightUnlockPro;
+
+  /// No description provided for @insightProTeaser.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Pro to get personalised savings tips.'**
+  String get insightProTeaser;
+
+  /// No description provided for @insightProTeaserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personalised savings tips'**
+  String get insightProTeaserTitle;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

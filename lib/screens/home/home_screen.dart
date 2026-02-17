@@ -27,7 +27,9 @@ import '../../widgets/spending_ring.dart';
 import '../../widgets/subscription_card.dart';
 import '../../widgets/mascot_image.dart';
 import '../../widgets/nudge_card.dart';
+import '../../widgets/service_insight_card.dart';
 import '../../widgets/trap_stats_card.dart';
+import '../../providers/combined_insights_provider.dart';
 import '../../providers/budget_provider.dart';
 import '../detail/add_edit_screen.dart';
 import '../detail/detail_screen.dart';
@@ -496,6 +498,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 // 4. Smart Insights
                 if (insights.isNotEmpty && !_dismissedCards.contains('insights')) {
                   cards.add(InsightCard(insights: insights));
+                }
+
+                // 4.5 Combined Insights (AI-generated + curated)
+                final combinedInsights = ref.watch(combinedInsightsProvider);
+                if (combinedInsights.isNotEmpty) {
+                  cards.add(const ServiceInsightCard(embedded: true));
                 }
 
                 // 5. Nudge cards

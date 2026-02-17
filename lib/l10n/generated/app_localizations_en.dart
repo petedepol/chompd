@@ -1640,4 +1640,23 @@ class SEn extends S {
 
   @override
   String get perYear => '/yr';
+
+  @override
+  String get insightDidYouKnow => 'DID YOU KNOW?';
+
+  @override
+  String get insightSaveMoney => 'SAVE MONEY';
+
+  @override
+  String get insightLearnMore => 'Learn more';
+
+  @override
+  String get insightUnlockPro => 'Unlock with Pro';
+
+  @override
+  String get insightProTeaser =>
+      'Upgrade to Pro to get personalised savings tips.';
+
+  @override
+  String get insightProTeaserTitle => 'Personalised savings tips';
 }

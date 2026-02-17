@@ -779,5 +779,12 @@
   "@monthlyVsAnnual": {
     "placeholders": { "monthly": {"type": "String"}, "annual": {"type": "String"} }
   },
-  "perYear": "/rok"
+  "perYear": "/rok",
+
+  "insightDidYouKnow": "CZY WIESZ, ŻE...?",
+  "insightSaveMoney": "OSZCZĘDŹ",
+  "insightLearnMore": "Dowiedz się więcej",
+  "insightUnlockPro": "Odblokuj z Pro",
+  "insightProTeaser": "Przejdź na Pro, aby otrzymywać spersonalizowane porady oszczędnościowe.",
+  "insightProTeaserTitle": "Spersonalizowane porady oszczędnościowe"
 }

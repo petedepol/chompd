@@ -247,6 +247,29 @@
   - Fix: emphasised "≤7 calendar days" requirement, added concrete example showing that months-away dates do NOT qualify for the exception
   - Changed in both Haiku prompt (line ~632) and Sonnet prompt (line ~822) — identical edits
 
+### Sprint 15 — AI Insights Phase 1 + Phase 2 + Trap Scanner Split ✅
+- **AI Insights Phase 1 (Batches I3–I5)** — curated editorial insights synced from Supabase `service_insights` table
+  - `lib/models/service_insight.dart` — Isar collection with bilingual fields (EN/PL), `remoteId` unique index, `fromSupabaseMap()`
+  - `lib/services/service_insight_repository.dart` — singleton, full-replace sync from Supabase, local-only dismiss, `getForServices()`, `getRandomInsight()`
+  - `lib/providers/service_insight_provider.dart` — maps active subscription slugs (via `matchedServiceId` → `ServiceCache.slug`) to insight list
+  - `lib/widgets/service_insight_card.dart` — carousel card with tap-to-cycle, dismiss, pagination dots, emoji + accent by `insightType`, `_ProTeaser` for free users
+  - Registered `ServiceInsightSchema` in `isar_service.dart`, added sync calls in `main.dart` + connectivity listener
+  - Added 6 l10n keys to `app_en.arb` and `app_pl.arb`
+  - 14 insights synced from Supabase on first launch
+- **AI Insights Phase 2 (Batches I11–I13)** — AI-generated per-user insights synced from Supabase `user_insights` table
+  - `lib/models/user_insight.dart` — Isar collection with `userId`, `subscriptionId`, `serviceKey`, `generatedAt`, `expiresAt`, `isRead`, `isDismissed`
+  - `lib/services/user_insight_repository.dart` — singleton, user-scoped sync (filters by `AuthService.instance.userId`), dismiss/read sync to Supabase (fire-and-forget), `cleanupExpired()` auto-hides stale insights
+  - `lib/models/insight_display_data.dart` — unified display DTO mapping both `ServiceInsight` and `UserInsight` to a common model
+  - `lib/providers/combined_insights_provider.dart` — merges AI insights (first) + curated insights (fill remaining), max 3 total, locale-aware
+  - Modified `service_insight_card.dart` → reads from `combinedInsightsProvider`, shows ✨ AI badge (purple) on AI-generated insights, dual dismiss (Supabase for AI, local for curated), `markAsRead()` once per session
+  - Added `dismissById(int isarId)` to `service_insight_repository.dart` for InsightDisplayData compatibility
+  - Registered `UserInsightSchema` in `isar_service.dart` (7th schema), added sync calls in `main.dart`
+- **Trap Scanner Split** — separated subscription extraction from trap detection into two parallel API calls
+  - Modified `ai_scan_service.dart`: `analyseScreenshotWithTrap()` now uses `Future.wait()` running extraction + `_runTrapScan()` simultaneously
+  - New `_trapScanPrompt` getter — dedicated fine-print reading prompt checking 6 trap categories
+  - `_extractionPrompt` cleaned: removed TASK 2 trap section, focused on subscription data only
+  - `_runTrapScan()` never throws — returns `TrapResult.clean` on failure
+
 ---
 
 ## Current File Structure
@@ -268,6 +291,11 @@ lib/
 │   ├── scan_output.dart              (ScanResult + TrapResult wrapper)
 │   ├── trap_result.dart              (trap detection model + enums)
 │   ├── dodged_trap.dart              (dodged trap record, plain class)
+│   ├── service_insight.dart          (Isar: curated editorial insights)
+│   ├── service_insight.g.dart        (generated)
+│   ├── user_insight.dart             (Isar: AI-generated per-user insights)
+│   ├── user_insight.g.dart           (generated)
+│   ├── insight_display_data.dart     (unified display DTO for carousel)
 │   ├── cancel_guide.dart             (cancel guide model, plain class)
 │   ├── refund_template.dart          (refund path data class + RefundPath enum)
 │   └── nudge_candidate.dart          (nudge result + NudgeReason enum)
@@ -284,7 +312,9 @@ lib/
 │   ├── trap_stats_provider.dart      (dodged trap statistics)
 │   ├── calendar_provider.dart        (renewal date projections)
 │   ├── nudge_provider.dart           (highest-priority nudge candidate)
-│   └── currency_provider.dart        (supported currencies list + helpers)
+│   ├── currency_provider.dart        (supported currencies list + helpers)
+│   ├── service_insight_provider.dart (curated insights by user's service slugs)
+│   └── combined_insights_provider.dart (merges AI + curated, max 3)
 ├── screens/
 │   ├── home/home_screen.dart         (main list + spending ring + calendar/settings icons)
 │   ├── detail/detail_screen.dart     (sub details + cancel guide + refund rescue)
@@ -305,7 +335,9 @@ lib/
 │   ├── purchase_service.dart         (IAP / Pro unlock)
 │   ├── haptic_service.dart           (tactile feedback)
 │   ├── nudge_engine.dart             (5 heuristic nudge rules)
-│   └── storage_service.dart          (Isar local DB operations)
+│   ├── storage_service.dart          (Isar local DB operations)
+│   ├── service_insight_repository.dart (curated insight sync + dismiss)
+│   └── user_insight_repository.dart  (AI insight sync + dismiss/read + expiry cleanup)
 ├── utils/
 │   ├── csv_export.dart               (RFC 4180 export)
 │   ├── currency.dart
@@ -328,7 +360,8 @@ lib/
     ├── toast_overlay.dart            (feedback messages)
     ├── scan_shimmer.dart             (scan loading animation)
     ├── nudge_card.dart               (inline "should I keep this?" card)
-    └── mascot_image.dart             (reusable piranha mascot widget)
+    ├── mascot_image.dart             (reusable piranha mascot widget)
+    └── service_insight_card.dart     (unified insight carousel card + AI badge)
 ```
 
 ---

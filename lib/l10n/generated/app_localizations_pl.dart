@@ -1669,4 +1669,23 @@ class SPl extends S {
 
   @override
   String get perYear => '/rok';
+
+  @override
+  String get insightDidYouKnow => 'CZY WIESZ, ŻE...?';
+
+  @override
+  String get insightSaveMoney => 'OSZCZĘDŹ';
+
+  @override
+  String get insightLearnMore => 'Dowiedz się więcej';
+
+  @override
+  String get insightUnlockPro => 'Odblokuj z Pro';
+
+  @override
+  String get insightProTeaser =>
+      'Przejdź na Pro, aby otrzymywać spersonalizowane porady oszczędnościowe.';
+
+  @override
+  String get insightProTeaserTitle => 'Spersonalizowane porady oszczędnościowe';
 }

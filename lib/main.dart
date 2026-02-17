@@ -13,8 +13,10 @@ import 'services/isar_service.dart';
 import 'services/merchant_db.dart';
 import 'services/notification_service.dart';
 import 'services/purchase_service.dart';
+import 'services/service_insight_repository.dart';
 import 'services/service_sync_service.dart';
 import 'services/sync_service.dart';
+import 'services/user_insight_repository.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,12 +79,20 @@ void main() async {
   // Sync service database (cancel guides, pricing, dark patterns, etc.)
   ServiceSyncService.instance.syncServices();
 
+  // Sync curated service insights
+  ServiceInsightRepository.instance.syncFromSupabase();
+
+  // Sync AI-generated user insights
+  UserInsightRepository.instance.syncFromSupabase();
+
   // Re-sync whenever connectivity is restored
   Connectivity().onConnectivityChanged.listen((results) {
     if (!results.contains(ConnectivityResult.none)) {
       debugPrint('[Sync] Connectivity restored — syncing...');
       SyncService.instance.pullAndMerge();
       ServiceSyncService.instance.syncServices();
+      ServiceInsightRepository.instance.syncFromSupabase();
+      UserInsightRepository.instance.syncFromSupabase();
     }
   });
 

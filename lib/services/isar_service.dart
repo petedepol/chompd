@@ -4,7 +4,9 @@ import 'package:path_provider/path_provider.dart';
 import '../models/dodged_trap.dart';
 import '../models/merchant.dart';
 import '../models/service_cache.dart';
+import '../models/service_insight.dart';
 import '../models/subscription.dart';
+import '../models/user_insight.dart';
 
 /// Isar database initialisation and access.
 ///
@@ -28,6 +30,8 @@ class IsarService {
         DodgedTrapSchema,
         ServiceCacheSchema,
         SyncStateSchema,
+        ServiceInsightSchema,
+        UserInsightSchema,
       ],
       directory: dir.path,
     );
