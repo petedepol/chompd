@@ -90,7 +90,6 @@ class AiScanService {
       } catch (e) {
         // Edge Function not deployed or erroring — try direct if key available
         if (_hasApiKey) {
-          debugPrint('[AiScan] Edge Function failed, falling back to direct API: $e');
           return _callDirectApi(body);
         }
         rethrow;
@@ -126,8 +125,6 @@ class AiScanService {
     if (!_hasApiKey) {
       throw Exception('No API key configured — pass --dart-define=ANTHROPIC_API_KEY=sk-...');
     }
-    debugPrint('[AiScan] Direct API — key length: ${_apiKey.length}');
-
     final http.Response response;
     try {
       response = await http
@@ -217,17 +214,14 @@ class AiScanService {
         orElse: () => throw Exception('No text block in trap scan response'),
       );
       final rawText = textBlock['text'] as String;
-      debugPrint('[AiScan] Trap raw response (first 300 chars): ${rawText.substring(0, rawText.length.clamp(0, 300))}');
       final decoded = _extractJson(rawText);
 
       if (decoded is! Map<String, dynamic>) {
-        debugPrint('[AiScan] Trap scan returned unexpected format: ${decoded.runtimeType}');
         return TrapResult.clean;
       }
 
       final data = decoded;
       final hasTraps = data['has_traps'] as bool? ?? false;
-      debugPrint('[AiScan] Trap scan result: hasTraps=$hasTraps, severity=${data['worst_severity']}, confidence=${data['confidence']}, confType=${data['confidence'].runtimeType}, warning=${data['warning_message']?.toString().substring(0, (data['warning_message']?.toString().length ?? 0).clamp(0, 80))}');
 
       if (!hasTraps) return TrapResult.clean;
 
@@ -266,7 +260,6 @@ class AiScanService {
 
       // Parse scenario and map new fields for backward compat
       final scenario = data['scenario'] as String?;
-      debugPrint('[AiScan] Trap scenario: ${data['scenario']}, current_price: ${data['current_price']}, future_price: ${data['future_price']}');
       // current_price → trialPrice (what user pays now / initially)
       final currentPrice = (data['current_price'] as num?)?.toDouble();
       // future_price → realPrice (what user will pay later)
@@ -288,8 +281,7 @@ class AiScanService {
         warningMessage: data['warning_message'] as String? ?? '',
         serviceName: '',
       );
-    } catch (e) {
-      debugPrint('[AiScan] Trap scan failed (non-fatal): $e');
+    } catch (_) {
       return TrapResult.clean;
     }
   }
@@ -311,8 +303,6 @@ class AiScanService {
     String mimeType,
   ) async {
     try {
-      final originalKB = (imageBytes.length / 1024).round();
-
       // ── Step 1: Decode ──
       // For JPEG/PNG the `image` package can decode directly.
       // For HEIC/HEIF/WebP we need Flutter's platform codec first.
@@ -327,28 +317,19 @@ class AiScanService {
             decoded.width <= _maxDimension &&
             decoded.height <= _maxDimension &&
             imageBytes.length <= 500 * 1024) {
-          debugPrint(
-            '[AiScan] Image OK: ${decoded.width}×${decoded.height}, '
-            '${originalKB}KB — no processing needed',
-          );
           return (bytes: imageBytes, mime: mimeType);
         }
       } else {
         // HEIC / HEIF / WebP / other — decode via platform codec to raw RGBA,
         // then hand off to the image package for resize + JPEG encode.
-        debugPrint(
-          '[AiScan] Decoding $mimeType (${originalKB}KB) via platform codec',
-        );
         final rgba = await _decodeToPlatformRgba(imageBytes);
         if (rgba == null) {
-          debugPrint('[AiScan] Platform decode failed — using original');
           return (bytes: imageBytes, mime: mimeType);
         }
         decoded = rgba;
       }
 
       if (decoded == null) {
-        debugPrint('[AiScan] Decode failed — using original');
         return (bytes: imageBytes, mime: mimeType);
       }
 
@@ -362,10 +343,6 @@ class AiScanService {
                 : decoded.height);
         final newW = (decoded.width * scale).round();
         final newH = (decoded.height * scale).round();
-        debugPrint(
-          '[AiScan] Resizing ${decoded.width}×${decoded.height} → '
-          '$newW×$newH',
-        );
         decoded = img.copyResize(decoded, width: newW, height: newH,
             interpolation: img.Interpolation.linear);
       }
@@ -376,14 +353,8 @@ class AiScanService {
         _EncodeParams(decoded, _jpegQuality),
       );
 
-      final newKB = (jpegBytes.length / 1024).round();
-      debugPrint(
-        '[AiScan] Normalised: ${decoded.width}×${decoded.height}, '
-        '${originalKB}KB → ${newKB}KB JPEG',
-      );
       return (bytes: jpegBytes, mime: 'image/jpeg');
-    } catch (e) {
-      debugPrint('[AiScan] Image normalisation failed: $e — using original');
+    } catch (_) {
       return (bytes: imageBytes, mime: mimeType);
     }
   }
@@ -424,8 +395,7 @@ class AiScanService {
         numChannels: 4,
         order: img.ChannelOrder.rgba,
       );
-    } catch (e) {
-      debugPrint('[AiScan] Platform RGBA decode failed: $e');
+    } catch (_) {
       return null;
     }
   }
@@ -510,8 +480,6 @@ class AiScanService {
 
     // Get trap result (call 2) — already a TrapResult, never throws
     final trapResult = results[1] as TrapResult;
-    debugPrint('[AiScan] Final trap: isTrap=${trapResult.isTrap}, severity=${trapResult.severity}, warning=${trapResult.warningMessage?.substring(0, (trapResult.warningMessage?.length ?? 0).clamp(0, 80))}');
-
     // Set service name on trap result if trap was found
     final finalTrap = trapResult.isTrap
         ? TrapResult(
@@ -1592,17 +1560,14 @@ Return ONLY valid JSON array, no markdown, no explanation.
         orElse: () => throw Exception('No text block in trap scan response'),
       );
       final rawText = textBlock['text'] as String;
-      debugPrint('[AiScan] Trap raw response (first 300 chars): ${rawText.substring(0, rawText.length.clamp(0, 300))}');
       final decoded = _extractJson(rawText);
 
       if (decoded is! Map<String, dynamic>) {
-        debugPrint('[AiScan] Trap scan returned unexpected format: ${decoded.runtimeType}');
         return TrapResult.clean;
       }
 
       final data = decoded;
       final hasTraps = data['has_traps'] as bool? ?? false;
-      debugPrint('[AiScan] Trap scan result: hasTraps=$hasTraps, severity=${data['worst_severity']}');
 
       if (!hasTraps) return TrapResult.clean;
 
@@ -1638,7 +1603,6 @@ Return ONLY valid JSON array, no markdown, no explanation.
       }
 
       final scenario = data['scenario'] as String?;
-      debugPrint('[AiScan] Trap scenario: ${data['scenario']}, current_price: ${data['current_price']}, future_price: ${data['future_price']}');
       final currentPrice = (data['current_price'] as num?)?.toDouble();
       final futurePrice = (data['future_price'] as num?)?.toDouble();
       final futureBillingCycle = data['future_billing_cycle'] as String?;
@@ -1657,8 +1621,7 @@ Return ONLY valid JSON array, no markdown, no explanation.
         warningMessage: data['warning_message'] as String? ?? '',
         serviceName: '',
       );
-    } catch (e) {
-      debugPrint('[AiScan] Trap scan failed (non-fatal): $e');
+    } catch (_) {
       return TrapResult.clean;
     }
   }

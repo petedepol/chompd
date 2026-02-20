@@ -70,7 +70,6 @@ class PurchaseService {
     // }
 
     _initialised = true;
-    debugPrint('[PurchaseService] Initialised — state: $_state');
   }
 
   // ─── Supabase Pro Status ───
@@ -84,15 +83,9 @@ class PurchaseService {
   /// Gracefully falls back to current state on failure (offline, no
   /// Supabase, etc.) — never blocks the app from launching.
   Future<void> fetchProStatus() async {
-    if (!_hasSupabase) {
-      debugPrint('[PurchaseService] Skip Pro check — Supabase not configured');
-      return;
-    }
+    if (!_hasSupabase) return;
     final userId = AuthService.instance.userId;
-    if (userId == null) {
-      debugPrint('[PurchaseService] Skip Pro check — no userId');
-      return;
-    }
+    if (userId == null) return;
 
     try {
       final row = await _client
@@ -103,17 +96,10 @@ class PurchaseService {
 
       if (row != null && row['is_pro'] == true) {
         if (_state != PurchaseState.pro) {
-          debugPrint('[PurchaseService] Supabase says Pro — upgrading state');
           _setState(PurchaseState.pro);
         }
-      } else {
-        debugPrint(
-          '[PurchaseService] Supabase says free '
-          '(is_pro: ${row?['is_pro']})',
-        );
       }
-    } catch (e) {
-      debugPrint('[PurchaseService] Pro status fetch failed: $e');
+    } catch (_) {
       // Keep current state — don't downgrade on network failure
     }
   }
@@ -132,9 +118,8 @@ class PurchaseService {
           .from('profiles')
           .update({'is_pro': true, 'pro_purchased_at': DateTime.now().toUtc().toIso8601String()})
           .eq('id', userId);
-      debugPrint('[PurchaseService] Synced is_pro=true to Supabase');
-    } catch (e) {
-      debugPrint('[PurchaseService] Failed to sync Pro to Supabase: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -181,11 +166,9 @@ class PurchaseService {
       // Simulate success
       _setState(PurchaseState.pro);
       _syncProToSupabase();
-      debugPrint('[PurchaseService] Purchase successful');
       return true;
-    } catch (e) {
+    } catch (_) {
       _setState(PurchaseState.failed);
-      debugPrint('[PurchaseService] Purchase failed: $e');
       return false;
     }
   }
@@ -209,7 +192,6 @@ class PurchaseService {
 
         if (row != null && row['is_pro'] == true) {
           _setState(PurchaseState.pro);
-          debugPrint('[PurchaseService] Restored Pro from Supabase');
           return true;
         }
       }
@@ -227,11 +209,9 @@ class PurchaseService {
 
       // No purchase found anywhere
       _setState(PurchaseState.free);
-      debugPrint('[PurchaseService] No purchase to restore');
       return false;
-    } catch (e) {
+    } catch (_) {
       _setState(PurchaseState.free);
-      debugPrint('[PurchaseService] Restore failed: $e');
       return false;
     }
   }

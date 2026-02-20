@@ -1090,6 +1090,11 @@ class SPl extends S {
   }
 
   @override
+  String introBadge(int days) {
+    return '${days}d promo';
+  }
+
+  @override
   String get emptyNoSubscriptions => 'Brak subskrypcji';
 
   @override
@@ -1926,4 +1931,117 @@ class SPl extends S {
 
   @override
   String get scanErrorEmpty => 'Plik graficzny jest pusty. Spróbuj ponownie.';
+
+  @override
+  String scanServiceFound(String name) {
+    return 'Znaleziono $name!';
+  }
+
+  @override
+  String get scanNoSubscriptionsFound =>
+      'Nie znaleziono subskrypcji na tym zdjęciu. Spróbuj zeskanować paragon, e-mail potwierdzający lub zrzut ekranu ze sklepu z aplikacjami.';
+
+  @override
+  String scanRecurringCharge(String name) {
+    return 'Znaleziono cykliczną opłatę, która wygląda na $name.';
+  }
+
+  @override
+  String scanConfirmQuestion(String pct, String name) {
+    return '$pct% użytkowników z tą opłatą mówi, że to $name. Zgadza się?';
+  }
+
+  @override
+  String scanPersonalOrTeam(String name) {
+    return 'To wygląda na $name. Subskrypcja osobista czy zespołowa/firmowa?';
+  }
+
+  @override
+  String get scanPersonal => 'Osobista';
+
+  @override
+  String get scanTeamBusiness => 'Zespołowa / Firmowa';
+
+  @override
+  String get scanNotSure => 'Nie wiem';
+
+  @override
+  String scanAllDoneAdded(String added, String total) {
+    return 'Gotowe! Dodano $added z $total subskrypcji.';
+  }
+
+  @override
+  String scanSubsConfirmed(String count) {
+    return 'Potwierdzono $count subskrypcji!';
+  }
+
+  @override
+  String scanConfirmed(String name) {
+    return '$name potwierdzono!';
+  }
+
+  @override
+  String scanLimitReached(String limit) {
+    return 'Wykorzystano wszystkie $limit darmowe skany. Przejdź na Pro, aby skanować bez limitu!';
+  }
+
+  @override
+  String get scanUnableToProcess =>
+      'Nie udało się przetworzyć zdjęcia. Spróbuj ponownie.';
+
+  @override
+  String scanTrapDetectedIn(String name) {
+    return '⚠️ Wykryto pułapkę w $name!';
+  }
+
+  @override
+  String scanTrackingTrial(String name) {
+    return 'Śledzenie okresu próbnego $name. Przypomnimy Ci przed naliczeniem opłaty!';
+  }
+
+  @override
+  String scanAddedWithAlerts(String name) {
+    return '$name dodano z alertami o okresie próbnym.';
+  }
+
+  @override
+  String get scanNoConnection =>
+      'Brak połączenia z internetem. Sprawdź Wi-Fi lub dane mobilne i spróbuj ponownie.';
+
+  @override
+  String get scanTooManyRequests =>
+      'Zbyt wiele żądań — odczekaj chwilę i spróbuj ponownie.';
+
+  @override
+  String get scanServiceDown =>
+      'Nasza usługa skanowania jest tymczasowo niedostępna. Spróbuj ponownie za kilka minut.';
+
+  @override
+  String get scanSomethingWrong => 'Coś poszło nie tak. Spróbuj ponownie.';
+
+  @override
+  String get scanConvertToGbp => 'Przelicz na £ GBP';
+
+  @override
+  String scanKeepInCurrency(String currency) {
+    return 'Zostaw w $currency';
+  }
+
+  @override
+  String scanPriceCurrency(String currency, String price) {
+    return 'Cena jest w $currency ($price). Jak chcesz śledzić?';
+  }
+
+  @override
+  String get introPrice => 'Cena promocyjna';
+
+  @override
+  String introPriceExpires(String date) {
+    return 'Cena promocyjna kończy się $date';
+  }
+
+  @override
+  String introPriceDaysRemaining(int days) {
+    return '⚠️ Cena promocyjna — zostało $days dni';
+  }
 }

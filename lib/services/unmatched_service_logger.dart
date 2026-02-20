@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Logs unmatched service names locally for future database expansion.
@@ -52,9 +51,8 @@ class UnmatchedServiceLogger {
 
       existing.add(entry);
       await prefs.setStringList(_key, existing);
-      debugPrint('[UnmatchedServiceLogger] Logged: $name');
-    } catch (e) {
-      debugPrint('[UnmatchedServiceLogger] Failed to log: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -73,8 +71,7 @@ class UnmatchedServiceLogger {
           })
           .whereType<Map<String, dynamic>>()
           .toList();
-    } catch (e) {
-      debugPrint('[UnmatchedServiceLogger] Failed to read: $e');
+    } catch (_) {
       return [];
     }
   }

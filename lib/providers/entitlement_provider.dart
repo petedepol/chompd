@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -63,9 +62,6 @@ class EntitlementNotifier extends StateNotifier<Entitlement> {
       trialEndDate: trialEnd,
     );
 
-    debugPrint('[Entitlement] Resolved tier: $tier'
-        '${trialStart != null ? ', trial started: $trialStart' : ''}');
-
     // Sync notification service Pro status
     _ref.read(notificationPrefsProvider.notifier).setProStatus(
       state.hasFullAccess,
@@ -74,7 +70,6 @@ class EntitlementNotifier extends StateNotifier<Entitlement> {
     // Listen for purchase state changes → auto-upgrade to Pro
     _ref.listen<PurchaseState>(purchaseProvider, (prev, next) {
       if (next == PurchaseState.pro && !state.isPro) {
-        debugPrint('[Entitlement] Purchase detected → upgrading to Pro');
         state = state.copyWith(tier: UserTier.pro);
         _onTierChange(state);
       }
@@ -112,7 +107,6 @@ class EntitlementNotifier extends StateNotifier<Entitlement> {
       trialEndDate: end,
     );
 
-    debugPrint('[Entitlement] Trial started, expires: $end');
     _onTierChange(state);
   }
 
@@ -126,7 +120,6 @@ class EntitlementNotifier extends StateNotifier<Entitlement> {
   void recheck() {
     if (state.isTrial && state.trialEndDate != null &&
         DateTime.now().isAfter(state.trialEndDate!)) {
-      debugPrint('[Entitlement] Trial expired on recheck');
       state = state.copyWith(tier: UserTier.free);
       _onTierChange(state);
     }
@@ -149,7 +142,6 @@ class EntitlementNotifier extends StateNotifier<Entitlement> {
       trialEndDate: end,
     );
 
-    debugPrint('[Entitlement] DEV: Trial set to expire in $minutes min');
     _onTierChange(state);
   }
 
@@ -162,7 +154,6 @@ class EntitlementNotifier extends StateNotifier<Entitlement> {
     await prefs.remove('trial_expired_shown');
 
     state = const Entitlement(tier: UserTier.free);
-    debugPrint('[Entitlement] DEV: Trial state reset');
     _onTierChange(state);
   }
 }
@@ -173,12 +164,6 @@ class EntitlementNotifier extends StateNotifier<Entitlement> {
 final entitlementProvider =
     StateNotifierProvider<EntitlementNotifier, Entitlement>((ref) {
   return EntitlementNotifier(ref);
-});
-
-/// Backward-compatible: replaces the old isProProvider.
-/// Returns true for trial OR pro (full access).
-final isProProvider = Provider<bool>((ref) {
-  return ref.watch(entitlementProvider).hasFullAccess;
 });
 
 /// Current user tier.

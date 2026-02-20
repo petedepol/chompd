@@ -1,5 +1,4 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -33,29 +32,18 @@ class SyncService {
 
   /// Push a single subscription to Supabase (upsert by user_id + uid).
   Future<void> pushSubscription(Subscription sub) async {
-    if (!_hasSupabase) {
-      debugPrint('[Sync] Skip push "${sub.name}" — Supabase not configured');
-      return;
-    }
-    if (!await isOnline) {
-      debugPrint('[Sync] Skip push "${sub.name}" — offline');
-      return;
-    }
+    if (!_hasSupabase) return;
+    if (!await isOnline) return;
     final userId = AuthService.instance.userId;
-    if (userId == null) {
-      debugPrint('[Sync] Skip push "${sub.name}" — no userId');
-      return;
-    }
+    if (userId == null) return;
 
     try {
-      debugPrint('[Sync] Pushing subscription: ${sub.uid} (${sub.name})');
       await _client.from('subscriptions').upsert(
         sub.toSupabaseMap(userId),
         onConflict: 'user_id,uid',
       );
-      debugPrint('[Sync] Pushed "${sub.name}" OK');
-    } catch (e) {
-      debugPrint('[Sync] Push "${sub.name}" FAILED: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -66,12 +54,11 @@ class SyncService {
     if (userId == null) return;
 
     try {
-      debugPrint('[Sync] Pushing dodged trap: ${trap.serviceName}');
       await _client.from('dodged_traps').insert(
         trap.toSupabaseMap(userId),
       );
-    } catch (e) {
-      debugPrint('[Sync] Push dodged trap "${trap.serviceName}" FAILED: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -82,15 +69,13 @@ class SyncService {
     if (userId == null) return;
 
     try {
-      debugPrint('[Sync] Pushing hard delete: $uid');
       await _client
           .from('subscriptions')
           .delete()
           .eq('user_id', userId)
           .eq('uid', uid);
-      debugPrint('[Sync] Hard deleted "$uid" OK');
-    } catch (e) {
-      debugPrint('[Sync] Push delete "$uid" FAILED: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -100,19 +85,10 @@ class SyncService {
   ///
   /// Called on app start and when connectivity is restored.
   Future<void> pullAndMerge() async {
-    if (!_hasSupabase) {
-      debugPrint('[Sync] Skip pull — Supabase not configured');
-      return;
-    }
-    if (!await isOnline) {
-      debugPrint('[Sync] Skip pull — offline');
-      return;
-    }
+    if (!_hasSupabase) return;
+    if (!await isOnline) return;
     final userId = AuthService.instance.userId;
-    if (userId == null) {
-      debugPrint('[Sync] Skip pull — no userId');
-      return;
-    }
+    if (userId == null) return;
 
     try {
       // 1. Fetch non-deleted remote subscriptions
@@ -122,10 +98,7 @@ class SyncService {
           .eq('user_id', userId)
           .isFilter('deleted_at', null);
 
-      debugPrint('[Sync] Pulled ${remote.length} remote subs');
-
       // 2. Merge remote into local (last-write-wins)
-      int pulledCount = 0;
       for (final row in remote) {
         final remoteSub = Subscription.fromSupabaseMap(row);
         final localSub = await _isar.subscriptions
@@ -138,20 +111,14 @@ class SyncService {
           await _isar.writeTxn(() async {
             await _isar.subscriptions.put(remoteSub);
           });
-          pulledCount++;
         } else if (remoteSub.updatedAt.isAfter(localSub.updatedAt)) {
           // Remote is newer — overwrite local (preserve Isar ID)
           remoteSub.id = localSub.id;
           await _isar.writeTxn(() async {
             await _isar.subscriptions.put(remoteSub);
           });
-          pulledCount++;
         }
         // else: local is newer or same — skip (will be pushed below)
-      }
-
-      if (pulledCount > 0) {
-        debugPrint('[Sync] Merged $pulledCount new/updated subs from remote');
       }
 
       // 2b. Purge any locally-cached soft-deleted subs that may have
@@ -165,8 +132,6 @@ class SyncService {
           await _isar.subscriptions
               .deleteAll(softDeleted.map((s) => s.id).toList());
         });
-        debugPrint(
-            '[Sync] Purged ${softDeleted.length} soft-deleted subs from Isar');
       }
 
       // 3. Bulk push: push every local sub that doesn't exist remotely
@@ -196,32 +161,19 @@ class SyncService {
       }
 
       if (toPush.isNotEmpty) {
-        debugPrint(
-          '[Sync] Bulk pushing ${toPush.length} unsynced local subs...',
-        );
-        int pushed = 0;
-        int failed = 0;
         for (final sub in toPush) {
           try {
             await _client.from('subscriptions').upsert(
               sub.toSupabaseMap(userId),
               onConflict: 'user_id,uid',
             );
-            pushed++;
-          } catch (e) {
-            debugPrint('[Sync] Bulk push "${sub.name}" FAILED: $e');
-            failed++;
+          } catch (_) {
+            // Silently ignored
           }
         }
-        debugPrint('[Sync] Bulk push complete: $pushed OK, $failed failed');
-      } else {
-        debugPrint('[Sync] All local subs in sync — nothing to push');
       }
-
-      debugPrint('[Sync] Pull & merge complete');
-    } catch (e, st) {
-      debugPrint('[Sync] Pull & merge FAILED: $e');
-      debugPrint('[Sync] Stack trace: $st');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -271,14 +223,8 @@ class SyncService {
         });
       }
 
-      final restored = remoteSubs.isNotEmpty || remoteTraps.isNotEmpty;
-      if (restored) {
-        debugPrint('[Sync] Restored ${remoteSubs.length} subs + ${remoteTraps.length} traps from remote');
-      }
-      return restored;
-    } catch (e, st) {
-      debugPrint('[Sync] Restore FAILED: $e');
-      debugPrint('[Sync] Stack trace: $st');
+      return remoteSubs.isNotEmpty || remoteTraps.isNotEmpty;
+    } catch (_) {
       return false;
     }
   }
@@ -298,8 +244,8 @@ class SyncService {
 
     try {
       await _client.from('profiles').update(updates).eq('id', userId);
-    } catch (e) {
-      debugPrint('[Sync] Profile sync failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -317,8 +263,8 @@ class SyncService {
         'event_type': type,
         'metadata': metadata ?? {},
       });
-    } catch (e) {
-      debugPrint('[Sync] Event log failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 }

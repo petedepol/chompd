@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -50,9 +49,8 @@ class DodgedTrapRepository {
 
       // Clear SharedPreferences after successful migration
       await prefs.remove(_kDodgedTrapsKey);
-      debugPrint('[DodgedTrapRepo] Migrated ${oldTraps.length} traps from SharedPreferences to Isar');
-    } catch (e) {
-      debugPrint('[DodgedTrapRepo] Migration failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 

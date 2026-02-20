@@ -32,16 +32,14 @@ void main() async {
       url: supabaseUrl,
       anonKey: supabaseAnonKey,
     );
-  } else {
-    debugPrint('[Supabase] Skipped — no URL/key provided via --dart-define');
   }
 
   // Anonymous auth — deferred if offline or Supabase not configured
   if (supabaseUrl.isNotEmpty) {
     try {
       await AuthService.instance.ensureUser();
-    } catch (e) {
-      debugPrint('[Auth] Deferred (offline): $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -70,12 +68,9 @@ void main() async {
 
   // Restore from remote on reinstall (if local is empty but user is signed in)
   try {
-    final restored = await SyncService.instance.restoreFromRemote();
-    if (restored) {
-      debugPrint('[Main] Welcome back — data restored from cloud');
-    }
-  } catch (e) {
-    debugPrint('[Main] Restore check failed: $e');
+    await SyncService.instance.restoreFromRemote();
+  } catch (_) {
+    // Silently ignored
   }
 
   // Non-blocking initial sync (pull remote changes)
@@ -93,7 +88,6 @@ void main() async {
   // Re-sync whenever connectivity is restored
   Connectivity().onConnectivityChanged.listen((results) {
     if (!results.contains(ConnectivityResult.none)) {
-      debugPrint('[Sync] Connectivity restored — syncing...');
       SyncService.instance.pullAndMerge();
       ServiceSyncService.instance.syncServices();
       ServiceInsightRepository.instance.syncFromSupabase();

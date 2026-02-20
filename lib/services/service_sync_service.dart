@@ -44,7 +44,6 @@ class ServiceSyncService {
   Future<void> syncServices() async {
     // If a sync is already running, wait for it and return
     if (_activeSyncCompleter != null) {
-      debugPrint('[ServiceSync] Sync already in progress — waiting...');
       await _activeSyncCompleter!.future;
       return;
     }
@@ -78,8 +77,7 @@ class ServiceSyncService {
       } else {
         await _deltaSync(lastVersion);
       }
-    } catch (e) {
-      debugPrint('[ServiceSync] Sync failed: $e');
+    } catch (_) {
       // If sync fails and we have no data, seed from static
       final count = await _isar.serviceCaches.count();
       if (count == 0) {
@@ -90,11 +88,8 @@ class ServiceSyncService {
 
   /// Full sync — fetch all services from the `service_full` view.
   Future<void> _fullSync() async {
-    debugPrint('[ServiceSync] Starting full sync...');
-
     final rows = await _client.from('service_full').select('*');
     if (rows.isEmpty) {
-      debugPrint('[ServiceSync] No services in Supabase — seeding static');
       await _seedFromStaticData();
       return;
     }
@@ -137,26 +132,17 @@ class ServiceSyncService {
       );
     });
 
-    debugPrint(
-      '[ServiceSync] Full sync complete: ${caches.length} services, '
-      'version $maxVersion',
-    );
   }
 
   /// Delta sync — fetch only services updated since [sinceVersion].
   Future<void> _deltaSync(int sinceVersion) async {
-    debugPrint('[ServiceSync] Delta sync from version $sinceVersion...');
-
     final rows = await _client.rpc(
       'get_updated_services',
       params: {'since_version': sinceVersion},
     );
 
     final List rowsList = rows is List ? rows : [];
-    if (rowsList.isEmpty) {
-      debugPrint('[ServiceSync] No updates since version $sinceVersion');
-      return;
-    }
+    if (rowsList.isEmpty) return;
 
     int maxVersion = sinceVersion;
 
@@ -188,15 +174,10 @@ class ServiceSyncService {
       await _isar.syncStates.put(syncState);
     });
 
-    debugPrint(
-      '[ServiceSync] Delta sync: ${rowsList.length} updated, '
-      'version $maxVersion',
-    );
   }
 
   /// Seed Isar from bundled static data when no network is available.
   Future<void> _seedFromStaticData() async {
-    debugPrint('[ServiceSync] Seeding from static data...');
 
     final caches = <ServiceCache>[];
 
@@ -311,7 +292,6 @@ class ServiceSyncService {
       );
     });
 
-    debugPrint('[ServiceSync] Seeded ${caches.length} services from static');
   }
 
   Future<bool> _isOnline() async {

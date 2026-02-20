@@ -1,7 +1,6 @@
 import 'dart:io' show Platform;
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,7 +27,6 @@ Locale _detectLocaleFromDevice() {
     final supported = supportedLanguages.map((l) => l['code']).toSet();
     final detected = supported.contains(lang) ? lang : 'en';
 
-    debugPrint('[LocaleProvider] Device locale: $localeName -> lang: $lang -> $detected');
     return Locale(detected);
   } catch (_) {
     return const Locale('en');

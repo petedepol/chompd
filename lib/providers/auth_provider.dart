@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/auth_service.dart';
@@ -75,8 +74,8 @@ class AuthNotifier extends StateNotifier<AuthServiceState> {
           );
         }
       });
-    } catch (e) {
-      debugPrint('[AuthProvider] Stream error: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 

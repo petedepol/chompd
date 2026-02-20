@@ -1909,6 +1909,12 @@ abstract class S {
   /// **'{days}d trial'**
   String trialBadge(int days);
 
+  /// No description provided for @introBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}d intro'**
+  String introBadge(int days);
+
   /// No description provided for @emptyNoSubscriptions.
   ///
   /// In en, this message translates to:
@@ -3126,6 +3132,162 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Image file appears to be empty. Please try again.'**
   String get scanErrorEmpty;
+
+  /// No description provided for @scanServiceFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {name}!'**
+  String scanServiceFound(String name);
+
+  /// No description provided for @scanNoSubscriptionsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No subscriptions found in this image. Try scanning a receipt, confirmation email, or app store screenshot instead.'**
+  String get scanNoSubscriptionsFound;
+
+  /// No description provided for @scanRecurringCharge.
+  ///
+  /// In en, this message translates to:
+  /// **'Found a recurring charge that looks like it could be {name}.'**
+  String scanRecurringCharge(String name);
+
+  /// No description provided for @scanConfirmQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'{pct}% of users with this charge say it’s {name}. Sound right?'**
+  String scanConfirmQuestion(String pct, String name);
+
+  /// No description provided for @scanPersonalOrTeam.
+  ///
+  /// In en, this message translates to:
+  /// **'This looks like {name}. Personal subscription or team/business plan?'**
+  String scanPersonalOrTeam(String name);
+
+  /// No description provided for @scanPersonal.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal'**
+  String get scanPersonal;
+
+  /// No description provided for @scanTeamBusiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Team / Business'**
+  String get scanTeamBusiness;
+
+  /// No description provided for @scanNotSure.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sure'**
+  String get scanNotSure;
+
+  /// No description provided for @scanAllDoneAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'All done! Added {added} of {total} subscriptions.'**
+  String scanAllDoneAdded(String added, String total);
+
+  /// No description provided for @scanSubsConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} subscriptions confirmed!'**
+  String scanSubsConfirmed(String count);
+
+  /// No description provided for @scanConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} confirmed!'**
+  String scanConfirmed(String name);
+
+  /// No description provided for @scanLimitReached.
+  ///
+  /// In en, this message translates to:
+  /// **'You’ve used all {limit} free scans. Upgrade to Pro for unlimited scanning!'**
+  String scanLimitReached(String limit);
+
+  /// No description provided for @scanUnableToProcess.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to process image. Please try again.'**
+  String get scanUnableToProcess;
+
+  /// No description provided for @scanTrapDetectedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Trap detected in {name}!'**
+  String scanTrapDetectedIn(String name);
+
+  /// No description provided for @scanTrackingTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking {name} trial. We’ll remind you before it charges!'**
+  String scanTrackingTrial(String name);
+
+  /// No description provided for @scanAddedWithAlerts.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added with trial alerts.'**
+  String scanAddedWithAlerts(String name);
+
+  /// No description provided for @scanNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No internet connection. Check your Wi-Fi or mobile data and try again.'**
+  String get scanNoConnection;
+
+  /// No description provided for @scanTooManyRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many requests — please wait a moment and try again.'**
+  String get scanTooManyRequests;
+
+  /// No description provided for @scanServiceDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Our scanning service is temporarily down. Please try again in a few minutes.'**
+  String get scanServiceDown;
+
+  /// No description provided for @scanSomethingWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Something went wrong. Please try again.'**
+  String get scanSomethingWrong;
+
+  /// No description provided for @scanConvertToGbp.
+  ///
+  /// In en, this message translates to:
+  /// **'Convert to £ GBP'**
+  String get scanConvertToGbp;
+
+  /// No description provided for @scanKeepInCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep in {currency}'**
+  String scanKeepInCurrency(String currency);
+
+  /// No description provided for @scanPriceCurrency.
+  ///
+  /// In en, this message translates to:
+  /// **'The price is in {currency} ({price}). How should we track it?'**
+  String scanPriceCurrency(String currency, String price);
+
+  /// No description provided for @introPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'Intro price'**
+  String get introPrice;
+
+  /// No description provided for @introPriceExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Intro price ends {date}'**
+  String introPriceExpires(String date);
+
+  /// No description provided for @introPriceDaysRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'⚠️ Intro price — {days} days remaining'**
+  String introPriceDaysRemaining(int days);
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

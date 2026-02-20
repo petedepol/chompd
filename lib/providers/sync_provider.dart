@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../services/sync_service.dart';
@@ -44,8 +43,7 @@ class SyncNotifier extends StateNotifier<SyncState> {
         isSyncing: false,
         lastSyncAt: DateTime.now(),
       );
-    } catch (e) {
-      debugPrint('[SyncNotifier] Pull & merge error: $e');
+    } catch (_) {
       state = state.copyWith(isSyncing: false);
     }
   }

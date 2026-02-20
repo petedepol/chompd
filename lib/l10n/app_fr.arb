@@ -470,6 +470,10 @@
   "@trialBadge": {
     "placeholders": { "days": {"type": "int"} }
   },
+  "introBadge": "{days}j promo",
+  "@introBadge": {
+    "placeholders": { "days": {"type": "int"} }
+  },
   "emptyNoSubscriptions": "Pas encore d'abonnements",
   "emptyNoSubscriptionsHint": "Scanne une capture ou touche + pour commencer.",
   "emptyNoTrials": "Aucun essai actif",
@@ -882,5 +886,35 @@
   },
   "reactivateSubscription": "Réactiver l'abonnement",
   "scanErrorGeneric": "Impossible de lire cette image. Essaie une autre capture.",
-  "scanErrorEmpty": "Le fichier image semble vide. Réessaie."
+  "scanErrorEmpty": "Le fichier image semble vide. Réessaie.",
+
+  "scanServiceFound": "{name} trouvé !",
+  "scanNoSubscriptionsFound": "Aucun abonnement trouvé dans cette image. Essaie de scanner un reçu, un e-mail de confirmation ou une capture de l'App Store.",
+  "scanRecurringCharge": "Frais récurrents trouvés qui ressemblent à {name}.",
+  "scanConfirmQuestion": "{pct}% des utilisateurs avec ces frais disent que c'est {name}. C'est ça ?",
+  "scanPersonalOrTeam": "Ça ressemble à {name}. Abonnement personnel ou équipe/entreprise ?",
+  "scanPersonal": "Personnel",
+  "scanTeamBusiness": "Équipe / Entreprise",
+  "scanNotSure": "Pas sûr",
+  "scanAllDoneAdded": "Terminé ! {added} sur {total} abonnements ajoutés.",
+  "scanSubsConfirmed": "{count} abonnements confirmés !",
+  "scanConfirmed": "{name} confirmé !",
+  "scanLimitReached": "Tu as utilisé tes {limit} scans gratuits. Passe à Pro pour des scans illimités !",
+  "scanUnableToProcess": "Impossible de traiter l'image. Réessaie.",
+  "scanTrapDetectedIn": "\u26A0\uFE0F Piège détecté dans {name} !",
+  "scanTrackingTrial": "Suivi de l'essai de {name}. On te rappellera avant le prélèvement !",
+  "scanAddedWithAlerts": "{name} ajouté avec alertes de période d'essai.",
+  "scanNoConnection": "Pas de connexion internet. Vérifie ton Wi-Fi ou tes données mobiles et réessaie.",
+  "scanTooManyRequests": "Trop de requêtes \u2014 patiente un instant et réessaie.",
+  "scanServiceDown": "Notre service de scan est temporairement indisponible. Réessaie dans quelques minutes.",
+  "scanSomethingWrong": "Quelque chose s'est mal passé. Réessaie.",
+  "scanConvertToGbp": "Convertir en \u00A3 GBP",
+  "scanKeepInCurrency": "Garder en {currency}",
+  "scanPriceCurrency": "Le prix est en {currency} ({price}). Comment veux-tu le suivre ?",
+
+  "introPrice": "Prix de lancement",
+  "introPriceExpires": "Prix de lancement expire le {date}",
+  "@introPriceExpires": { "placeholders": { "date": {"type": "String"} } },
+  "introPriceDaysRemaining": "\u26A0\uFE0F Prix de lancement \u2014 {days} jours restants",
+  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } }
 }

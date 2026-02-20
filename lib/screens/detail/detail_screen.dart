@@ -223,6 +223,15 @@ class _DetailScreenState extends ConsumerState<DetailScreen>
                                   color: c.text,
                                 ),
                               ),
+                              const SizedBox(height: 3),
+                              // Category label
+                              Text(
+                                AppConstants.localisedCategory(sub.category, context.l10n),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: c.textMid,
+                                ),
+                              ),
                               // AI Scan provenance badge (2A.3)
                               if (sub.source == SubscriptionSource.aiScan) ...[
                                 const SizedBox(height: 4),
@@ -327,7 +336,9 @@ class _DetailScreenState extends ConsumerState<DetailScreen>
                         child: Text(
                           sub.trialDaysRemaining! <= 0
                               ? context.l10n.trialExpired
-                              : context.l10n.trialDaysRemaining(sub.trialDaysRemaining!),
+                              : (sub.trialPrice != null && sub.trialPrice! > 0)
+                                  ? context.l10n.introPriceDaysRemaining(sub.trialDaysRemaining!)
+                                  : context.l10n.trialDaysRemaining(sub.trialDaysRemaining!),
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
@@ -1751,7 +1762,9 @@ class _TrapInfoCard extends StatelessWidget {
           if (subscription.trialExpiresAt != null) ...[
             const SizedBox(height: 8),
             Text(
-              context.l10n.trialExpires(DateHelpers.shortDate(subscription.trialExpiresAt!, locale: locale)),
+              (subscription.trialPrice != null && subscription.trialPrice! > 0)
+                  ? context.l10n.introPriceExpires(DateHelpers.shortDate(subscription.trialExpiresAt!, locale: locale))
+                  : context.l10n.trialExpires(DateHelpers.shortDate(subscription.trialExpiresAt!, locale: locale)),
               style: TextStyle(fontSize: 12, color: warningColor),
             ),
           ],

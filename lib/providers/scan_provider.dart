@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -347,7 +346,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
         result = await AiScanService.mock(scenario);
       } else {
         if (imageBytes == null || mimeType == null) {
-          _addSystemMessage('Unable to process image. Please try again.');
+          _addSystemMessage(l.scanUnableToProcess);
           state = state.copyWith(phase: ScanPhase.idle);
           return;
         }
@@ -394,6 +393,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
         await _handleFullQuestion(result, scenario);
       }
     } on ScanLimitReachedException catch (e) {
+      final ll = _l10n ?? await _getL10n();
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'scan_limit_reached',
@@ -401,12 +401,12 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: 'You\'ve used all ${e.limit} free scans. Upgrade to Pro for unlimited scanning!',
+            text: ll.scanLimitReached(e.limit.toString()),
           ),
         ],
       );
     } catch (e) {
-      debugPrint('[ScanNotifier] Scan error: $e');
+      final ll = _l10n ?? await _getL10n();
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'scan_error',
@@ -414,7 +414,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: 'Scan error: ${e.toString().substring(0, (e.toString().length > 200) ? 200 : e.toString().length)}',
+            text: ll.scanSomethingWrong,
           ),
         ],
       );
@@ -424,6 +424,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
   /// Handle Tier 1 — auto-detect, no questions needed.
   Future<void> _handleAutoDetect(ScanResult result) async {
     await Future.delayed(const Duration(milliseconds: 400));
+    final l = _l10n ?? await _getL10n();
 
     state = state.copyWith(
       phase: ScanPhase.result,
@@ -431,7 +432,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
         ...state.messages,
         ChatMessage(
           type: ChatMessageType.result,
-          text: 'Found ${result.serviceName}!',
+          text: l.scanServiceFound(result.serviceName),
           scanResult: result,
         ),
       ],
@@ -441,6 +442,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
   /// Handle case where no subscription was found in the image.
   Future<void> _handleNotFound(ScanResult result) async {
     await Future.delayed(const Duration(milliseconds: 300));
+    final l = _l10n ?? await _getL10n();
 
     final messages = <ChatMessage>[...state.messages];
 
@@ -452,10 +454,9 @@ class ScanNotifier extends StateNotifier<ScanState> {
       ));
     }
 
-    messages.add(const ChatMessage(
+    messages.add(ChatMessage(
       type: ChatMessageType.system,
-      text:
-          'No subscriptions found in this image. Try scanning a receipt, confirmation email, or app store screenshot instead.',
+      text: l.scanNoSubscriptionsFound,
     ));
 
     state = state.copyWith(
@@ -467,6 +468,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
   /// Handle Tier 2 — quick confirm with primary button.
   Future<void> _handleQuickConfirm(ScanResult result) async {
     await Future.delayed(const Duration(milliseconds: 300));
+    final l = _l10n ?? await _getL10n();
 
     final merchantDb = MerchantDb.instance;
     final alternatives = merchantDb.getAlternatives(result.serviceName);
@@ -478,12 +480,12 @@ class ScanNotifier extends StateNotifier<ScanState> {
         ...state.messages,
         ChatMessage(
           type: ChatMessageType.partial,
-          text: 'Found a recurring charge that looks like it could be ${result.serviceName}.',
+          text: l.scanRecurringCharge(result.serviceName),
           scanResult: result,
         ),
         ChatMessage(
           type: ChatMessageType.question,
-          text: '$confirmPct% of users with this charge say it\'s ${result.serviceName}. Sound right?',
+          text: l.scanConfirmQuestion(confirmPct.toString(), result.serviceName),
           questionType: QuestionType.confirm,
           options: [result.serviceName, ...alternatives],
         ),
@@ -520,9 +522,9 @@ class ScanNotifier extends StateNotifier<ScanState> {
       messages.add(
         ChatMessage(
           type: ChatMessageType.question,
-          text: 'This looks like ${result.serviceName}. Personal subscription or team/business plan?',
+          text: l.scanPersonalOrTeam(result.serviceName),
           questionType: QuestionType.choose,
-          options: ['Personal', 'Team / Business', 'Not sure'],
+          options: [l.scanPersonal, l.scanTeamBusiness, l.scanNotSure],
         ),
       );
     } else {
@@ -554,7 +556,8 @@ class ScanNotifier extends StateNotifier<ScanState> {
     // Filter out "Unknown" or empty results
     final validOutputs = outputs.where((o) => !o.subscription.isNotFound).toList();
     if (validOutputs.isEmpty) {
-      _addSystemMessage('No subscriptions found in this image.');
+      final l = _l10n ?? await _getL10n();
+      _addSystemMessage(l.scanNoSubscriptionsFound);
       state = state.copyWith(phase: ScanPhase.idle);
       return;
     }
@@ -566,11 +569,12 @@ class ScanNotifier extends StateNotifier<ScanState> {
     }
 
     // Multiple results — show checklist for batch selection
+    final l = _l10n ?? await _getL10n();
     final messages = <ChatMessage>[
       ...state.messages,
       ChatMessage(
         type: ChatMessageType.multiReview,
-        text: 'Found ${validOutputs.length} subscriptions!',
+        text: l.scanFoundCount(validOutputs.length),
         multiReviewTotal: validOutputs.length,
       ),
     ];
@@ -589,10 +593,13 @@ class ScanNotifier extends StateNotifier<ScanState> {
   /// [addedCount] is how many the user checked and added.
   void completeMultiReview(int addedCount) {
     final total = state.multiOutputs?.length ?? 0;
+    final l = _l10n;
     final messages = [...state.messages];
     messages.add(ChatMessage(
       type: ChatMessageType.system,
-      text: 'All done! Added $addedCount of $total subscriptions.',
+      text: l != null
+          ? l.scanAllDoneAdded(addedCount.toString(), total.toString())
+          : 'Added $addedCount of $total subscriptions.',
     ));
     state = state.copyWith(
       phase: ScanPhase.result,
@@ -831,16 +838,21 @@ class ScanNotifier extends StateNotifier<ScanState> {
   void addFollowUpQuestion() {
     if (state.currentResult == null) return;
     final result = state.currentResult!;
+    final l = _l10n;
 
     final messages = [...state.messages];
     messages.add(
       ChatMessage(
         type: ChatMessageType.question,
-        text: 'The price is in ${result.currency} (${Subscription.formatPrice(result.price ?? 0, result.currency)}). How should we track it?',
+        text: l != null
+            ? l.scanPriceCurrency(result.currency, Subscription.formatPrice(result.price ?? 0, result.currency))
+            : 'The price is in ${result.currency} (${Subscription.formatPrice(result.price ?? 0, result.currency)}). How should we track it?',
         questionType: QuestionType.choose,
         options: [
-          'Convert to \u00A3 GBP',
-          'Keep in ${result.currency == 'USD' ? '\$ USD' : '\u20AC EUR'}',
+          l?.scanConvertToGbp ?? 'Convert to \u00A3 GBP',
+          l != null
+              ? l.scanKeepInCurrency(result.currency == 'USD' ? '\$ USD' : '\u20AC EUR')
+              : 'Keep in ${result.currency == 'USD' ? '\$ USD' : '\u20AC EUR'}',
         ],
       ),
     );
@@ -986,6 +998,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
   /// Show the final confirmed result.
   Future<void> _showFinalResult(ScanResult? result) async {
     await Future.delayed(const Duration(milliseconds: 400));
+    final l = _l10n ?? await _getL10n();
 
     final messages = [...state.messages];
 
@@ -993,7 +1006,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
       messages.add(
         ChatMessage(
           type: ChatMessageType.multiResult,
-          text: '${state.multiResults!.length} subscriptions confirmed!',
+          text: l.scanSubsConfirmed(state.multiResults!.length.toString()),
           multiResults: state.multiResults,
         ),
       );
@@ -1001,7 +1014,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
       messages.add(
         ChatMessage(
           type: ChatMessageType.result,
-          text: '${result.serviceName} confirmed!',
+          text: l.scanConfirmed(result.serviceName),
           scanResult: result,
         ),
       );
@@ -1061,7 +1074,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
       // ─── Real API mode ───
       if (imageBytes == null || mimeType == null) {
-        _addSystemMessage('Unable to process image. Please try again.');
+        _addSystemMessage(l.scanUnableToProcess);
         state = state.copyWith(phase: ScanPhase.idle);
         return;
       }
@@ -1188,59 +1201,55 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: 'You\'ve used all ${e.limit} free scans. Upgrade to Pro for unlimited scanning!',
+            text: l.scanLimitReached(e.limit.toString()),
           ),
         ],
       );
     } on NoConnectionException {
-      debugPrint('[ScanNotifier] No connection during scan');
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'no_connection',
         messages: [
           ...state.messages,
-          const ChatMessage(
+          ChatMessage(
             type: ChatMessageType.system,
-            text: 'No internet connection. Check your Wi-Fi or mobile data and try again.',
+            text: l.scanNoConnection,
           ),
         ],
       );
     } on ApiLimitException {
-      debugPrint('[ScanNotifier] API rate limit hit');
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'api_limit',
         messages: [
           ...state.messages,
-          const ChatMessage(
+          ChatMessage(
             type: ChatMessageType.system,
-            text: 'Too many requests — please wait a moment and try again.',
+            text: l.scanTooManyRequests,
           ),
         ],
       );
-    } on ApiUnavailableException catch (e) {
-      debugPrint('[ScanNotifier] API unavailable: $e');
+    } on ApiUnavailableException {
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'api_unavailable',
         messages: [
           ...state.messages,
-          const ChatMessage(
+          ChatMessage(
             type: ChatMessageType.system,
-            text: 'Our scanning service is temporarily down. Please try again in a few minutes.',
+            text: l.scanServiceDown,
           ),
         ],
       );
     } catch (e) {
-      debugPrint('[ScanNotifier] Combined scan error: $e');
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'scan_error',
         messages: [
           ...state.messages,
-          const ChatMessage(
+          ChatMessage(
             type: ChatMessageType.system,
-            text: 'Something went wrong. Please try again.',
+            text: l.scanSomethingWrong,
           ),
         ],
       );
@@ -1307,59 +1316,55 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: 'You\'ve used all ${e.limit} free scans. Upgrade to Pro for unlimited scanning!',
+            text: l.scanLimitReached(e.limit.toString()),
           ),
         ],
       );
     } on NoConnectionException {
-      debugPrint('[ScanNotifier] No connection during text scan');
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'no_connection',
         messages: [
           ...state.messages,
-          const ChatMessage(
+          ChatMessage(
             type: ChatMessageType.system,
-            text: 'No internet connection. Check your Wi-Fi or mobile data and try again.',
+            text: l.scanNoConnection,
           ),
         ],
       );
     } on ApiLimitException {
-      debugPrint('[ScanNotifier] API rate limit hit during text scan');
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'api_limit',
         messages: [
           ...state.messages,
-          const ChatMessage(
+          ChatMessage(
             type: ChatMessageType.system,
-            text: 'Too many requests — please wait a moment and try again.',
+            text: l.scanTooManyRequests,
           ),
         ],
       );
-    } on ApiUnavailableException catch (e) {
-      debugPrint('[ScanNotifier] API unavailable during text scan: $e');
+    } on ApiUnavailableException {
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'api_unavailable',
         messages: [
           ...state.messages,
-          const ChatMessage(
+          ChatMessage(
             type: ChatMessageType.system,
-            text: 'Our scanning service is temporarily down. Please try again in a few minutes.',
+            text: l.scanServiceDown,
           ),
         ],
       );
     } catch (e) {
-      debugPrint('[ScanNotifier] Text scan error: $e');
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'scan_error',
         messages: [
           ...state.messages,
-          const ChatMessage(
+          ChatMessage(
             type: ChatMessageType.system,
-            text: 'Something went wrong. Please try again.',
+            text: l.scanSomethingWrong,
           ),
         ],
       );
@@ -1384,6 +1389,8 @@ class ScanNotifier extends StateNotifier<ScanState> {
       return;
     }
 
+    final l = _l10n ?? await _getL10n();
+
     if (output.shouldShowTrapWarning) {
       // HIGH / MEDIUM severity trap — show full warning card
       state = state.copyWith(
@@ -1394,7 +1401,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: '\u26A0\uFE0F Trap detected in ${output.subscription.serviceName}!',
+            text: l.scanTrapDetectedIn(output.subscription.serviceName),
           ),
         ],
       );
@@ -1408,7 +1415,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.result,
-            text: 'Found ${output.subscription.serviceName}!',
+            text: l.scanServiceFound(output.subscription.serviceName),
             scanResult: output.subscription,
           ),
         ],
@@ -1463,17 +1470,22 @@ class ScanNotifier extends StateNotifier<ScanState> {
       // (integrated in Phase 5)
     }
 
+    final l = _l10n;
     state = state.copyWith(
       phase: ScanPhase.result,
       messages: [
         ...state.messages,
         ChatMessage(
           type: ChatMessageType.system,
-          text: 'Tracking ${subscription.serviceName} trial. We\'ll remind you before it charges!',
+          text: l != null
+              ? l.scanTrackingTrial(subscription.serviceName)
+              : 'Tracking ${subscription.serviceName} trial.',
         ),
         ChatMessage(
           type: ChatMessageType.result,
-          text: '${subscription.serviceName} added with trial alerts.',
+          text: l != null
+              ? l.scanAddedWithAlerts(subscription.serviceName)
+              : '${subscription.serviceName} added with trial alerts.',
           scanResult: subscription,
           fromTrapTracking: true,
         ),

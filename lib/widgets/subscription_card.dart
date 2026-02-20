@@ -212,7 +212,7 @@ class _SubscriptionCardState extends ConsumerState<SubscriptionCard> {
                             ),
                             if (trialDays != null) ...[
                               const SizedBox(width: 6),
-                              TrialBadge(daysRemaining: trialDays),
+                              TrialBadge(daysRemaining: trialDays, trialPrice: subscription.trialPrice),
                             ],
                             if (subscription.isTrap == true) ...[
                               const SizedBox(width: 6),

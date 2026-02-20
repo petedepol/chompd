@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -58,9 +57,8 @@ class ExchangeRateService {
         );
         // Ensure GBP is always present
         _ratesFromGBP['GBP'] = 1.0;
-        debugPrint('[ExchangeRateService] Loaded cached rates');
-      } catch (e) {
-        debugPrint('[ExchangeRateService] Cache parse error: $e');
+      } catch (_) {
+        // Silently ignored
       }
     }
 
@@ -85,12 +83,7 @@ class ExchangeRateService {
           .get(Uri.parse(_apiUrl))
           .timeout(const Duration(seconds: 10));
 
-      if (response.statusCode != 200) {
-        debugPrint(
-          '[ExchangeRateService] API returned ${response.statusCode}',
-        );
-        return;
-      }
+      if (response.statusCode != 200) return;
 
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       final rates = data['rates'] as Map<String, dynamic>;
@@ -110,11 +103,8 @@ class ExchangeRateService {
         DateTime.now().toIso8601String(),
       );
 
-      debugPrint(
-        '[ExchangeRateService] Fetched fresh rates (${parsed.length} currencies)',
-      );
-    } catch (e) {
-      debugPrint('[ExchangeRateService] Fetch failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 

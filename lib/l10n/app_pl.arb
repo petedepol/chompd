@@ -470,6 +470,10 @@
   "@trialBadge": {
     "placeholders": { "days": {"type": "int"} }
   },
+  "introBadge": "{days}d promo",
+  "@introBadge": {
+    "placeholders": { "days": {"type": "int"} }
+  },
   "emptyNoSubscriptions": "Brak subskrypcji",
   "emptyNoSubscriptionsHint": "Skanuj zrzut ekranu lub stuknij +, by zacząć.",
   "emptyNoTrials": "Brak aktywnych triali",
@@ -882,5 +886,35 @@
   },
   "reactivateSubscription": "Reaktywuj subskrypcję",
   "scanErrorGeneric": "Nie udało się odczytać tego zdjęcia. Spróbuj inny zrzut ekranu.",
-  "scanErrorEmpty": "Plik graficzny jest pusty. Spróbuj ponownie."
+  "scanErrorEmpty": "Plik graficzny jest pusty. Spróbuj ponownie.",
+
+  "scanServiceFound": "Znaleziono {name}!",
+  "scanNoSubscriptionsFound": "Nie znaleziono subskrypcji na tym zdjęciu. Spróbuj zeskanować paragon, e-mail potwierdzający lub zrzut ekranu ze sklepu z aplikacjami.",
+  "scanRecurringCharge": "Znaleziono cykliczną opłatę, która wygląda na {name}.",
+  "scanConfirmQuestion": "{pct}% użytkowników z tą opłatą mówi, że to {name}. Zgadza się?",
+  "scanPersonalOrTeam": "To wygląda na {name}. Subskrypcja osobista czy zespołowa/firmowa?",
+  "scanPersonal": "Osobista",
+  "scanTeamBusiness": "Zespołowa / Firmowa",
+  "scanNotSure": "Nie wiem",
+  "scanAllDoneAdded": "Gotowe! Dodano {added} z {total} subskrypcji.",
+  "scanSubsConfirmed": "Potwierdzono {count} subskrypcji!",
+  "scanConfirmed": "{name} potwierdzono!",
+  "scanLimitReached": "Wykorzystano wszystkie {limit} darmowe skany. Przejdź na Pro, aby skanować bez limitu!",
+  "scanUnableToProcess": "Nie udało się przetworzyć zdjęcia. Spróbuj ponownie.",
+  "scanTrapDetectedIn": "\u26A0\uFE0F Wykryto pułapkę w {name}!",
+  "scanTrackingTrial": "Śledzenie okresu próbnego {name}. Przypomnimy Ci przed naliczeniem opłaty!",
+  "scanAddedWithAlerts": "{name} dodano z alertami o okresie próbnym.",
+  "scanNoConnection": "Brak połączenia z internetem. Sprawdź Wi-Fi lub dane mobilne i spróbuj ponownie.",
+  "scanTooManyRequests": "Zbyt wiele żądań \u2014 odczekaj chwilę i spróbuj ponownie.",
+  "scanServiceDown": "Nasza usługa skanowania jest tymczasowo niedostępna. Spróbuj ponownie za kilka minut.",
+  "scanSomethingWrong": "Coś poszło nie tak. Spróbuj ponownie.",
+  "scanConvertToGbp": "Przelicz na \u00A3 GBP",
+  "scanKeepInCurrency": "Zostaw w {currency}",
+  "scanPriceCurrency": "Cena jest w {currency} ({price}). Jak chcesz śledzić?",
+
+  "introPrice": "Cena promocyjna",
+  "introPriceExpires": "Cena promocyjna kończy się {date}",
+  "@introPriceExpires": { "placeholders": { "date": {"type": "String"} } },
+  "introPriceDaysRemaining": "\u26A0\uFE0F Cena promocyjna \u2014 zostało {days} dni",
+  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } }
 }

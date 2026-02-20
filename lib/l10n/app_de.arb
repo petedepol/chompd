@@ -470,6 +470,10 @@
   "@trialBadge": {
     "placeholders": { "days": {"type": "int"} }
   },
+  "introBadge": "{days}T Aktion",
+  "@introBadge": {
+    "placeholders": { "days": {"type": "int"} }
+  },
   "emptyNoSubscriptions": "Noch keine Abos",
   "emptyNoSubscriptionsHint": "Scanne einen Screenshot oder tippe + zum Starten.",
   "emptyNoTrials": "Keine aktiven Testabos",
@@ -882,5 +886,35 @@
   },
   "reactivateSubscription": "Abo reaktivieren",
   "scanErrorGeneric": "Dieses Bild konnte nicht gelesen werden. Versuche einen anderen Screenshot.",
-  "scanErrorEmpty": "Bilddatei scheint leer zu sein. Versuche es erneut."
+  "scanErrorEmpty": "Bilddatei scheint leer zu sein. Versuche es erneut.",
+
+  "scanServiceFound": "{name} gefunden!",
+  "scanNoSubscriptionsFound": "Keine Abonnements in diesem Bild gefunden. Versuche einen Beleg, eine Bestätigungs-E-Mail oder einen App-Store-Screenshot.",
+  "scanRecurringCharge": "Wiederkehrende Gebühr gefunden, die wie {name} aussieht.",
+  "scanConfirmQuestion": "{pct}% der Nutzer mit dieser Gebühr sagen, es ist {name}. Stimmt das?",
+  "scanPersonalOrTeam": "Das sieht nach {name} aus. Persönliches Abo oder Team-/Business-Plan?",
+  "scanPersonal": "Persönlich",
+  "scanTeamBusiness": "Team / Business",
+  "scanNotSure": "Nicht sicher",
+  "scanAllDoneAdded": "Fertig! {added} von {total} Abonnements hinzugefügt.",
+  "scanSubsConfirmed": "{count} Abonnements bestätigt!",
+  "scanConfirmed": "{name} bestätigt!",
+  "scanLimitReached": "Du hast alle {limit} kostenlosen Scans verbraucht. Upgrade auf Pro für unbegrenztes Scannen!",
+  "scanUnableToProcess": "Bild konnte nicht verarbeitet werden. Versuche es erneut.",
+  "scanTrapDetectedIn": "\u26A0\uFE0F Falle erkannt bei {name}!",
+  "scanTrackingTrial": "{name}-Testphase wird überwacht. Wir erinnern dich vor der Abbuchung!",
+  "scanAddedWithAlerts": "{name} mit Testphasen-Alerts hinzugefügt.",
+  "scanNoConnection": "Keine Internetverbindung. Überprüfe WLAN oder mobile Daten und versuche es erneut.",
+  "scanTooManyRequests": "Zu viele Anfragen \u2014 bitte warte einen Moment und versuche es erneut.",
+  "scanServiceDown": "Unser Scan-Dienst ist vorübergehend nicht verfügbar. Versuche es in einigen Minuten erneut.",
+  "scanSomethingWrong": "Etwas ist schiefgelaufen. Versuche es erneut.",
+  "scanConvertToGbp": "In \u00A3 GBP umrechnen",
+  "scanKeepInCurrency": "In {currency} belassen",
+  "scanPriceCurrency": "Der Preis ist in {currency} ({price}). Wie möchtest du ihn verfolgen?",
+
+  "introPrice": "Aktionspreis",
+  "introPriceExpires": "Aktionspreis endet am {date}",
+  "@introPriceExpires": { "placeholders": { "date": {"type": "String"} } },
+  "introPriceDaysRemaining": "\u26A0\uFE0F Aktionspreis \u2014 noch {days} Tage",
+  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } }
 }

@@ -9,10 +9,12 @@ import '../utils/l10n_extension.dart';
 /// the trial is expiring within 7 days.
 class TrialBadge extends StatefulWidget {
   final int daysRemaining;
+  final double? trialPrice;
 
   const TrialBadge({
     super.key,
     required this.daysRemaining,
+    this.trialPrice,
   });
 
   @override
@@ -67,7 +69,9 @@ class _TrialBadgeState extends State<TrialBadge>
       child: Text(
         widget.daysRemaining <= 0
             ? context.l10n.trialExpired
-            : context.l10n.trialBadge(widget.daysRemaining),
+            : (widget.trialPrice != null && widget.trialPrice! > 0)
+                ? context.l10n.introBadge(widget.daysRemaining)
+                : context.l10n.trialBadge(widget.daysRemaining),
         style: ChompdTypography.mono(
           size: 10,
           weight: FontWeight.w700,

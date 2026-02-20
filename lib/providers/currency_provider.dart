@@ -1,6 +1,6 @@
 import 'dart:io' show Platform;
+import 'dart:ui' show PlatformDispatcher;
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -59,8 +59,6 @@ String _detectCurrencyFromLocale() {
     final regionCode = platformLocale.countryCode?.toUpperCase();
 
     if (regionCode != null && _countryToCurrency.containsKey(regionCode)) {
-      debugPrint('[CurrencyProvider] PlatformDispatcher region: '
-          '$regionCode → ${_countryToCurrency[regionCode]}');
       return _countryToCurrency[regionCode]!;
     }
 
@@ -71,8 +69,6 @@ String _detectCurrencyFromLocale() {
         parts.length >= 2 ? parts[1].toUpperCase() : parts[0].toUpperCase();
 
     final detected = _countryToCurrency[country] ?? _kDefaultCurrency;
-    debugPrint('[CurrencyProvider] Platform.localeName fallback: '
-        '$locale → $country → $detected');
     return detected;
   } catch (_) {
     return _kDefaultCurrency;

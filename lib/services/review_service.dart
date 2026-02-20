@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -51,10 +50,7 @@ class ReviewService {
       final cancelCount = prefs.getInt(_kCancelCountKey) ?? 0;
 
       // Threshold: 3+ scans OR 1+ cancellations
-      if (scanCount < _minScans && cancelCount < _minCancels) {
-        debugPrint('[ReviewService] Thresholds not met: scans=$scanCount, cancels=$cancelCount');
-        return;
-      }
+      if (scanCount < _minScans && cancelCount < _minCancels) return;
 
       // Cooldown: not within 90 days of last request
       final lastRequest = prefs.getInt(_kLastRequestKey) ?? 0;
@@ -62,20 +58,13 @@ class ReviewService {
           .difference(DateTime.fromMillisecondsSinceEpoch(lastRequest))
           .inDays;
 
-      if (lastRequest > 0 && daysSinceLast < _cooldownDays) {
-        debugPrint('[ReviewService] Cooldown active: ${_cooldownDays - daysSinceLast} days remaining');
-        return;
-      }
+      if (lastRequest > 0 && daysSinceLast < _cooldownDays) return;
 
       // Check availability
       final inAppReview = InAppReview.instance;
-      if (!await inAppReview.isAvailable()) {
-        debugPrint('[ReviewService] InAppReview not available');
-        return;
-      }
+      if (!await inAppReview.isAvailable()) return;
 
       // Request review — OS decides whether to show
-      debugPrint('[ReviewService] Requesting review (scans=$scanCount, cancels=$cancelCount)');
       await inAppReview.requestReview();
 
       // Save timestamp
@@ -83,9 +72,8 @@ class ReviewService {
         _kLastRequestKey,
         DateTime.now().millisecondsSinceEpoch,
       );
-    } catch (e) {
-      // Never crash the app over a review prompt
-      debugPrint('[ReviewService] Error: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 }

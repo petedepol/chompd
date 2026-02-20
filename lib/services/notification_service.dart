@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -118,7 +119,6 @@ class NotificationService {
     tz.initializeTimeZones();
 
     _initialised = true;
-    debugPrint('[NotificationService] Initialised');
 
     await _restorePendingNotifications();
   }
@@ -126,7 +126,6 @@ class NotificationService {
   /// Update Pro status (affects which reminder tiers are available).
   void setProStatus(bool isPro) {
     _isPro = isPro;
-    debugPrint('[NotificationService] Pro status: $_isPro');
   }
 
   /// Get the localised strings instance based on stored locale.
@@ -177,9 +176,6 @@ class NotificationService {
     }
 
     _permissionGranted = granted;
-    debugPrint(
-      '[NotificationService] Permission ${granted ? "granted" : "denied"}',
-    );
     return granted;
   }
 
@@ -237,10 +233,7 @@ class NotificationService {
   /// The in-memory [_scheduled] list doesn't survive app restarts, but
   /// OS-scheduled notifications do. This logs the count for diagnostics.
   Future<void> _restorePendingNotifications() async {
-    final pending = await _plugin.pendingNotificationRequests();
-    debugPrint(
-      '[NotificationService] Restored ${pending.length} pending OS notifications',
-    );
+    await _plugin.pendingNotificationRequests();
   }
 
   // ─── Scheduling ───
@@ -296,7 +289,6 @@ class NotificationService {
 
         _scheduled.add(notification);
         await _scheduleOSNotification(notification);
-        debugPrint('[NotificationService] Scheduled: $notification');
       }
     }
 
@@ -338,7 +330,6 @@ class NotificationService {
 
         _scheduled.add(notification);
         await _scheduleOSNotification(notification);
-        debugPrint('[NotificationService] Trial alert: $notification');
       }
     }
   }
@@ -371,7 +362,6 @@ class NotificationService {
       );
       _scheduled.add(notification);
       await _scheduleOSNotification(notification);
-      debugPrint('[NotificationService] Trap alert 72h: $notification');
     }
 
     // 24 hours before
@@ -388,7 +378,6 @@ class NotificationService {
       );
       _scheduled.add(notification);
       await _scheduleOSNotification(notification);
-      debugPrint('[NotificationService] Trap alert 24h: $notification');
     }
 
     // 2 hours before — URGENT
@@ -405,7 +394,6 @@ class NotificationService {
       );
       _scheduled.add(notification);
       await _scheduleOSNotification(notification);
-      debugPrint('[NotificationService] Trap alert 2h: $notification');
     }
 
     // Post-conversion check-in (2h after expiry)
@@ -421,7 +409,6 @@ class NotificationService {
     );
     _scheduled.add(afterNotif);
     await _scheduleOSNotification(afterNotif);
-    debugPrint('[NotificationService] Trap post-conversion: $afterNotif');
   }
 
   /// Schedule a morning digest notification.
@@ -488,7 +475,6 @@ class NotificationService {
 
     _scheduled.add(notification);
     await _scheduleOSNotification(notification);
-    debugPrint('[NotificationService] Morning digest: $notification');
   }
 
   /// Cancel all reminders for a specific subscription.
@@ -501,19 +487,12 @@ class NotificationService {
       await _plugin.cancel(id: n.id);
     }
     _scheduled.removeWhere((n) => n.subscriptionUid == subscriptionUid);
-
-    if (toCancel.isNotEmpty) {
-      debugPrint(
-        '[NotificationService] Cancelled ${toCancel.length} reminders for $subscriptionUid',
-      );
-    }
   }
 
   /// Cancel all scheduled notifications.
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
     _scheduled.clear();
-    debugPrint('[NotificationService] All notifications cancelled');
   }
 
   // ─── Queries ───
@@ -616,8 +595,9 @@ class NotificationService {
 
   /// Fire a test notification immediately for development verification.
   ///
-  /// TODO: Remove before App Store submission.
+  /// Gated behind [kDebugMode] — never fires in release builds.
   Future<void> debugFireTestNotification() async {
+    if (!kDebugMode) return;
     await _plugin.show(
       id: 99999,
       title: '🐟 Chompd Test',
@@ -634,6 +614,5 @@ class NotificationService {
         ),
       ),
     );
-    debugPrint('[NotificationService] Test notification fired');
   }
 }

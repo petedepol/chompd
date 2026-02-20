@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 
@@ -71,7 +70,6 @@ final expiringTrialsProvider = Provider<List<Subscription>>((ref) {
 final totalSavedProvider = Provider<double>((ref) {
   final visibleCancelled = ref.watch(cancelledSubsProvider);
   final displayCurrency = ref.watch(currencyProvider);
-  debugPrint('[Savings] Counting ${visibleCancelled.length} cancelled subs:');
   return visibleCancelled.fold(0.0, (sum, sub) {
     final cancelDate = sub.cancelledDate ?? sub.createdAt;
     final daysSinceCancelled =
@@ -80,7 +78,6 @@ final totalSavedProvider = Provider<double>((ref) {
     final months = (daysSinceCancelled / 30).clamp(1.0, double.infinity);
     final monthlyInCurrency = sub.monthlyEquivalentIn(displayCurrency);
     final contribution = monthlyInCurrency * months;
-    debugPrint('[Savings]   ${sub.name}: ${sub.price} ${sub.currency} (monthly=$monthlyInCurrency in $displayCurrency) × $months months = $contribution');
     return sum + contribution;
   });
 });
@@ -114,18 +111,14 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         }
       }
       if (needsMigration.isNotEmpty) {
-        debugPrint(
-          '[SubscriptionsNotifier] Migrating ${needsMigration.length} '
-          'category names to Supabase enum values',
-        );
         await _isar.writeTxn(() async {
           await _isar.subscriptions.putAll(needsMigration);
         });
       }
 
       state = subs;
-    } catch (e) {
-      debugPrint('[SubscriptionsNotifier] Isar load failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -139,8 +132,6 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         s.createdAt
             .isAfter(DateTime.now().subtract(const Duration(seconds: 30))));
     if (isDup) {
-      debugPrint(
-          '[SubscriptionsNotifier] Skipping duplicate add for "${sub.name}"');
       return;
     }
 
@@ -151,8 +142,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         await _isar.subscriptions.put(sub);
       });
       SyncService.instance.pushSubscription(sub);
-    } catch (e) {
-      debugPrint('[SubscriptionsNotifier] Isar add failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -170,8 +161,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
             .deleteAll();
       });
       SyncService.instance.pushDelete(uid);
-    } catch (e) {
-      debugPrint('[SubscriptionsNotifier] Isar remove failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -186,8 +177,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         await _isar.subscriptions.put(updated);
       });
       SyncService.instance.pushSubscription(updated);
-    } catch (e) {
-      debugPrint('[SubscriptionsNotifier] Isar update failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -242,8 +233,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         await _isar.subscriptions.put(sub);
       });
       SyncService.instance.pushSubscription(sub);
-    } catch (e) {
-      debugPrint('[SubscriptionsNotifier] Isar cancel failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -265,8 +256,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         await _isar.subscriptions.put(sub);
       });
       SyncService.instance.pushSubscription(sub);
-    } catch (e) {
-      debugPrint('[SubscriptionsNotifier] Isar reactivate failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -290,8 +281,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
       for (final sub in frozen) {
         SyncService.instance.pushSubscription(sub);
       }
-    } catch (e) {
-      debugPrint('[SubscriptionsNotifier] Isar unfreezeAll failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -320,8 +311,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
       for (final sub in toFreeze) {
         SyncService.instance.pushSubscription(sub);
       }
-    } catch (e) {
-      debugPrint('[SubscriptionsNotifier] Isar freezeExcess failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 }

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -92,7 +91,6 @@ class AuthService {
       // instead of returning the existing Apple-linked account.
       if (wasAnonymous) {
         await _client.auth.signOut();
-        debugPrint('[AuthService] Signed out anonymous session ($previousUserId)');
       }
 
       // Sign in with the Apple credential.
@@ -107,16 +105,11 @@ class AuthService {
       final newUserId = _client.auth.currentUser?.id;
       final restored = previousUserId != null && newUserId != previousUserId;
 
-      debugPrint('[AuthService] Apple sign-in complete'
-          ' (prev=$previousUserId, new=$newUserId,'
-          ' restored=$restored)');
-
       return restored;
     } on SignInWithAppleAuthorizationException catch (e) {
       if (e.code == AuthorizationErrorCode.canceled) {
         throw AppleSignInCancelledException();
       }
-      debugPrint('[AuthService] Apple sign-in failed: ${e.code} ${e.message}');
       throw AppleSignInException(
         'Apple sign-in failed. Please try again.',
       );
@@ -125,7 +118,6 @@ class AuthService {
       if (e is AppleSignInCancelledException || e is AppleSignInException) {
         rethrow;
       }
-      debugPrint('[AuthService] Apple sign-in error: $e');
       throw AppleSignInException(
         'Something went wrong. Please try again.',
       );

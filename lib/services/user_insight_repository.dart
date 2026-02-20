@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -67,10 +66,8 @@ class UserInsightRepository {
       // Auto-hide expired insights
       await cleanupExpired();
 
-      debugPrint(
-          '[UserInsightRepo] Synced ${rows.length} user insights');
-    } catch (e) {
-      debugPrint('[UserInsightRepo] Sync failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -171,8 +168,6 @@ class UserInsightRepository {
       }
     });
 
-    debugPrint(
-        '[UserInsightRepo] Cleaned up ${expired.length} expired insights');
   }
 
   /// Total insight count (for debug).
@@ -193,8 +188,8 @@ class UserInsightRepository {
           .from('user_insights')
           .update({'is_dismissed': true})
           .eq('id', remoteId);
-    } catch (e) {
-      debugPrint('[UserInsightRepo] Dismiss sync failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
@@ -206,8 +201,8 @@ class UserInsightRepository {
           .from('user_insights')
           .update({'is_read': true})
           .eq('id', remoteId);
-    } catch (e) {
-      debugPrint('[UserInsightRepo] Read sync failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 }

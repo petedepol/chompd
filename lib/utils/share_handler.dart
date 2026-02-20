@@ -51,9 +51,7 @@ class ShareHandler {
           _handleSharedFiles(files);
         }
       },
-      onError: (e) {
-        debugPrint('[ShareHandler] Error receiving shared intent: $e');
-      },
+      onError: (_) {},
     );
   }
 
@@ -71,7 +69,6 @@ class ShareHandler {
 
     final file = File(imageFile.path);
     if (!file.existsSync()) {
-      debugPrint('[ShareHandler] Shared file does not exist: ${imageFile.path}');
       return;
     }
 
@@ -106,7 +103,6 @@ class ShareHandler {
       MaterialPageRoute(builder: (_) => const ScanScreen()),
     );
 
-    debugPrint('[ShareHandler] Started scan from shared image: ${imageFile.path}');
   }
 
   /// Clean up the stream subscription.

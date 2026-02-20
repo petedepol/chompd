@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -58,10 +57,8 @@ class ServiceInsightRepository {
         }
       });
 
-      debugPrint(
-          '[ServiceInsightRepo] Synced ${rows.length} insights from Supabase');
-    } catch (e) {
-      debugPrint('[ServiceInsightRepo] Sync failed: $e');
+    } catch (_) {
+      // Silently ignored
     }
   }
 
