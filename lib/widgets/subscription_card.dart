@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/constants.dart';
 import '../config/theme.dart';
 import '../models/subscription.dart';
+import '../providers/service_cache_provider.dart';
 import '../services/haptic_service.dart';
 import '../utils/l10n_extension.dart';
 import 'trial_badge.dart';
@@ -33,6 +34,15 @@ class SubscriptionCard extends ConsumerStatefulWidget {
 
 class _SubscriptionCardState extends ConsumerState<SubscriptionCard> {
   bool _pressed = false;
+
+  /// Service description from the curated database (e.g. "Stream music, podcasts & more").
+  String? get _serviceDescription {
+    final id = widget.subscription.matchedServiceId;
+    if (id == null) return null;
+    final service = ref.read(serviceCacheProvider.notifier).findById(id);
+    final desc = service?.description;
+    return (desc != null && desc.isNotEmpty) ? desc : null;
+  }
 
   /// Category colour for card tint/border — consistent across same-category subs.
   Color get _categoryColor =>
@@ -222,8 +232,9 @@ class _SubscriptionCardState extends ConsumerState<SubscriptionCard> {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          AppConstants.localisedCategory(
-                              subscription.category, context.l10n),
+                          _serviceDescription ??
+                              AppConstants.localisedCategory(
+                                  subscription.category, context.l10n),
                           style: TextStyle(
                             fontSize: 11,
                             color: c.textMid,

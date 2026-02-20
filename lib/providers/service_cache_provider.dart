@@ -50,9 +50,29 @@ class ServiceCacheNotifier extends StateNotifier<List<ServiceCache>> {
   }
 
   /// Find a [ServiceCache] by subscription name (fuzzy matching).
+  /// Generic billing platform names that should NOT match individual services.
+  /// These appear in bank statements / receipts as the billing entity,
+  /// not as the actual subscription service name.
+  static const _billingPlatforms = {
+    'google play',
+    'google play store',
+    'apple',
+    'apple.com/bill',
+    'app store',
+    'itunes',
+    'paypal',
+    'stripe',
+    'google',
+    'microsoft store',
+  };
+
   ServiceCache? findByName(String name) {
     final normalised = name.toLowerCase().trim();
     final slug = normalised.replaceAll(' ', '_');
+
+    // Bail out early for generic billing platform names — these should
+    // never match a specific service (e.g. "Google Play" ≠ YouTube Premium).
+    if (_billingPlatforms.contains(normalised)) return null;
 
     // 1. Exact slug match
     for (final s in state) {

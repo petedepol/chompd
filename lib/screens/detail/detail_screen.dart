@@ -66,6 +66,15 @@ class _DetailScreenState extends ConsumerState<DetailScreen>
     super.dispose();
   }
 
+  /// Service description from the curated database.
+  String? _serviceDescription(Subscription sub) {
+    final id = sub.matchedServiceId;
+    if (id == null) return null;
+    final service = ref.read(serviceCacheProvider.notifier).findById(id);
+    final desc = service?.description;
+    return (desc != null && desc.isNotEmpty) ? desc : null;
+  }
+
   /// Glow tier based on subscription price (quartile system).
   _GlowTier _glowTier(double price) {
     if (price >= 30) return _GlowTier.max;
@@ -224,14 +233,17 @@ class _DetailScreenState extends ConsumerState<DetailScreen>
                                 ),
                               ),
                               const SizedBox(height: 3),
-                              // Category label
-                              Text(
-                                AppConstants.localisedCategory(sub.category, context.l10n),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: c.textMid,
-                                ),
-                              ),
+                              // Description punchline (from service DB) or category fallback
+                              Builder(builder: (context) {
+                                final desc = _serviceDescription(sub);
+                                return Text(
+                                  desc ?? AppConstants.localisedCategory(sub.category, context.l10n),
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: c.textMid,
+                                  ),
+                                );
+                              }),
                               // AI Scan provenance badge (2A.3)
                               if (sub.source == SubscriptionSource.aiScan) ...[
                                 const SizedBox(height: 4),
