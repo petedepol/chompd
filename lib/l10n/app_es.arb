@@ -369,6 +369,14 @@
   "requestSubmitted": "¡Solicitud enviada!",
   "requestSubmittedMessage": "Tu solicitud de reembolso ha sido registrada. Revisa tu email.",
   "emailCopied": "Email copiado al portapapeles",
+  "refundWindowDays": "Ventana de reembolso de {days} días",
+  "@refundWindowDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
+  "avgRefundDays": "~{days}d prom.",
+  "@avgRefundDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
 
   "settingsTitle": "Ajustes",
   "themeTitle": "TEMA",

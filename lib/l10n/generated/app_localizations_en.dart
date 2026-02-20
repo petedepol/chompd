@@ -842,6 +842,16 @@ class SEn extends S {
   String get emailCopied => 'Email copied to clipboard';
 
   @override
+  String refundWindowDays(String days) {
+    return '$days-day refund window';
+  }
+
+  @override
+  String avgRefundDays(String days) {
+    return '~${days}d avg';
+  }
+
+  @override
   String get settingsTitle => 'Settings';
 
   @override

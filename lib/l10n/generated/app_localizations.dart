@@ -1513,6 +1513,18 @@ abstract class S {
   /// **'Email copied to clipboard'**
   String get emailCopied;
 
+  /// No description provided for @refundWindowDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day refund window'**
+  String refundWindowDays(String days);
+
+  /// No description provided for @avgRefundDays.
+  ///
+  /// In en, this message translates to:
+  /// **'~{days}d avg'**
+  String avgRefundDays(String days);
+
   /// No description provided for @settingsTitle.
   ///
   /// In en, this message translates to:

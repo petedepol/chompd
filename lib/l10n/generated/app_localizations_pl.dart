@@ -855,6 +855,16 @@ class SPl extends S {
   String get emailCopied => 'E-mail skopiowany do schowka';
 
   @override
+  String refundWindowDays(String days) {
+    return '$days-dniowe okno zwrotu';
+  }
+
+  @override
+  String avgRefundDays(String days) {
+    return '~$days dni śr.';
+  }
+
+  @override
   String get settingsTitle => 'Ustawienia';
 
   @override

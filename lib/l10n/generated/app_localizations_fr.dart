@@ -851,6 +851,16 @@ class SFr extends S {
   String get emailCopied => 'E-mail copié dans le presse-papier';
 
   @override
+  String refundWindowDays(String days) {
+    return 'Fenêtre de remboursement de $days jours';
+  }
+
+  @override
+  String avgRefundDays(String days) {
+    return '~${days}j en moy.';
+  }
+
+  @override
   String get settingsTitle => 'Paramètres';
 
   @override

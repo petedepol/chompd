@@ -369,6 +369,14 @@
   "requestSubmitted": "Request Submitted!",
   "requestSubmittedMessage": "We\u2019ve recorded your refund request. Keep an eye on your email for updates.",
   "emailCopied": "Email copied to clipboard",
+  "refundWindowDays": "{days}-day refund window",
+  "@refundWindowDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
+  "avgRefundDays": "~{days}d avg",
+  "@avgRefundDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
 
   "settingsTitle": "Settings",
   "themeTitle": "THEME",

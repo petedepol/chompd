@@ -369,6 +369,14 @@
   "requestSubmitted": "Wniosek wysłany!",
   "requestSubmittedMessage": "Zapisaliśmy Twój wniosek o zwrot. Sprawdzaj skrzynkę mailową.",
   "emailCopied": "E-mail skopiowany do schowka",
+  "refundWindowDays": "{days}-dniowe okno zwrotu",
+  "@refundWindowDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
+  "avgRefundDays": "~{days} dni śr.",
+  "@avgRefundDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
 
   "settingsTitle": "Ustawienia",
   "themeTitle": "MOTYW",

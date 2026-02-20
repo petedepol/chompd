@@ -847,6 +847,16 @@ class SDe extends S {
   String get emailCopied => 'E-Mail in Zwischenablage kopiert';
 
   @override
+  String refundWindowDays(String days) {
+    return '$days-Tage-Erstattungsfenster';
+  }
+
+  @override
+  String avgRefundDays(String days) {
+    return '~$days Tage Ø';
+  }
+
+  @override
   String get settingsTitle => 'Einstellungen';
 
   @override

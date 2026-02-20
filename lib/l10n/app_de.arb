@@ -369,6 +369,14 @@
   "requestSubmitted": "Antrag eingereicht!",
   "requestSubmittedMessage": "Wir haben deinen Rückerstattungsantrag gespeichert. Prüfe dein Postfach.",
   "emailCopied": "E-Mail in Zwischenablage kopiert",
+  "refundWindowDays": "{days}-Tage-Erstattungsfenster",
+  "@refundWindowDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
+  "avgRefundDays": "~{days} Tage Ø",
+  "@avgRefundDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
 
   "settingsTitle": "Einstellungen",
   "themeTitle": "DESIGN",

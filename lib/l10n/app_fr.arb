@@ -369,6 +369,14 @@
   "requestSubmitted": "Demande envoyée !",
   "requestSubmittedMessage": "Ta demande de remboursement a été enregistrée. Surveille ta boîte mail.",
   "emailCopied": "E-mail copié dans le presse-papier",
+  "refundWindowDays": "Fenêtre de remboursement de {days} jours",
+  "@refundWindowDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
+  "avgRefundDays": "~{days}j en moy.",
+  "@avgRefundDays": {
+    "placeholders": { "days": {"type": "String"} }
+  },
 
   "settingsTitle": "Paramètres",
   "themeTitle": "THÈME",

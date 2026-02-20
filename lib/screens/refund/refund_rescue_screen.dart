@@ -614,7 +614,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   if (template.refundWindowDays != null)
                     Flexible(
                       child: Text(
-                        '${template.refundWindowDays}-day refund window',
+                        context.l10n.refundWindowDays(template.refundWindowDays.toString()),
                         style: TextStyle(
                           fontSize: 11,
                           color: c.textDim,
@@ -625,7 +625,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   if (template.avgRefundDays != null)
                     Flexible(
                       child: Text(
-                        ' · ~${template.avgRefundDays}d avg',
+                        ' · ${context.l10n.avgRefundDays(template.avgRefundDays.toString())}',
                         style: TextStyle(
                           fontSize: 11,
                           color: c.textDim,
@@ -992,7 +992,7 @@ class _ServicePathCard extends StatelessWidget {
             ),
             if (template.refundWindowDays != null)
               Text(
-                '${template.refundWindowDays}d window',
+                context.l10n.refundWindowDays(template.refundWindowDays.toString()),
                 style: TextStyle(
                   fontSize: 10,
                   color: c.textDim,

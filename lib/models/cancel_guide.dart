@@ -55,23 +55,4 @@ class CancelGuide {
   /// Returns localised notes for [langCode], falling back to English.
   String? getNotes(String langCode) => notesLocalized[langCode] ?? notes;
 
-  /// Colour representing difficulty.
-  ///
-  /// 1-2 mint (easy), 3-4 amber (medium-hard), 5 red (very hard).
-  String get difficultyLabel {
-    switch (difficultyRating) {
-      case 1:
-        return 'Easy \u2014 straightforward cancel';
-      case 2:
-        return 'Easy \u2014 one extra step';
-      case 3:
-        return 'Medium \u2014 takes a few minutes';
-      case 4:
-        return 'Hard \u2014 they make this deliberately difficult';
-      case 5:
-        return 'Very hard \u2014 multiple retention screens or fees';
-      default:
-        return '';
-    }
-  }
 }

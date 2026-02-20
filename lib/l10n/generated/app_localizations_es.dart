@@ -851,6 +851,16 @@ class SEs extends S {
   String get emailCopied => 'Email copiado al portapapeles';
 
   @override
+  String refundWindowDays(String days) {
+    return 'Ventana de reembolso de $days días';
+  }
+
+  @override
+  String avgRefundDays(String days) {
+    return '~${days}d prom.';
+  }
+
+  @override
   String get settingsTitle => 'Ajustes';
 
   @override
