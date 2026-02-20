@@ -128,6 +128,9 @@ class SEn extends S {
   String get scanAScreenshot => 'Scan a Screenshot';
 
   @override
+  String get scanHintTooltip => 'Tap me to scan!';
+
+  @override
   String get addManually => 'Add Manually';
 
   @override

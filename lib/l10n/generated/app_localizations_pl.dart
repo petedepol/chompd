@@ -131,6 +131,9 @@ class SPl extends S {
   String get scanAScreenshot => 'Skanuj zrzut ekranu';
 
   @override
+  String get scanHintTooltip => 'Dotknij mnie, żeby skanować!';
+
+  @override
   String get addManually => 'Dodaj ręcznie';
 
   @override

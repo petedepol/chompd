@@ -44,6 +44,7 @@
   "onboardingTitle4": "Ajoute ton premier abonnement",
   "onboardingSubtitle4": "La plupart des gens découvrent des abos oubliés dès le premier scan. Voyons ce qui grignote ton argent.",
   "scanAScreenshot": "Scanner une capture",
+  "scanHintTooltip": "Appuie sur moi pour scanner !",
   "addManually": "Ajouter manuellement",
   "skipForNow": "Passer pour l'instant",
 

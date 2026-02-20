@@ -130,6 +130,9 @@ class SDe extends S {
   String get scanAScreenshot => 'Screenshot scannen';
 
   @override
+  String get scanHintTooltip => 'Tippe mich zum Scannen!';
+
+  @override
   String get addManually => 'Manuell hinzufügen';
 
   @override

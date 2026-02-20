@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../config/theme.dart';
 import '../../utils/l10n_extension.dart';
@@ -57,11 +58,83 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with SingleTickerProviderStateMixin {
   bool _showConfetti = false;
   final Set<String> _dismissedCards = {};
   int _carouselPage = 0;
   bool _scanPressed = false;
+
+  // ─── Scan hint state ───
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+  bool _showPulse = false;
+  bool _showTooltip = false;
+
+  static const _kScanHintShown = 'scan_hint_shown';
+  static const _kHomeOpenCount = 'home_open_count';
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.45).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
+    );
+    _initScanHint();
+  }
+
+  Future<void> _initScanHint() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // If user already has subscriptions, they know how to scan — skip hint
+    final subs = ref.read(subscriptionsProvider);
+    if (subs.isNotEmpty) return;
+
+    final hintShown = prefs.getBool(_kScanHintShown) ?? false;
+    final openCount = prefs.getInt(_kHomeOpenCount) ?? 0;
+    final newCount = openCount + 1;
+    await prefs.setInt(_kHomeOpenCount, newCount);
+
+    if (!mounted) return;
+
+    // Pulse glow for first 3 opens
+    if (newCount <= 3) {
+      setState(() => _showPulse = true);
+      _pulseController.repeat();
+    }
+
+    // Tooltip on first open only
+    if (!hintShown) {
+      await prefs.setBool(_kScanHintShown, true);
+      setState(() => _showTooltip = true);
+      Future.delayed(const Duration(seconds: 4), () {
+        if (mounted) setState(() => _showTooltip = false);
+      });
+    }
+  }
+
+  void _dismissScanHint() async {
+    if (_showPulse) {
+      _pulseController.stop();
+      setState(() {
+        _showPulse = false;
+        _showTooltip = false;
+      });
+    }
+    // Mark hint as done permanently
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_kHomeOpenCount, 99);
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   void _showAddOptions(BuildContext context, WidgetRef ref) {
     HapticService.instance.selection();
@@ -346,37 +419,98 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
                   child: Align(
                     alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () => _showAddOptions(context, ref),
-                      onTapDown: (_) => setState(() => _scanPressed = true),
-                      onTapUp: (_) => setState(() => _scanPressed = false),
-                      onTapCancel: () => setState(() => _scanPressed = false),
-                      child: AnimatedScale(
-                        scale: _scanPressed ? 0.92 : 1.0,
-                        duration: const Duration(milliseconds: 100),
-                        child: Container(
-                          width: 64,
-                          height: 64,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: c.mint.withValues(alpha: 0.35),
-                                blurRadius: 16,
-                                offset: const Offset(0, 4),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        // Tooltip bubble (first open only)
+                        if (_showTooltip)
+                          Positioned(
+                            right: 72,
+                            top: 14,
+                            child: GestureDetector(
+                              onTap: () => setState(() => _showTooltip = false),
+                              child: _ScanHintTooltip(
+                                text: context.l10n.scanHintTooltip,
+                                color: c.mint,
                               ),
-                            ],
+                            ),
                           ),
-                          child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/scan_button.png',
-                              width: 64,
-                              height: 64,
-                              fit: BoxFit.cover,
+                        GestureDetector(
+                          onTap: () {
+                            _dismissScanHint();
+                            _showAddOptions(context, ref);
+                          },
+                          onTapDown: (_) =>
+                              setState(() => _scanPressed = true),
+                          onTapUp: (_) =>
+                              setState(() => _scanPressed = false),
+                          onTapCancel: () =>
+                              setState(() => _scanPressed = false),
+                          child: AnimatedScale(
+                            scale: _scanPressed ? 0.92 : 1.0,
+                            duration: const Duration(milliseconds: 100),
+                            child: SizedBox(
+                              width: 80,
+                              height: 80,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Pulse glow ring (first 3 opens)
+                                  if (_showPulse)
+                                    AnimatedBuilder(
+                                      animation: _pulseAnimation,
+                                      builder: (context, child) {
+                                        return Transform.scale(
+                                          scale: _pulseAnimation.value,
+                                          child: Container(
+                                            width: 64,
+                                            height: 64,
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              border: Border.all(
+                                                color: c.mint.withValues(
+                                                    alpha: 1.0 -
+                                                        ((_pulseAnimation
+                                                                    .value -
+                                                                1.0) /
+                                                            0.45)),
+                                                width: 2.5,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  // Actual button
+                                  Container(
+                                    width: 64,
+                                    height: 64,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: c.mint
+                                              .withValues(alpha: 0.35),
+                                          blurRadius: 16,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipOval(
+                                      child: Image.asset(
+                                        'assets/images/scan_button.png',
+                                        width: 64,
+                                        height: 64,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -1517,5 +1651,61 @@ class _CompactSavings extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Small speech-bubble tooltip pointing right toward the piranha button.
+class _ScanHintTooltip extends StatelessWidget {
+  final String text;
+  final Color color;
+
+  const _ScanHintTooltip({required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Colors.black,
+            ),
+          ),
+        ),
+        // Arrow pointing right toward the button
+        CustomPaint(
+          size: const Size(8, 14),
+          painter: _ArrowPainter(color: color),
+        ),
+      ],
+    );
+  }
+}
+
+class _ArrowPainter extends CustomPainter {
+  final Color color;
+  _ArrowPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = color;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, size.height / 2)
+      ..lineTo(0, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 

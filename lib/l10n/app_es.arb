@@ -44,6 +44,7 @@
   "onboardingTitle4": "Añade tu primera suscripción",
   "onboardingSubtitle4": "La mayoría descubren suscripciones olvidadas en su primer escaneo. Veamos qué se come tu dinero.",
   "scanAScreenshot": "Escanear una captura",
+  "scanHintTooltip": "¡Tócame para escanear!",
   "addManually": "Añadir manualmente",
   "skipForNow": "Omitir por ahora",
 

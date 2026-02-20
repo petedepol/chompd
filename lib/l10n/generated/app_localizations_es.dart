@@ -130,6 +130,9 @@ class SEs extends S {
   String get scanAScreenshot => 'Escanear una captura';
 
   @override
+  String get scanHintTooltip => '¡Tócame para escanear!';
+
+  @override
   String get addManually => 'Añadir manualmente';
 
   @override

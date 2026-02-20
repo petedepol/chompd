@@ -331,6 +331,12 @@ abstract class S {
   /// **'Scan a Screenshot'**
   String get scanAScreenshot;
 
+  /// No description provided for @scanHintTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap me to scan!'**
+  String get scanHintTooltip;
+
   /// No description provided for @addManually.
   ///
   /// In en, this message translates to:

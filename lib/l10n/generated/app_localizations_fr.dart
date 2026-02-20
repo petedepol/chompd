@@ -131,6 +131,9 @@ class SFr extends S {
   String get scanAScreenshot => 'Scanner une capture';
 
   @override
+  String get scanHintTooltip => 'Appuie sur moi pour scanner !';
+
+  @override
   String get addManually => 'Ajouter manuellement';
 
   @override
