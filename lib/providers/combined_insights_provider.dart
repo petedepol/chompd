@@ -132,9 +132,14 @@ final combinedInsightsProvider = Provider<List<InsightDisplayData>>((ref) {
   }
 
   // Fill remaining slots with curated insights (up to 3 total),
-  // with the same annual_saving validation
+  // with the same annual_saving validation and subscription matching
   for (final si in serviceInsights) {
     if (combined.length >= 3) break;
+
+    // Guard: only show insights for services the user actually has
+    if (!userServiceSlugs.contains(si.serviceKey)) {
+      continue;
+    }
 
     // Same annual_saving guards as above
     if (si.insightType == 'annual_saving') {

@@ -481,13 +481,17 @@ class Subscription {
       ..trapSeverity = trap.severity.name
       ..trapWarningMessage = trap.warningMessage.isNotEmpty ? trap.warningMessage : null;
 
-    // Set trial expiry and override nextRenewal only when we have
-    // a concrete future expiry date (not just isTrial with no date).
+    // Set trial expiry date when we have a concrete future date.
+    // Do NOT override nextRenewal — it already holds the next actual
+    // billing date from the AI scan (which may be an intro-price charge
+    // before the trial/intro period ends).
     if (trialStillActive && effectiveTrialEnd != null) {
       sub.trialExpiresAt = effectiveTrialEnd;
-      // For trap/trial subs, "next renewal" = when trial expires
-      // and real charge kicks in.
-      sub.nextRenewal = effectiveTrialEnd;
+      // Only override nextRenewal for FREE trials (price == 0 or null)
+      // where the first real charge IS the trial end date.
+      if (scan.nextRenewal == null && (scan.price == null || scan.price == 0)) {
+        sub.nextRenewal = effectiveTrialEnd;
+      }
     }
 
     return sub;

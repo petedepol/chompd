@@ -115,11 +115,12 @@ class SyncService {
     }
 
     try {
-      // 1. Fetch all remote subscriptions
+      // 1. Fetch non-deleted remote subscriptions
       final remote = await _client
           .from('subscriptions')
           .select()
-          .eq('user_id', userId);
+          .eq('user_id', userId)
+          .isFilter('deleted_at', null);
 
       debugPrint('[Sync] Pulled ${remote.length} remote subs');
 
@@ -151,6 +152,21 @@ class SyncService {
 
       if (pulledCount > 0) {
         debugPrint('[Sync] Merged $pulledCount new/updated subs from remote');
+      }
+
+      // 2b. Purge any locally-cached soft-deleted subs that may have
+      //     been imported by earlier sync runs (before the deleted_at filter).
+      final softDeleted = await _isar.subscriptions
+          .filter()
+          .deletedAtIsNotNull()
+          .findAll();
+      if (softDeleted.isNotEmpty) {
+        await _isar.writeTxn(() async {
+          await _isar.subscriptions
+              .deleteAll(softDeleted.map((s) => s.id).toList());
+        });
+        debugPrint(
+            '[Sync] Purged ${softDeleted.length} soft-deleted subs from Isar');
       }
 
       // 3. Bulk push: push every local sub that doesn't exist remotely

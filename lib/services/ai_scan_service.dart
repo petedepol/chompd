@@ -1097,12 +1097,12 @@ Analyse this image carefully. It may be:
 TASK 1 — SUBSCRIPTION EXTRACTION:
 Find any subscription or recurring payment services and extract:
 - service_name: the actual product/service name (e.g. "Netflix", "ScreenPal", "Claude Pro")
-- price: numeric only, no currency symbol. If price is NOT visible, set to null.
+- price: numeric only, no currency symbol. This is the CURRENT price the user pays or will pay at the NEXT renewal. For intro/promotional pricing, use the intro price (not the future full price). If price is NOT visible, set to null.
 - currency: ISO 4217 code (GBP, USD, EUR, PLN, etc). Infer from symbols, language, or context.
 - billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly". Infer from context if not explicit.
-- next_renewal: ISO date string if visible, or null
+- next_renewal: ISO date string — the NEXT date the user will be charged ANY amount. NOT the date the price changes. If in an intro period with multiple charges before the full price, use the next billing date at the current price. Example: "£3.49/month for 2 months then £6.99 starting Mar 28" purchased Jan 29 → next_renewal = "2026-02-28".
 - is_trial: boolean
-- trial_end_date: ISO date string, or null
+- trial_end_date: ISO date string — when the intro/trial period ENDS and full price begins. Different from next_renewal when there are billing dates during the intro period.
 - category: one of "streaming", "music", "ai", "productivity", "storage", "fitness", "gaming", "reading", "communication", "news", "finance", "education", "vpn", "developer", "bundle", "other"
 - icon: first letter or short identifier (1-2 chars)
 - brand_color: hex colour code for the brand
@@ -1284,12 +1284,12 @@ Analyse this image carefully. It is likely a bank statement, card transaction li
 
 For EACH recurring subscription or digital service charge you find, extract:
 - service_name: the actual product/service name (e.g. "Netflix", "ScreenPal", "Claude Pro")
-- price: numeric only, no currency symbol. If price is NOT visible, set to null.
+- price: numeric only, no currency symbol. This is the CURRENT price the user pays or will pay at the NEXT renewal. For intro/promotional pricing, use the intro price (not the future full price). If price is NOT visible, set to null.
 - currency: ISO 4217 code (GBP, USD, EUR, PLN, etc). Infer from symbols, language, or context.
 - billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly". Infer from context if not explicit.
-- next_renewal: ISO date string if visible, or null
+- next_renewal: ISO date string — the NEXT date the user will be charged ANY amount. NOT the date the price changes. If in an intro period with multiple charges before the full price, use the next billing date at the current price. Example: "£3.49/month for 2 months then £6.99 starting Mar 28" purchased Jan 29 → next_renewal = "2026-02-28".
 - is_trial: boolean
-- trial_end_date: ISO date string, or null
+- trial_end_date: ISO date string — when the intro/trial period ENDS and full price begins. Different from next_renewal when there are billing dates during the intro period.
 - category: one of "streaming", "music", "ai", "productivity", "storage", "fitness", "gaming", "reading", "communication", "news", "finance", "education", "vpn", "developer", "bundle", "other"
 - icon: first letter or short identifier (1-2 chars)
 - brand_color: hex colour code for the brand
@@ -1679,12 +1679,12 @@ Analyse the following text carefully. It may be from:
 TASK 1 — SUBSCRIPTION EXTRACTION:
 Find any subscription or recurring payment services and extract:
 - service_name: the actual product/service name (e.g. "Netflix", "ScreenPal", "Claude Pro")
-- price: numeric only, no currency symbol. If price is NOT visible, set to null.
+- price: numeric only, no currency symbol. This is the CURRENT price the user pays or will pay at the NEXT renewal. For intro/promotional pricing, use the intro price (not the future full price). If price is NOT visible, set to null.
 - currency: ISO 4217 code (GBP, USD, EUR, PLN, etc). Infer from symbols, language, or context.
 - billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly". Infer from context if not explicit.
-- next_renewal: ISO date string if visible, or null
+- next_renewal: ISO date string — the NEXT date the user will be charged ANY amount. NOT the date the price changes. If in an intro period with multiple charges before the full price, use the next billing date at the current price. Example: "£3.49/month for 2 months then £6.99 starting Mar 28" purchased Jan 29 → next_renewal = "2026-02-28".
 - is_trial: boolean
-- trial_end_date: ISO date string, or null
+- trial_end_date: ISO date string — when the intro/trial period ENDS and full price begins. Different from next_renewal when there are billing dates during the intro period.
 - category: one of "streaming", "music", "ai", "productivity", "storage", "fitness", "gaming", "reading", "communication", "news", "finance", "education", "vpn", "developer", "bundle", "other"
 - icon: first letter or short identifier (1-2 chars)
 - brand_color: hex colour code for the brand
