@@ -1534,6 +1534,8 @@ class _QuestionMessageState extends State<_QuestionMessage> {
                 child: DropdownButton<String>(
                   value: _priceCurrency,
                   dropdownColor: c.bgElevated,
+                  isDense: true,
+                  menuMaxHeight: 300,
                   style: ChompdTypography.mono(
                     size: 11,
                     weight: FontWeight.w600,
@@ -2737,6 +2739,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                               value: _getEffectiveCurrency(i),
                               dropdownColor: c.bgElevated,
                               isDense: true,
+                              menuMaxHeight: 300,
                               style: ChompdTypography.mono(
                                 size: 11,
                                 weight: FontWeight.w600,
