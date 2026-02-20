@@ -27,7 +27,6 @@ const _localStatAmount = <String, double>{
 // ─── Layout constants for visual consistency ───
 const double _mascotSize = 140;
 const double _mascotGlowSize = 180;
-const double _topPadding = 40;
 const double _mascotToTitle = 20;
 const double _titleToBody = 10;
 const double _bodyToContent = 16;
@@ -136,104 +135,109 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: _topPadding),
-            // Piranha mascot with subtle glow behind
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                // Background glow
-                Container(
-                  width: _mascotGlowSize,
-                  height: _mascotGlowSize,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        c.mint.withValues(alpha: 0.08),
-                        Colors.transparent,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Piranha mascot with subtle glow behind
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Background glow
+                      Container(
+                        width: _mascotGlowSize,
+                        height: _mascotGlowSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              c.mint.withValues(alpha: 0.08),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                      const MascotImage(
+                        asset: 'piranha_wave.png',
+                        size: _mascotSize,
+                        fadeIn: true,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: _mascotToTitle),
+                  // Title
+                  Text(
+                    context.l10n.onboardingTitle1,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: c.text,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: _titleToBody),
+                  // Subtitle
+                  Text(
+                    context.l10n.onboardingSubtitle1,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: c.textMid,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: _bodyToContent),
+                  // Confronting stat — localised amount
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: c.bgCard,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: c.border),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('💸', style: TextStyle(fontSize: 18)),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(
+                            context.l10n.onboardingStatWaste(Subscription.formatPrice(statAmount, currency, decimals: 0)),
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: c.textMid,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
-                ),
-                const MascotImage(
-                  asset: 'piranha_wave.png',
-                  size: _mascotSize,
-                  fadeIn: true,
-                ),
-              ],
-            ),
-            const SizedBox(height: _mascotToTitle),
-            // Title
-            Text(
-              context.l10n.onboardingTitle1,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: c.text,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: _titleToBody),
-            // Subtitle
-            Text(
-              context.l10n.onboardingSubtitle1,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: c.textMid,
-                height: 1.5,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: _bodyToContent),
-            // Confronting stat — localised amount
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
-              decoration: BoxDecoration(
-                color: c.bgCard,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: c.border),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('💸', style: TextStyle(fontSize: 18)),
-                  const SizedBox(width: 10),
-                  Flexible(
-                    child: Text(
-                      context.l10n.onboardingStatWaste(Subscription.formatPrice(statAmount, currency, decimals: 0)),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: c.textMid,
-                        height: 1.4,
-                      ),
+                  const SizedBox(height: _bodyToContent),
+                  // Ease-of-use tag
+                  Text(
+                    '📸 ${context.l10n.onboardingEaseTag}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: c.mint,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: _bodyToContent),
-            // Ease-of-use tag
-            Text(
-              '📸 ${context.l10n.onboardingEaseTag}',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: c.mint,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -243,57 +247,62 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: _topPadding),
-            // Piranha mascot — with phone (scan tutorial)
-            const MascotImage(
-              asset: 'piranha_full.png',
-              size: _mascotSize,
-              fadeIn: true,
-            ),
-            const SizedBox(height: _mascotToTitle),
-            // "How It Works" headline
-            Text(
-              context.l10n.onboardingTitle2,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: c.text,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Piranha mascot — with phone (scan tutorial)
+                  const MascotImage(
+                    asset: 'piranha_full.png',
+                    size: _mascotSize,
+                    fadeIn: true,
                   ),
-              textAlign: TextAlign.center,
+                  const SizedBox(height: _mascotToTitle),
+                  // "How It Works" headline
+                  Text(
+                    context.l10n.onboardingTitle2,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: c.text,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: _titleToBody + 6),
+                  _buildStep(
+                    number: 1,
+                    icon: Icons.camera_alt,
+                    iconColor: c.mint,
+                    title: context.l10n.onboardingStep1Title,
+                    subtitle: context.l10n.onboardingStep1Subtitle,
+                    isLast: false,
+                  ),
+                  _buildStep(
+                    number: 2,
+                    icon: Icons.auto_awesome,
+                    iconColor: c.purple,
+                    title: context.l10n.onboardingStep2Title,
+                    subtitle: context.l10n.onboardingStep2Subtitle,
+                    isLast: false,
+                  ),
+                  _buildStep(
+                    number: 3,
+                    icon: Icons.check_circle,
+                    iconColor: c.mint,
+                    title: context.l10n.onboardingStep3Title,
+                    subtitle: context.l10n.onboardingStep3Subtitle,
+                    isLast: true,
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: _titleToBody + 6),
-            _buildStep(
-              number: 1,
-              icon: Icons.camera_alt,
-              iconColor: c.mint,
-              title: context.l10n.onboardingStep1Title,
-              subtitle: context.l10n.onboardingStep1Subtitle,
-              isLast: false,
-            ),
-            _buildStep(
-              number: 2,
-              icon: Icons.auto_awesome,
-              iconColor: c.purple,
-              title: context.l10n.onboardingStep2Title,
-              subtitle: context.l10n.onboardingStep2Subtitle,
-              isLast: false,
-            ),
-            _buildStep(
-              number: 3,
-              icon: Icons.check_circle,
-              iconColor: c.mint,
-              title: context.l10n.onboardingStep3Title,
-              subtitle: context.l10n.onboardingStep3Subtitle,
-              isLast: true,
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -390,56 +399,61 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: _topPadding),
-            // Piranha mascot — alert
-            const MascotImage(
-              asset: 'piranha_alert.png',
-              size: _mascotSize,
-              fadeIn: true,
-            ),
-            const SizedBox(height: _mascotToTitle),
-            // Title
-            Text(
-              context.l10n.onboardingTitle3,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: c.text,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Piranha mascot — alert
+                  const MascotImage(
+                    asset: 'piranha_alert.png',
+                    size: _mascotSize,
+                    fadeIn: true,
                   ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: _titleToBody),
-            // Subtitle
-            Text(
-              context.l10n.onboardingSubtitle3,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: c.textMid,
-                height: 1.5,
+                  const SizedBox(height: _mascotToTitle),
+                  // Title
+                  Text(
+                    context.l10n.onboardingTitle3,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: c.text,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: _titleToBody),
+                  // Subtitle
+                  Text(
+                    context.l10n.onboardingSubtitle3,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: c.textMid,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: _bodyToContent + 4),
+                  // What you get — compact feature pills (mint)
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    alignment: WrapAlignment.center,
+                    children: [
+                      _notifFeature(context.l10n.onboardingNotifMorning),
+                      _notifFeature(context.l10n.onboardingNotif7days),
+                      _notifFeature(context.l10n.onboardingNotifTrial),
+                    ],
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: _bodyToContent + 4),
-            // What you get — compact feature pills (mint)
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              alignment: WrapAlignment.center,
-              children: [
-                _notifFeature(context.l10n.onboardingNotifMorning),
-                _notifFeature(context.l10n.onboardingNotif7days),
-                _notifFeature(context.l10n.onboardingNotifTrial),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -449,69 +463,70 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(height: _topPadding),
-            // Piranha mascot — celebrate (static PNG for now — GIF has dark background)
-            const MascotImage(
-              asset: 'piranha_celebrate.png',
-              size: _mascotSize,
-              fadeIn: true,
-            ),
-            const SizedBox(height: _mascotToTitle),
-            // Title
-            Text(
-              context.l10n.onboardingTitle4,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: c.text,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final previewWidth = (constraints.maxWidth - 48) * 0.65; // account for horizontal padding
+          return SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Piranha mascot — celebrate (static PNG for now — GIF has dark background)
+                  const MascotImage(
+                    asset: 'piranha_celebrate.png',
+                    size: _mascotSize,
+                    fadeIn: true,
                   ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: _titleToBody),
-            // Subtitle — more urgency
-            Text(
-              context.l10n.onboardingSubtitle4,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w400,
-                color: c.textMid,
-                height: 1.5,
+                  const SizedBox(height: _mascotToTitle),
+                  // Title
+                  Text(
+                    context.l10n.onboardingTitle4,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: c.text,
+                        ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: _titleToBody),
+                  // Subtitle — more urgency
+                  Text(
+                    context.l10n.onboardingSubtitle4,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      color: c.textMid,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: _bodyToContent),
+                  // Scan preview — shows what the scan result looks like
+                  Container(
+                    width: previewWidth,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      'assets/mascot/6_subs_found.png',
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: _bodyToContent),
-            // Scan preview — shows what the scan result looks like
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final width = constraints.maxWidth * 0.65;
-                return Container(
-                  width: width,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Image.asset(
-                    'assets/mascot/6_subs_found.png',
-                    fit: BoxFit.contain,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
