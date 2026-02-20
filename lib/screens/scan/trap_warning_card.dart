@@ -46,6 +46,7 @@ class TrapWarningCard extends ConsumerWidget {
         child: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(24),
+            child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -93,7 +94,7 @@ class TrapWarningCard extends ConsumerWidget {
                 const SizedBox(height: 16),
 
                 // ─── Price breakdown ───
-                PriceBreakdownCard(trap: trap),
+                PriceBreakdownCard(trap: trap, currency: subscription.currency),
 
                 const SizedBox(height: 16),
 
@@ -119,7 +120,7 @@ class TrapWarningCard extends ConsumerWidget {
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 24),
 
                 // ─── Primary: Skip It ───
                 GestureDetector(
@@ -153,7 +154,7 @@ class TrapWarningCard extends ConsumerWidget {
 
                 // ─── Secondary: Track Trial Anyway ───
                 GestureDetector(
-                  onTap: () {
+                  onTap: () async {
                     // Guard against double-tap
                     final phase = ref.read(scanProvider).phase;
                     if (phase != ScanPhase.trapDetected) return;
@@ -175,8 +176,8 @@ class TrapWarningCard extends ConsumerWidget {
                       sub.currency = displayCurrency;
                     }
 
-                    // Match against service database
-                    final matchedId = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+                    // Match against service database (async — refreshes cache if empty)
+                    final matchedId = await ref.read(serviceCacheProvider.notifier).matchServiceIdAsync(sub.name);
                     sub.matchedServiceId = matchedId;
                     if (matchedId == null) {
                       UnmatchedServiceLogger.instance.log(
@@ -244,6 +245,7 @@ class TrapWarningCard extends ConsumerWidget {
 
                 const SizedBox(height: 16),
               ],
+            ),
             ),
           ),
         ),

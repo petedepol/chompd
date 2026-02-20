@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:image/image.dart' as img;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/constants.dart';
@@ -12,8 +16,12 @@ import '../models/scan_output.dart';
 /// Use real API when ANTHROPIC_API_KEY or SUPABASE_URL is provided.
 /// Override with --dart-define=USE_MOCK=true to force mock.
 const _forceMock = bool.fromEnvironment('USE_MOCK');
-const _hasApiKey = String.fromEnvironment('ANTHROPIC_API_KEY') != '';
+const _apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
+const _hasApiKey = _apiKey != '';
 const _hasSupabase = String.fromEnvironment('SUPABASE_URL') != '';
+/// Whether to use Edge Function (only if explicitly enabled AND deployed).
+/// Default: false — direct API is the primary path for dev.
+const _useEdgeFn = bool.fromEnvironment('USE_EDGE_FUNCTION');
 final useMockData = _forceMock || (!_hasApiKey && !_hasSupabase);
 
 /// Thrown when the free scan limit is reached (server returns 429).
@@ -23,6 +31,30 @@ class ScanLimitReachedException implements Exception {
 
   @override
   String toString() => 'Free scan limit reached ($limit scans)';
+}
+
+/// Thrown when the device has no internet connection or the request timed out.
+class NoConnectionException implements Exception {
+  final String? reason;
+  NoConnectionException([this.reason]);
+
+  @override
+  String toString() => reason ?? 'No internet connection';
+}
+
+/// Thrown when the API returns 429 (rate limit / too many requests).
+class ApiLimitException implements Exception {
+  @override
+  String toString() => 'API rate limit reached';
+}
+
+/// Thrown when the API returns a server error (500, 502, 503).
+class ApiUnavailableException implements Exception {
+  final int statusCode;
+  ApiUnavailableException(this.statusCode);
+
+  @override
+  String toString() => 'API temporarily unavailable (HTTP $statusCode)';
 }
 
 /// Claude Haiku integration for screenshot scanning.
@@ -35,8 +67,8 @@ class AiScanService {
 
   static const _directBaseUrl = 'https://api.anthropic.com/v1/messages';
 
-  /// Whether Supabase is configured (preferred path).
-  bool get _useEdgeFunction => _hasSupabase;
+  /// Whether to route through Edge Function (opt-in via --dart-define=USE_EDGE_FUNCTION=true).
+  bool get _useEdgeFunction => _useEdgeFn && _hasSupabase;
 
   /// Call the AI API via Edge Function or direct fallback.
   ///
@@ -49,6 +81,12 @@ class AiScanService {
         return await _callViaEdgeFunction(body);
       } on ScanLimitReachedException {
         rethrow; // Don't fall back for intentional limit
+      } on NoConnectionException {
+        rethrow; // Don't fall back — no network means no network
+      } on ApiLimitException {
+        rethrow; // Don't fall back — rate limited everywhere
+      } on ApiUnavailableException {
+        rethrow; // Don't fall back — server-side issue
       } catch (e) {
         // Edge Function not deployed or erroring — try direct if key available
         if (_hasApiKey) {
@@ -85,26 +123,41 @@ class AiScanService {
   /// Direct Anthropic API call (dev fallback).
   Future<Map<String, dynamic>> _callDirectApi(
       Map<String, dynamic> body) async {
-    const apiKey = String.fromEnvironment('ANTHROPIC_API_KEY');
-    if (apiKey.isEmpty) {
-      throw Exception('No API key configured');
+    if (!_hasApiKey) {
+      throw Exception('No API key configured — pass --dart-define=ANTHROPIC_API_KEY=sk-...');
+    }
+    debugPrint('[AiScan] Direct API — key length: ${_apiKey.length}');
+
+    final http.Response response;
+    try {
+      response = await http
+          .post(
+            Uri.parse(_directBaseUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': _apiKey,
+              'anthropic-version': '2023-06-01',
+            },
+            body: jsonEncode(body),
+          )
+          .timeout(Duration(
+              seconds: (body['model'] as String?)?.contains('sonnet') == true
+                  ? 90
+                  : 60));
+    } on SocketException catch (e) {
+      throw NoConnectionException('No internet connection: $e');
+    } on TimeoutException {
+      throw NoConnectionException('Request timed out — check your connection');
+    } on HttpException catch (e) {
+      throw NoConnectionException('Network error: $e');
     }
 
-    final response = await http
-        .post(
-          Uri.parse(_directBaseUrl),
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': apiKey,
-            'anthropic-version': '2023-06-01',
-          },
-          body: jsonEncode(body),
-        )
-        .timeout(Duration(
-            seconds: (body['model'] as String?)?.contains('sonnet') == true
-                ? 60
-                : 30));
-
+    if (response.statusCode == 429) {
+      throw ApiLimitException();
+    }
+    if (response.statusCode >= 500 && response.statusCode < 600) {
+      throw ApiUnavailableException(response.statusCode);
+    }
     if (response.statusCode != 200) {
       throw Exception(
         'Claude API error ${response.statusCode}: ${response.body}',
@@ -112,6 +165,269 @@ class AiScanService {
     }
 
     return jsonDecode(response.body) as Map<String, dynamic>;
+  }
+
+  /// Analyse a screenshot and extract subscription + trap details.
+  ///
+  /// [imageBytes] — the raw screenshot PNG/JPEG bytes.
+  /// [mimeType]   — 'image/png' or 'image/jpeg'.
+  ///
+  /// Returns a [ScanOutput] with both subscription and trap data.
+  /// Throws on network or parse errors.
+  /// Throws [ScanLimitReachedException] if free scan limit reached.
+  /// Run dedicated trap detection scan.
+  ///
+  /// Returns a [TrapResult] from a focused fine-print analysis.
+  /// Returns [TrapResult.clean] if the scan fails or finds no traps.
+  /// This method NEVER throws — trap scan failure is not user-facing.
+  Future<TrapResult> _runTrapScan({
+    required String base64Image,
+    required String mimeType,
+    String langCode = 'en',
+  }) async {
+    try {
+      final body = {
+        'model': AppConstants.aiModel,
+        'max_tokens': 1000,
+        'messages': [
+          {
+            'role': 'user',
+            'content': [
+              {
+                'type': 'image',
+                'source': {
+                  'type': 'base64',
+                  'media_type': mimeType,
+                  'data': base64Image,
+                },
+              },
+              {
+                'type': 'text',
+                'text': _trapScanPromptFor(langCode),
+              },
+            ],
+          },
+        ],
+      };
+
+      final responseJson = await _callApi(body);
+      final content = responseJson['content'] as List<dynamic>;
+      final textBlock = content.firstWhere(
+        (block) => block['type'] == 'text',
+        orElse: () => throw Exception('No text block in trap scan response'),
+      );
+      final rawText = textBlock['text'] as String;
+      debugPrint('[AiScan] Trap raw response (first 300 chars): ${rawText.substring(0, rawText.length.clamp(0, 300))}');
+      final decoded = _extractJson(rawText);
+
+      if (decoded is! Map<String, dynamic>) {
+        debugPrint('[AiScan] Trap scan returned unexpected format: ${decoded.runtimeType}');
+        return TrapResult.clean;
+      }
+
+      final data = decoded;
+      final hasTraps = data['has_traps'] as bool? ?? false;
+      debugPrint('[AiScan] Trap scan result: hasTraps=$hasTraps, severity=${data['worst_severity']}, confidence=${data['confidence']}, confType=${data['confidence'].runtimeType}, warning=${data['warning_message']?.toString().substring(0, (data['warning_message']?.toString().length ?? 0).clamp(0, 80))}');
+
+      if (!hasTraps) return TrapResult.clean;
+
+      // Map worst_type string to TrapType enum
+      TrapType? trapType;
+      final worstType = data['worst_type'] as String?;
+      switch (worstType) {
+        case 'trial_bait':
+          trapType = TrapType.trialBait;
+          break;
+        case 'price_framing':
+          trapType = TrapType.priceFraming;
+          break;
+        case 'hidden_renewal':
+          trapType = TrapType.hiddenRenewal;
+          break;
+        case 'cancel_friction':
+          trapType = TrapType.cancelFriction;
+          break;
+        default:
+          trapType = TrapType.hiddenRenewal;
+      }
+
+      // Map severity string to TrapSeverity enum
+      TrapSeverity severity;
+      switch (data['worst_severity'] as String? ?? 'low') {
+        case 'high':
+          severity = TrapSeverity.high;
+          break;
+        case 'medium':
+          severity = TrapSeverity.medium;
+          break;
+        default:
+          severity = TrapSeverity.low;
+      }
+
+      // Parse scenario and map new fields for backward compat
+      final scenario = data['scenario'] as String?;
+      debugPrint('[AiScan] Trap scenario: ${data['scenario']}, current_price: ${data['current_price']}, future_price: ${data['future_price']}');
+      // current_price → trialPrice (what user pays now / initially)
+      final currentPrice = (data['current_price'] as num?)?.toDouble();
+      // future_price → realPrice (what user will pay later)
+      final futurePrice = (data['future_price'] as num?)?.toDouble();
+      // future_billing_cycle → realBillingCycle
+      final futureBillingCycle = data['future_billing_cycle'] as String?;
+
+      return TrapResult(
+        isTrap: true,
+        trapType: trapType,
+        severity: severity,
+        scenario: scenario,
+        trialPrice: currentPrice,
+        trialDurationDays: (data['trial_duration_days'] as num?)?.toInt(),
+        realPrice: futurePrice,
+        realBillingCycle: futureBillingCycle,
+        realAnnualCost: (data['real_annual_cost'] as num?)?.toDouble(),
+        confidence: data['confidence'] as int? ?? 0,
+        warningMessage: data['warning_message'] as String? ?? '',
+        serviceName: '',
+      );
+    } catch (e) {
+      debugPrint('[AiScan] Trap scan failed (non-fatal): $e');
+      return TrapResult.clean;
+    }
+  }
+
+  /// Max dimension for images sent to the API.
+  static const _maxDimension = 1280;
+
+  /// JPEG quality for re-encoded images (0-100).
+  static const _jpegQuality = 80;
+
+  /// Normalise image bytes for the API: convert non-JPEG/PNG formats (HEIC,
+  /// WebP, etc.), resize oversized images to fit within [_maxDimension]px on
+  /// the longest side, and re-encode as JPEG for small payload size.
+  ///
+  /// Every image sent to the API passes through this method. Returns a record
+  /// of (bytes, mimeType) ready for base64 encoding.
+  static Future<({Uint8List bytes, String mime})> _normaliseImage(
+    Uint8List imageBytes,
+    String mimeType,
+  ) async {
+    try {
+      final originalKB = (imageBytes.length / 1024).round();
+
+      // ── Step 1: Decode ──
+      // For JPEG/PNG the `image` package can decode directly.
+      // For HEIC/HEIF/WebP we need Flutter's platform codec first.
+      img.Image? decoded;
+      final isNativeFormat =
+          mimeType == 'image/jpeg' || mimeType == 'image/png';
+
+      if (isNativeFormat) {
+        // Quick size check — if already small enough, pass through as-is.
+        decoded = await compute(_decodeImage, imageBytes);
+        if (decoded != null &&
+            decoded.width <= _maxDimension &&
+            decoded.height <= _maxDimension &&
+            imageBytes.length <= 500 * 1024) {
+          debugPrint(
+            '[AiScan] Image OK: ${decoded.width}×${decoded.height}, '
+            '${originalKB}KB — no processing needed',
+          );
+          return (bytes: imageBytes, mime: mimeType);
+        }
+      } else {
+        // HEIC / HEIF / WebP / other — decode via platform codec to raw RGBA,
+        // then hand off to the image package for resize + JPEG encode.
+        debugPrint(
+          '[AiScan] Decoding $mimeType (${originalKB}KB) via platform codec',
+        );
+        final rgba = await _decodeToPlatformRgba(imageBytes);
+        if (rgba == null) {
+          debugPrint('[AiScan] Platform decode failed — using original');
+          return (bytes: imageBytes, mime: mimeType);
+        }
+        decoded = rgba;
+      }
+
+      if (decoded == null) {
+        debugPrint('[AiScan] Decode failed — using original');
+        return (bytes: imageBytes, mime: mimeType);
+      }
+
+      // ── Step 2: Resize if needed ──
+      final needsResize =
+          decoded.width > _maxDimension || decoded.height > _maxDimension;
+      if (needsResize) {
+        final scale = _maxDimension /
+            (decoded.width > decoded.height
+                ? decoded.width
+                : decoded.height);
+        final newW = (decoded.width * scale).round();
+        final newH = (decoded.height * scale).round();
+        debugPrint(
+          '[AiScan] Resizing ${decoded.width}×${decoded.height} → '
+          '$newW×$newH',
+        );
+        decoded = img.copyResize(decoded, width: newW, height: newH,
+            interpolation: img.Interpolation.linear);
+      }
+
+      // ── Step 3: Encode as JPEG ──
+      final jpegBytes = await compute<_EncodeParams, Uint8List>(
+        _encodeJpeg,
+        _EncodeParams(decoded, _jpegQuality),
+      );
+
+      final newKB = (jpegBytes.length / 1024).round();
+      debugPrint(
+        '[AiScan] Normalised: ${decoded.width}×${decoded.height}, '
+        '${originalKB}KB → ${newKB}KB JPEG',
+      );
+      return (bytes: jpegBytes, mime: 'image/jpeg');
+    } catch (e) {
+      debugPrint('[AiScan] Image normalisation failed: $e — using original');
+      return (bytes: imageBytes, mime: mimeType);
+    }
+  }
+
+  /// Decode image bytes using the `image` package (runs in isolate).
+  static img.Image? _decodeImage(Uint8List bytes) {
+    return img.decodeImage(bytes);
+  }
+
+  /// Encode an image to JPEG (runs in isolate).
+  static Uint8List _encodeJpeg(_EncodeParams params) {
+    return Uint8List.fromList(
+      img.encodeJpg(params.image, quality: params.quality),
+    );
+  }
+
+  /// Decode non-native formats (HEIC, WebP, etc.) via Flutter's platform
+  /// codec into an [img.Image] suitable for the `image` package.
+  static Future<img.Image?> _decodeToPlatformRgba(Uint8List bytes) async {
+    try {
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final uiImage = frame.image;
+      final byteData = await uiImage.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
+      final w = uiImage.width;
+      final h = uiImage.height;
+      uiImage.dispose();
+      codec.dispose();
+
+      if (byteData == null || byteData.lengthInBytes == 0) return null;
+
+      return img.Image.fromBytes(
+        width: w,
+        height: h,
+        bytes: byteData.buffer,
+        numChannels: 4,
+        order: img.ChannelOrder.rgba,
+      );
+    } catch (e) {
+      debugPrint('[AiScan] Platform RGBA decode failed: $e');
+      return null;
+    }
   }
 
   /// Analyse a screenshot and extract subscription + trap details.
@@ -127,8 +443,11 @@ class AiScanService {
     required Uint8List imageBytes,
     required String mimeType,
     String? modelOverride,
+    String langCode = 'en',
   }) async {
-    final base64Image = base64Encode(imageBytes);
+    // Normalise HEIC/HEIF/WebP → PNG for API compatibility.
+    final normalised = await _normaliseImage(imageBytes, mimeType);
+    final base64Image = base64Encode(normalised.bytes);
 
     if (base64Image.isEmpty) {
       throw Exception('Image encoding produced empty result');
@@ -146,13 +465,13 @@ class AiScanService {
               'type': 'image',
               'source': {
                 'type': 'base64',
-                'media_type': mimeType,
+                'media_type': normalised.mime,
                 'data': base64Image,
               },
             },
             {
               'type': 'text',
-              'text': _extractionPrompt,
+              'text': _extractionPromptFor(langCode),
             },
           ],
         },
@@ -160,9 +479,9 @@ class AiScanService {
     };
 
     // Run both calls in parallel
-    final results = await Future.wait([
+    final results = await Future.wait<dynamic>([
       _callApi(subBody),
-      _runTrapScan(base64Image: base64Image, mimeType: mimeType),
+      _runTrapScan(base64Image: base64Image, mimeType: normalised.mime, langCode: langCode),
     ]);
 
     // Parse subscription result (call 1)
@@ -185,13 +504,13 @@ class AiScanService {
       parsed = decoded as Map<String, dynamic>;
     }
 
+    // Build subscription from parsed JSON
+    final subscriptionJson = parsed['subscription'] as Map<String, dynamic>? ?? parsed;
+    final subscription = ScanResult.fromJson(subscriptionJson);
+
     // Get trap result (call 2) — already a TrapResult, never throws
     final trapResult = results[1] as TrapResult;
-
-    // Build subscription from parsed JSON
-    final subscriptionJson =
-        parsed['subscription'] as Map<String, dynamic>? ?? parsed;
-    final subscription = ScanResult.fromJson(subscriptionJson);
+    debugPrint('[AiScan] Final trap: isTrap=${trapResult.isTrap}, severity=${trapResult.severity}, warning=${trapResult.warningMessage?.substring(0, (trapResult.warningMessage?.length ?? 0).clamp(0, 80))}');
 
     // Set service name on trap result if trap was found
     final finalTrap = trapResult.isTrap
@@ -199,6 +518,7 @@ class AiScanService {
             isTrap: trapResult.isTrap,
             trapType: trapResult.trapType,
             severity: trapResult.severity,
+            scenario: trapResult.scenario,
             trialPrice: trapResult.trialPrice,
             trialDurationDays: trapResult.trialDurationDays,
             realPrice: trapResult.realPrice,
@@ -213,110 +533,6 @@ class AiScanService {
     return ScanOutput(subscription: subscription, trap: finalTrap);
   }
 
-  /// Run dedicated trap detection scan.
-  ///
-  /// Returns a [TrapResult] from a focused fine-print analysis.
-  /// Returns [TrapResult.clean] if the scan fails or finds no traps.
-  /// This method NEVER throws — trap scan failure is not user-facing.
-  Future<TrapResult> _runTrapScan({
-    required String base64Image,
-    required String mimeType,
-  }) async {
-    try {
-      final body = {
-        'model': 'claude-haiku-4-5-20250929',
-        'max_tokens': 1000,
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'image',
-                'source': {
-                  'type': 'base64',
-                  'media_type': mimeType,
-                  'data': base64Image,
-                },
-              },
-              {
-                'type': 'text',
-                'text': _trapScanPrompt,
-              },
-            ],
-          },
-        ],
-      };
-
-      final responseJson = await _callApi(body);
-      final content = responseJson['content'] as List<dynamic>;
-      final textBlock = content.firstWhere(
-        (block) => block['type'] == 'text',
-        orElse: () =>
-            throw Exception('No text block in trap scan response'),
-      );
-      final rawText = textBlock['text'] as String;
-      final decoded = _extractJson(rawText);
-
-      if (decoded is! Map<String, dynamic>) {
-        debugPrint(
-            '[AiScan] Trap scan returned unexpected format: ${decoded.runtimeType}');
-        return TrapResult.clean;
-      }
-
-      final data = decoded;
-      final hasTraps = data['has_traps'] as bool? ?? false;
-
-      if (!hasTraps) return TrapResult.clean;
-
-      // Map worst_type string to TrapType enum
-      TrapType? trapType;
-      switch (data['worst_type'] as String?) {
-        case 'trial_bait':
-          trapType = TrapType.trialBait;
-        case 'price_framing':
-          trapType = TrapType.priceFraming;
-        case 'hidden_renewal':
-          trapType = TrapType.hiddenRenewal;
-        case 'cancel_friction':
-          trapType = TrapType.cancelFriction;
-        default:
-          trapType = TrapType.hiddenRenewal; // fallback
-      }
-
-      // Map severity string to TrapSeverity enum
-      final TrapSeverity severity;
-      switch (data['worst_severity'] as String? ?? 'low') {
-        case 'high':
-          severity = TrapSeverity.high;
-        case 'medium':
-          severity = TrapSeverity.medium;
-        default:
-          severity = TrapSeverity.low;
-      }
-
-      return TrapResult(
-        isTrap: true,
-        trapType: trapType,
-        severity: severity,
-        trialPrice: (data['trial_price'] as num?)?.toDouble(),
-        trialDurationDays:
-            (data['trial_duration_days'] as num?)?.toInt(),
-        realPrice: (data['real_price'] as num?)?.toDouble(),
-        realBillingCycle: data['real_billing_cycle'] as String?,
-        realAnnualCost:
-            (data['real_annual_cost'] as num?)?.toDouble(),
-        confidence: (data['confidence'] as num?)?.toInt() ?? 0,
-        warningMessage:
-            data['warning_message'] as String? ?? '',
-        serviceName: '', // Will be set from subscription result
-      );
-    } catch (e) {
-      // Trap scan failure is NOT user-facing — just log and return clean
-      debugPrint('[AiScan] Trap scan failed (non-fatal): $e');
-      return TrapResult.clean;
-    }
-  }
-
   /// Analyse a screenshot and extract ALL subscription + trap details.
   ///
   /// Returns a list of [ScanOutput] when multiple subscriptions are found
@@ -326,8 +542,15 @@ class AiScanService {
     required Uint8List imageBytes,
     required String mimeType,
     String? modelOverride,
+    String langCode = 'en',
   }) async {
-    final base64Image = base64Encode(imageBytes);
+    // Normalise HEIC/HEIF/WebP → PNG for API compatibility.
+    final normalised = await _normaliseImage(imageBytes, mimeType);
+    final base64Image = base64Encode(normalised.bytes);
+
+    if (base64Image.isEmpty) {
+      throw Exception('Image encoding produced empty result');
+    }
 
     final body = {
       'model': modelOverride ?? AppConstants.aiModel,
@@ -340,13 +563,13 @@ class AiScanService {
               'type': 'image',
               'source': {
                 'type': 'base64',
-                'media_type': mimeType,
+                'media_type': normalised.mime,
                 'data': base64Image,
               },
             },
             {
               'type': 'text',
-              'text': _multiExtractionPrompt,
+              'text': _multiExtractionPromptFor(langCode),
             },
           ],
         },
@@ -838,11 +1061,30 @@ class AiScanService {
     return jsonDecode(jsonStr);
   }
 
+  /// Map language code to full language name for AI prompt instructions.
+  static String _languageName(String langCode) {
+    return switch (langCode) {
+      'pl' => 'Polish',
+      'de' => 'German',
+      'fr' => 'French',
+      'es' => 'Spanish',
+      _ => 'English',
+    };
+  }
+
+  /// Language instruction appended to AI prompts when non-English.
+  static String _langInstruction(String langCode) {
+    if (langCode == 'en') return '';
+    final lang = _languageName(langCode);
+    return '\nIMPORTANT: Write the extraction_notes and warning_message fields in $lang. Use $lang for all human-readable text in your response. Keep field names and enum values (like billing_cycle, category, source_type) in English.\n';
+  }
+
   /// The structured extraction prompt sent to Claude Haiku.
   ///
-  /// Focused on subscription extraction ONLY. Trap detection is handled
-  /// by a separate dedicated API call via [_trapScanPrompt].
-  static String get _extractionPrompt => '''
+  /// Includes both subscription extraction (Task 1) and
+  /// trap detection (Task 2) in a single API call.
+  static String _extractionPromptFor(String langCode) => '''
+${_langInstruction(langCode)}
 Today's date is ${DateTime.now().toIso8601String().substring(0, 10)}.
 
 Analyse this image carefully. It may be:
@@ -852,7 +1094,7 @@ Analyse this image carefully. It may be:
 - A payment confirmation screen
 - Any screen showing subscription or recurring payment info
 
-SUBSCRIPTION EXTRACTION:
+TASK 1 — SUBSCRIPTION EXTRACTION:
 Find any subscription or recurring payment services and extract:
 - service_name: the actual product/service name (e.g. "Netflix", "ScreenPal", "Claude Pro")
 - price: numeric only, no currency symbol. If price is NOT visible, set to null.
@@ -1034,7 +1276,8 @@ Return ONLY valid JSON, no markdown, no explanation.
   /// Prompt for multi-subscription extraction (bank statements, billing pages).
   ///
   /// Returns a JSON array of subscription+trap objects.
-  static String get _multiExtractionPrompt => '''
+  static String _multiExtractionPromptFor(String langCode) => '''
+${_langInstruction(langCode)}
 Today's date is ${DateTime.now().toIso8601String().substring(0, 10)}.
 
 Analyse this image carefully. It is likely a bank statement, card transaction list, or billing page with MULTIPLE subscriptions.
@@ -1232,39 +1475,319 @@ Return ONLY valid JSON array, no markdown, no explanation.
   ///
   /// Focused entirely on reading fine print and detecting dark patterns.
   /// Returns a single trap analysis JSON object.
-  static String get _trapScanPrompt => '''
-You are a subscription trap detector. Your ONLY job is to carefully read ALL text in this image — especially fine print, terms, footnotes, and small text — and identify subscription dark patterns that could cost the user money.
+  // ─── Text-based scanning (no image) ───
 
-READ EVERY WORD in the image, including:
-- Fine print at the bottom
-- Terms and conditions text
+  /// Analyse pasted text (email, confirmation) and extract subscription + trap.
+  ///
+  /// Equivalent to [analyseScreenshotWithTrap] but for text input.
+  Future<ScanOutput> analyseTextWithTrap({
+    required String text,
+    String? modelOverride,
+    String langCode = 'en',
+  }) async {
+    // Build subscription extraction request body (text-only, no image)
+    final subBody = {
+      'model': modelOverride ?? AppConstants.aiModel,
+      'max_tokens': 4096,
+      'messages': [
+        {
+          'role': 'user',
+          'content': [
+            {
+              'type': 'text',
+              'text': '${_textExtractionPromptFor(langCode)}\n\n--- BEGIN TEXT ---\n$text\n--- END TEXT ---',
+            },
+          ],
+        },
+      ],
+    };
+
+    // Build trap detection request body (text-only, no image)
+    final trapBody = {
+      'model': AppConstants.aiModel,
+      'max_tokens': 1000,
+      'messages': [
+        {
+          'role': 'user',
+          'content': [
+            {
+              'type': 'text',
+              'text': '${_textTrapScanPromptFor(langCode)}\n\n--- BEGIN TEXT ---\n$text\n--- END TEXT ---',
+            },
+          ],
+        },
+      ],
+    };
+
+    // Run both calls in parallel
+    final results = await Future.wait<dynamic>([
+      _callApi(subBody),
+      _runTrapScanFromBody(trapBody),
+    ]);
+
+    // Parse subscription result (call 1)
+    final subResponseJson = results[0] as Map<String, dynamic>;
+    final content = subResponseJson['content'] as List<dynamic>;
+    final textBlock = content.firstWhere(
+      (block) => block['type'] == 'text',
+      orElse: () => throw Exception('No text block in Claude response'),
+    );
+    final rawText = textBlock['text'] as String;
+    final decoded = _extractJson(rawText);
+
+    final Map<String, dynamic> parsed;
+    if (decoded is List) {
+      if (decoded.isEmpty) {
+        throw Exception('Claude returned an empty array');
+      }
+      parsed = decoded.first as Map<String, dynamic>;
+    } else {
+      parsed = decoded as Map<String, dynamic>;
+    }
+
+    // Build subscription from parsed JSON
+    final subscriptionJson = parsed['subscription'] as Map<String, dynamic>? ?? parsed;
+    final subscription = ScanResult.fromJson(subscriptionJson);
+
+    // Get trap result (call 2) — already a TrapResult, never throws
+    final trapResult = results[1] as TrapResult;
+
+    // Set service name on trap result if trap was found
+    final finalTrap = trapResult.isTrap
+        ? TrapResult(
+            isTrap: trapResult.isTrap,
+            trapType: trapResult.trapType,
+            severity: trapResult.severity,
+            scenario: trapResult.scenario,
+            trialPrice: trapResult.trialPrice,
+            trialDurationDays: trapResult.trialDurationDays,
+            realPrice: trapResult.realPrice,
+            realBillingCycle: trapResult.realBillingCycle,
+            realAnnualCost: trapResult.realAnnualCost,
+            confidence: trapResult.confidence,
+            warningMessage: trapResult.warningMessage,
+            serviceName: subscription.serviceName,
+          )
+        : TrapResult.clean;
+
+    return ScanOutput(subscription: subscription, trap: finalTrap);
+  }
+
+  /// Analyse pasted text — convenience wrapper returning only [ScanResult].
+  Future<ScanResult> analyseText({
+    required String text,
+    String? modelOverride,
+  }) async {
+    final output = await analyseTextWithTrap(text: text, modelOverride: modelOverride);
+    return output.subscription;
+  }
+
+  /// Run trap detection from a pre-built API body (shared by image + text paths).
+  Future<TrapResult> _runTrapScanFromBody(Map<String, dynamic> body) async {
+    try {
+      final responseJson = await _callApi(body);
+      final content = responseJson['content'] as List<dynamic>;
+      final textBlock = content.firstWhere(
+        (block) => block['type'] == 'text',
+        orElse: () => throw Exception('No text block in trap scan response'),
+      );
+      final rawText = textBlock['text'] as String;
+      debugPrint('[AiScan] Trap raw response (first 300 chars): ${rawText.substring(0, rawText.length.clamp(0, 300))}');
+      final decoded = _extractJson(rawText);
+
+      if (decoded is! Map<String, dynamic>) {
+        debugPrint('[AiScan] Trap scan returned unexpected format: ${decoded.runtimeType}');
+        return TrapResult.clean;
+      }
+
+      final data = decoded;
+      final hasTraps = data['has_traps'] as bool? ?? false;
+      debugPrint('[AiScan] Trap scan result: hasTraps=$hasTraps, severity=${data['worst_severity']}');
+
+      if (!hasTraps) return TrapResult.clean;
+
+      TrapType? trapType;
+      final worstType = data['worst_type'] as String?;
+      switch (worstType) {
+        case 'trial_bait':
+          trapType = TrapType.trialBait;
+          break;
+        case 'price_framing':
+          trapType = TrapType.priceFraming;
+          break;
+        case 'hidden_renewal':
+          trapType = TrapType.hiddenRenewal;
+          break;
+        case 'cancel_friction':
+          trapType = TrapType.cancelFriction;
+          break;
+        default:
+          trapType = TrapType.hiddenRenewal;
+      }
+
+      TrapSeverity severity;
+      switch (data['worst_severity'] as String? ?? 'low') {
+        case 'high':
+          severity = TrapSeverity.high;
+          break;
+        case 'medium':
+          severity = TrapSeverity.medium;
+          break;
+        default:
+          severity = TrapSeverity.low;
+      }
+
+      final scenario = data['scenario'] as String?;
+      debugPrint('[AiScan] Trap scenario: ${data['scenario']}, current_price: ${data['current_price']}, future_price: ${data['future_price']}');
+      final currentPrice = (data['current_price'] as num?)?.toDouble();
+      final futurePrice = (data['future_price'] as num?)?.toDouble();
+      final futureBillingCycle = data['future_billing_cycle'] as String?;
+
+      return TrapResult(
+        isTrap: true,
+        trapType: trapType,
+        severity: severity,
+        scenario: scenario,
+        trialPrice: currentPrice,
+        trialDurationDays: (data['trial_duration_days'] as num?)?.toInt(),
+        realPrice: futurePrice,
+        realBillingCycle: futureBillingCycle,
+        realAnnualCost: (data['real_annual_cost'] as num?)?.toDouble(),
+        confidence: data['confidence'] as int? ?? 0,
+        warningMessage: data['warning_message'] as String? ?? '',
+        serviceName: '',
+      );
+    } catch (e) {
+      debugPrint('[AiScan] Trap scan failed (non-fatal): $e');
+      return TrapResult.clean;
+    }
+  }
+
+  // ─── Text-specific prompts ───
+
+  /// Text-based extraction prompt — adapted from [_extractionPromptFor] for pasted text.
+  static String _textExtractionPromptFor(String langCode) => '''
+${_langInstruction(langCode)}
+Today's date is ${DateTime.now().toIso8601String().substring(0, 10)}.
+
+Analyse the following text carefully. It may be from:
+- A subscription confirmation email
+- A payment confirmation or receipt
+- A renewal notice or billing reminder
+- Terms and conditions for a subscription service
+
+TASK 1 — SUBSCRIPTION EXTRACTION:
+Find any subscription or recurring payment services and extract:
+- service_name: the actual product/service name (e.g. "Netflix", "ScreenPal", "Claude Pro")
+- price: numeric only, no currency symbol. If price is NOT visible, set to null.
+- currency: ISO 4217 code (GBP, USD, EUR, PLN, etc). Infer from symbols, language, or context.
+- billing_cycle: "weekly" | "monthly" | "quarterly" | "yearly". Infer from context if not explicit.
+- next_renewal: ISO date string if visible, or null
+- is_trial: boolean
+- trial_end_date: ISO date string, or null
+- category: one of "streaming", "music", "ai", "productivity", "storage", "fitness", "gaming", "reading", "communication", "news", "finance", "education", "vpn", "developer", "bundle", "other"
+- icon: first letter or short identifier (1-2 chars)
+- brand_color: hex colour code for the brand
+- source_type: "email" | "receipt" | "other"
+- is_expiring: boolean — true if the subscription says "Expires" (already cancelled). false if it says "Renews" (active).
+
+DATE INFERENCE — CRITICAL:
+- ALL dates you return for next_renewal and trial_end_date MUST be in the future (today or later). NEVER return a past date.
+- When a date has NO year, assume the NEXT future occurrence from today's date.
+- When a date HAS a year but is in the PAST, roll it forward by the billing cycle until it is in the future.
+
+IMPORTANT RULES:
+1. If a field is NOT visible in the text, set it to null. Do NOT guess or default to 0.
+2. For service_name: use the real product name. "Claude Pro" not "Anthropic".
+3. For billing_cycle: NEVER blindly default to "monthly". Reason about the cycle.
+4. If you find a service name but not a price, still return the service with price as null.
+5. If you genuinely cannot find ANY subscription info, return service_name as "Unknown" with overall_confidence 0.0.
+6. Set confidence per field: 1.0 if clearly stated, 0.5 if inferred, 0.0 if not found.
+
+ALSO INCLUDE:
+- missing_fields: array of field names that could not be found
+- extraction_notes: brief explanation of what you found and what's missing (max 2 sentences)
+
+RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
+{
+  "subscription": {
+    "service_name": "string",
+    "price": number or null,
+    "currency": "string",
+    "billing_cycle": "string or null",
+    "next_renewal": "string or null",
+    "is_trial": boolean,
+    "trial_end_date": "string or null",
+    "category": "string",
+    "icon": "string",
+    "brand_color": "string",
+    "source_type": "string",
+    "is_expiring": boolean,
+    "confidence": { "name": 0.0, "price": 0.0, "cycle": 0.0, "currency": 0.0 },
+    "overall_confidence": 0.0,
+    "tier": 1,
+    "missing_fields": ["string"],
+    "extraction_notes": "string"
+  }
+}
+
+If no subscription is detected at all, return service_name "Unknown" with overall_confidence 0.
+Return ONLY valid JSON, no markdown, no explanation.
+''';
+
+  /// Text-based trap detection prompt — adapted from [_trapScanPrompt] for pasted text.
+  static String _textTrapScanPromptFor(String langCode) => '''
+${_langInstruction(langCode)}
+You are a subscription trap detector. Your ONLY job is to carefully read ALL the text below — especially fine print, terms, footnotes, and conditions — and identify subscription dark patterns that could cost the user money.
+
+READ EVERY WORD in the text, including:
+- Fine print and terms
 - Asterisk footnotes
-- Grey or light-coloured small text
-- Any text that seems intentionally hard to read
+- Any conditions that seem intentionally hard to notice
+
+IMPORTANT — NOT EVERYTHING IS A TRAP:
+- A renewal email that clearly states the price, gives advance notice, and provides a cancellation link is NOT a trap. This is normal, transparent business practice.
+- Auto-renewal alone is NOT a trap if the price is clearly stated and cancellation is easy.
+- Only flag something as a trap if there is genuine deception, hidden information, friction designed to prevent cancellation, or a price change the user might not notice.
+- If the text shows a straightforward renewal at the same price with clear terms, return has_traps: false.
 
 TRAP CATEGORIES TO CHECK:
 
-1. AUTO-RENEWAL TRAP: Free trial or intro period that automatically converts to a paid subscription. Look for "automatically renews", "will be charged", "converts to paid".
+1. AUTO-RENEWAL TRAP: Free trial or intro period that automatically converts to a paid subscription.
+2. PRICE HIKE TRAP: Introductory/promotional price that increases after a period.
+3. CANCELLATION FEE TRAP: Fee charged for cancelling the subscription.
+4. CANCELLATION WINDOW TRAP: Narrow window to cancel before being charged.
+5. PRICE ADJUSTMENT TRAP: Company reserves the right to change prices.
+6. HIDDEN AUTO-RENEWAL: Auto-renewal terms buried in fine print.
 
-2. PRICE HIKE TRAP: Introductory/promotional price that increases after a period. Look for "introductory rate", "for the first X months", "standard rate", "regular price", any mention of TWO different prices.
+IMPORTANT: Determine the SCENARIO first:
+- "trial_to_paid": Text shows a free/cheap trial that converts to a higher paid price
+- "renewal_notice": Text shows an existing subscription about to auto-renew at the SAME price
+- "price_increase": Text shows a subscription renewing at a HIGHER price than before
+- "new_signup": Text shows a new subscription signup
+- "other": Anything else
 
-3. CANCELLATION FEE TRAP: Fee charged for cancelling the subscription. Look for "cancellation fee", "early termination", "cancellation charge".
+For "renewal_notice": current_price = the renewal amount, future_price = same amount, trial_duration_days = null
+For "trial_to_paid": current_price = what the user pays during the intro/trial period (0 for free trial, or the reduced intro price e.g. 3.49), future_price = full price after the trial/intro period ends. Set current_price accurately — if the user pays a reduced but non-zero amount during the intro period, set current_price to that amount (NOT 0).
+For "price_increase": current_price = current price, future_price = new higher price
 
-4. CANCELLATION WINDOW TRAP: Narrow window to cancel before being charged. Look for "X hours before", "X days before billing", "must cancel by". Normal is "cancel anytime" — anything with a deadline is a trap.
-
-5. PRICE ADJUSTMENT TRAP: Company reserves the right to change prices. Look for "prices may change", "adjusted annually", "subject to change".
-
-6. HIDDEN AUTO-RENEWAL: Auto-renewal terms buried in fine print or not clearly stated alongside the price.
+IMPORTANT DISTINCTION — FREE TRIAL vs INTRO PRICE:
+- A FREE TRIAL is when current_price = 0 (user pays nothing initially).
+- An INTRO PRICE is when current_price > 0 but less than future_price (user pays a reduced amount initially).
+- Do NOT call an intro price a "trial" in warning_message if the user is charged from day one.
+- In warning_message: for free trials say "free trial converts to..."; for intro pricing say "introductory price of X increases to Y after Z months".
 
 RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
 {
   "has_traps": boolean,
   "worst_severity": "low" | "medium" | "high",
   "worst_type": "trial_bait" | "price_framing" | "hidden_renewal" | "cancel_friction" | null,
-  "trial_price": number or null,
+  "scenario": "trial_to_paid" | "renewal_notice" | "price_increase" | "new_signup" | "other",
+  "current_price": number or null,
+  "current_billing_cycle": "weekly" | "monthly" | "yearly" | null,
+  "future_price": number or null,
+  "future_billing_cycle": "weekly" | "monthly" | "yearly" | null,
   "trial_duration_days": number or null,
-  "real_price": number or null,
-  "real_billing_cycle": "weekly" | "monthly" | "yearly" | null,
   "real_annual_cost": number or null,
   "confidence": number (0-100),
   "traps_found": [
@@ -1285,4 +1808,91 @@ SEVERITY GUIDE:
 If no traps are found, return has_traps: false, worst_severity: "low", traps_found: [], warning_message: null.
 Return ONLY valid JSON, no markdown, no explanation.
 ''';
+
+  static String _trapScanPromptFor(String langCode) => '''
+${_langInstruction(langCode)}
+You are a subscription trap detector. Your ONLY job is to carefully read ALL text in this image — especially fine print, terms, footnotes, and small text — and identify subscription dark patterns that could cost the user money.
+
+READ EVERY WORD in the image, including:
+- Fine print at the bottom
+- Terms and conditions text
+- Asterisk footnotes
+- Grey or light-coloured small text
+- Any text that seems intentionally hard to read
+
+IMPORTANT — NOT EVERYTHING IS A TRAP:
+- A renewal email that clearly states the price, gives advance notice, and provides a cancellation link is NOT a trap. This is normal, transparent business practice.
+- Auto-renewal alone is NOT a trap if the price is clearly stated and cancellation is easy.
+- Only flag something as a trap if there is genuine deception, hidden information, friction designed to prevent cancellation, or a price change the user might not notice.
+- If the image shows a straightforward renewal at the same price with clear terms, return has_traps: false.
+
+TRAP CATEGORIES TO CHECK:
+
+1. AUTO-RENEWAL TRAP: Free trial or intro period that automatically converts to a paid subscription. Look for "automatically renews", "will be charged", "converts to paid".
+
+2. PRICE HIKE TRAP: Introductory/promotional price that increases after a period. Look for "introductory rate", "for the first X months", "standard rate", "regular price", any mention of TWO different prices.
+
+3. CANCELLATION FEE TRAP: Fee charged for cancelling the subscription. Look for "cancellation fee", "early termination", "cancellation charge".
+
+4. CANCELLATION WINDOW TRAP: Narrow window to cancel before being charged. Look for "X hours before", "X days before billing", "must cancel by". Normal is "cancel anytime" — anything with a deadline is a trap.
+
+5. PRICE ADJUSTMENT TRAP: Company reserves the right to change prices. Look for "prices may change", "adjusted annually", "subject to change".
+
+6. HIDDEN AUTO-RENEWAL: Auto-renewal terms buried in fine print or not clearly stated alongside the price.
+
+IMPORTANT: Determine the SCENARIO first:
+- "trial_to_paid": Image shows a free/cheap trial that converts to a higher paid price
+- "renewal_notice": Image shows an existing subscription about to auto-renew at the SAME price
+- "price_increase": Image shows a subscription renewing at a HIGHER price than before
+- "new_signup": Image shows a new subscription signup page
+- "other": Anything else
+
+For "renewal_notice": current_price = the renewal amount, future_price = same amount, trial_duration_days = null
+For "trial_to_paid": current_price = what the user pays during the intro/trial period (0 for free trial, or the reduced intro price e.g. 3.49), future_price = full price after the trial/intro period ends. Set current_price accurately — if the user pays a reduced but non-zero amount during the intro period, set current_price to that amount (NOT 0).
+For "price_increase": current_price = current price, future_price = new higher price
+
+IMPORTANT DISTINCTION — FREE TRIAL vs INTRO PRICE:
+- A FREE TRIAL is when current_price = 0 (user pays nothing initially).
+- An INTRO PRICE is when current_price > 0 but less than future_price (user pays a reduced amount initially).
+- Do NOT call an intro price a "trial" in warning_message if the user is charged from day one.
+- In warning_message: for free trials say "free trial converts to..."; for intro pricing say "introductory price of X increases to Y after Z months".
+
+RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
+{
+  "has_traps": boolean,
+  "worst_severity": "low" | "medium" | "high",
+  "worst_type": "trial_bait" | "price_framing" | "hidden_renewal" | "cancel_friction" | null,
+  "scenario": "trial_to_paid" | "renewal_notice" | "price_increase" | "new_signup" | "other",
+  "current_price": number or null,
+  "current_billing_cycle": "weekly" | "monthly" | "yearly" | null,
+  "future_price": number or null,
+  "future_billing_cycle": "weekly" | "monthly" | "yearly" | null,
+  "trial_duration_days": number or null,
+  "real_annual_cost": number or null,
+  "confidence": number (0-100),
+  "traps_found": [
+    {
+      "type": "string",
+      "severity": "low" | "medium" | "high",
+      "detail": "one sentence explaining the trap"
+    }
+  ],
+  "warning_message": "plain English summary of ALL traps found, max 3 sentences. Be specific with numbers and dates."
+}
+
+SEVERITY GUIDE:
+- "low": Standard auto-renewal with clear terms, or minor price adjustment clause
+- "medium": Price increase 1.5-3x after intro period, or cancellation restrictions
+- "high": Price jump >3x, cancellation fees, very narrow cancel windows, or multiple traps combined
+
+If no traps are found, return has_traps: false, worst_severity: "low", traps_found: [], warning_message: null.
+Return ONLY valid JSON, no markdown, no explanation.
+''';
+}
+
+/// Parameters for JPEG encoding in an isolate via [compute].
+class _EncodeParams {
+  final img.Image image;
+  final int quality;
+  const _EncodeParams(this.image, this.quality);
 }

@@ -5,11 +5,19 @@ class CancelGuideStep {
   final String detail;
   final String? deeplink;
 
+  /// Localised title overrides keyed by language code ('pl', 'de', etc.).
+  final Map<String, String> titleLocalized;
+
+  /// Localised detail overrides keyed by language code.
+  final Map<String, String> detailLocalized;
+
   const CancelGuideStep({
     required this.step,
     required this.title,
     required this.detail,
     this.deeplink,
+    this.titleLocalized = const {},
+    this.detailLocalized = const {},
   });
 
   factory CancelGuideStep.fromJson(Map<String, dynamic> json) {
@@ -20,6 +28,12 @@ class CancelGuideStep {
       deeplink: json['deeplink'] as String?,
     );
   }
+
+  /// Returns the localised title for [langCode], falling back to English.
+  String getTitle(String langCode) => titleLocalized[langCode] ?? title;
+
+  /// Returns the localised detail for [langCode], falling back to English.
+  String getDetail(String langCode) => detailLocalized[langCode] ?? detail;
 }
 
 /// Cancel guide data parsed from the Supabase `cancel_guides` JSONB.
@@ -32,6 +46,12 @@ class CancelGuideData {
   final String? warningText;
   final String? proTip;
 
+  /// Localised warning text overrides keyed by language code.
+  final Map<String, String> warningTextLocalized;
+
+  /// Localised pro tip overrides keyed by language code.
+  final Map<String, String> proTipLocalized;
+
   const CancelGuideData({
     required this.platform,
     required this.steps,
@@ -40,6 +60,8 @@ class CancelGuideData {
     this.estimatedMinutes,
     this.warningText,
     this.proTip,
+    this.warningTextLocalized = const {},
+    this.proTipLocalized = const {},
   });
 
   factory CancelGuideData.fromJson(Map<String, dynamic> json) {
@@ -68,4 +90,12 @@ class CancelGuideData {
 
   /// The best URL to open for cancellation (deeplink first, then web).
   String? get bestCancelUrl => cancelDeeplink ?? cancelWebUrl;
+
+  /// Returns the localised warning text for [langCode], falling back to English.
+  String? getWarningText(String langCode) =>
+      warningTextLocalized[langCode] ?? warningText;
+
+  /// Returns the localised pro tip for [langCode], falling back to English.
+  String? getProTip(String langCode) =>
+      proTipLocalized[langCode] ?? proTip;
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/theme.dart';
 import '../models/insight_display_data.dart';
 import '../providers/combined_insights_provider.dart';
+import '../providers/entitlement_provider.dart';
 import '../providers/purchase_provider.dart';
 import '../providers/service_insight_provider.dart';
 import '../screens/paywall/paywall_screen.dart';
@@ -36,7 +37,7 @@ class _ServiceInsightCardState extends ConsumerState<ServiceInsightCard> {
   Widget build(BuildContext context) {
     final c = context.colors;
     final l = context.l10n;
-    final isPro = ref.watch(isProProvider);
+    final hasInsights = ref.watch(entitlementProvider).hasFullDashboard;
     final insights = ref.watch(combinedInsightsProvider);
 
     if (insights.isEmpty) return const SizedBox.shrink();
@@ -69,7 +70,7 @@ class _ServiceInsightCardState extends ConsumerState<ServiceInsightCard> {
     }
 
     // Pro gating: free users see teaser
-    if (!isPro) {
+    if (!hasInsights) {
       return _ProTeaser(
         accentColor: accentColor,
         bgCard: c.bgCard,
@@ -105,6 +106,7 @@ class _ServiceInsightCardState extends ConsumerState<ServiceInsightCard> {
           children: [
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 // Emoji + label + dismiss
                 Row(
@@ -157,56 +159,41 @@ class _ServiceInsightCardState extends ConsumerState<ServiceInsightCard> {
                 ),
                 const SizedBox(height: 6),
 
+                // AI insight cards are display-only — no action buttons or links
                 // Body with **bold** markers
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 300),
-                    child: Align(
-                      alignment: Alignment.topLeft,
-                      child: _RichBody(
-                        key: ValueKey('si_b_${insight.remoteId}'),
-                        text: insight.body,
-                        textMid: c.textMid,
-                        textBold: c.text,
-                      ),
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Align(
+                    alignment: Alignment.topLeft,
+                    child: _RichBody(
+                      key: ValueKey('si_b_${insight.remoteId}'),
+                      text: insight.body,
+                      textMid: c.textMid,
+                      textBold: c.text,
                     ),
                   ),
                 ),
 
-                // Bottom row: action label + pagination dots
-                Row(
-                  children: [
-                    // Pagination dots
-                    if (insights.length > 1) ...[
-                      ...List.generate(
-                        insights.length,
-                        (i) => Container(
-                          margin: const EdgeInsets.only(right: 4),
-                          width: i == _currentIndex ? 12 : 6,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: i == _currentIndex
-                                ? accentColor
-                                : c.textDim,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
+                // Bottom row: pagination dots
+                if (insights.length > 1) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: List.generate(
+                      insights.length,
+                      (i) => Container(
+                        margin: const EdgeInsets.only(right: 4),
+                        width: i == _currentIndex ? 12 : 6,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: i == _currentIndex
+                              ? accentColor
+                              : c.textDim,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                    ],
-                    const Spacer(),
-                    // Action label
-                    if (insight.actionLabel != null &&
-                        insight.actionLabel!.isNotEmpty)
-                      Text(
-                        '${insight.actionLabel} \u2192',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: accentColor,
-                        ),
-                      ),
-                  ],
-                ),
+                    ),
+                  ),
+                ],
               ],
             ),
 
@@ -221,8 +208,11 @@ class _ServiceInsightCardState extends ConsumerState<ServiceInsightCard> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: c.purple.withValues(alpha: 0.15),
+                    color: c.proTagBg,
                     borderRadius: BorderRadius.circular(6),
+                    border: Border.all(
+                      color: c.purple.withValues(alpha: 0.25),
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -297,8 +287,6 @@ class _RichBody extends StatelessWidget {
 
     return RichText(
       text: TextSpan(children: spans),
-      maxLines: 3,
-      overflow: TextOverflow.ellipsis,
     );
   }
 }
@@ -351,7 +339,7 @@ class _ProTeaser extends StatelessWidget {
                     style: TextStyle(fontSize: 16)),
                 const SizedBox(width: 8),
                 Text(
-                  'PRO INSIGHT',
+                  l.insightProLabel,
                   style: ChompdTypography.mono(
                     size: 10,
                     weight: FontWeight.w400,
@@ -394,7 +382,7 @@ class _ProTeaser extends StatelessWidget {
               ),
             ),
 
-            const Spacer(),
+            const SizedBox(height: 16),
 
             // Unlock CTA
             Row(

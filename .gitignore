@@ -51,3 +51,14 @@ app.*.map.json
 # Environment files
 .env
 .env.local
+
+# Backup files
+lib/providers/backup/
+lib/services/backup/
+*.bak
+
+# Claude Code config
+.claude/
+
+# Supabase temp
+supabase/.temp/

@@ -1,7 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/constants.dart';
+import '../l10n/generated/app_localizations.dart';
 import '../models/dodged_trap.dart';
 import '../models/scan_output.dart';
 import '../models/scan_result.dart';
@@ -96,6 +100,10 @@ class ChatMessage {
   final int? multiReviewTotal;
   final TrapResult? trapResult;
 
+  /// Whether this result was created by the Track Trial Anyway flow
+  /// (subscription already added — hide the "Add to Chompd" button).
+  final bool fromTrapTracking;
+
   const ChatMessage({
     required this.type,
     required this.text,
@@ -108,6 +116,7 @@ class ChatMessage {
     this.multiReviewIndex,
     this.multiReviewTotal,
     this.trapResult,
+    this.fromTrapTracking = false,
   });
 
   ChatMessage copyWith({
@@ -126,6 +135,7 @@ class ChatMessage {
       multiReviewIndex: multiReviewIndex,
       multiReviewTotal: multiReviewTotal,
       trapResult: trapResult,
+      fromTrapTracking: fromTrapTracking,
     );
   }
 }
@@ -222,9 +232,40 @@ class ScanState {
 class ScanNotifier extends StateNotifier<ScanState> {
   ScanNotifier() : super(const ScanState());
 
+  /// Cached l10n instance (same pattern as NotificationService._getL10n).
+  S? _l10n;
+
+  /// Cached language code for AI prompt localisation.
+  String _langCode = 'en';
+
+  /// Prevents showing the Sonnet escalation message more than once per scan.
+  bool _escalationMessageShown = false;
+
+  /// Get localised strings based on the user's stored locale.
+  Future<S> _getL10n() async {
+    if (_l10n != null) return _l10n!;
+    final prefs = await SharedPreferences.getInstance();
+    final langCode = prefs.getString('user_locale') ?? 'en';
+    _langCode = langCode;
+    _l10n = lookupS(Locale(langCode));
+    return _l10n!;
+  }
+
   /// Reset to idle state for a new scan.
   void reset() {
+    _escalationMessageShown = false;
     state = const ScanState();
+  }
+
+  /// Localise an AI billing cycle string (e.g. "monthly") using l10n keys.
+  String _localiseCycle(String? cycle, S l) {
+    return switch (cycle?.toLowerCase()) {
+      'weekly' => l.cycleWeekly,
+      'monthly' => l.cycleMonthly,
+      'quarterly' => l.cycleQuarterly,
+      'yearly' => l.cycleYearly,
+      _ => cycle ?? l.cycleMonthly,
+    };
   }
 
   /// Append a system message to the current conversation.
@@ -281,13 +322,15 @@ class ScanNotifier extends StateNotifier<ScanState> {
     String? mimeType,
     String scenario = 'clear_email',
   }) async {
+    final l = await _getL10n();
+
     // Phase 1: Scanning
     state = state.copyWith(
       phase: ScanPhase.scanning,
       messages: [
-        const ChatMessage(
+        ChatMessage(
           type: ChatMessageType.system,
-          text: 'Screenshot received! Analysing...',
+          text: l.scanAnalysing,
         ),
       ],
     );
@@ -319,7 +362,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
         // Check if Haiku struggled — escalate to Sonnet
         if (_shouldEscalate(result)) {
-          _addSystemMessage('Taking a closer look\u2026');
+          _addSystemMessage(l.scanEscalation);
 
           // Pass 2: Sonnet (smarter, handles complex images)
           result = await service.analyseScreenshot(
@@ -363,14 +406,15 @@ class ScanNotifier extends StateNotifier<ScanState> {
         ],
       );
     } catch (e) {
+      debugPrint('[ScanNotifier] Scan error: $e');
       state = state.copyWith(
         phase: ScanPhase.error,
-        errorMessage: e.toString(),
+        errorMessage: 'scan_error',
         messages: [
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: 'Something went wrong: ${e.toString()}',
+            text: 'Scan error: ${e.toString().substring(0, (e.toString().length > 200) ? 200 : e.toString().length)}',
           ),
         ],
       );
@@ -456,16 +500,17 @@ class ScanNotifier extends StateNotifier<ScanState> {
     final merchantDb = MerchantDb.instance;
     final alternatives = merchantDb.getAlternatives(result.serviceName);
 
+    final l = await _getL10n();
     final priceStr = result.price != null
         ? Subscription.formatPrice(result.price!, result.currency)
         : '?';
-    final cycleStr = result.billingCycle ?? 'month';
+    final cycleStr = _localiseCycle(result.billingCycle, l);
 
     final messages = <ChatMessage>[
       ...state.messages,
       ChatMessage(
         type: ChatMessageType.partial,
-        text: 'Found a charge for $priceStr/$cycleStr.',
+        text: l.scanChargeFound(priceStr, cycleStr),
         scanResult: result,
       ),
     ];
@@ -488,7 +533,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
       messages.add(
         ChatMessage(
           type: ChatMessageType.question,
-          text: 'Found a charge for $displayName at $priceStr/month. Which service is this?',
+          text: l.scanWhichService(displayName, priceStr, cycleStr),
           questionType: QuestionType.choose,
           options: alternatives,
         ),
@@ -702,12 +747,13 @@ class ScanNotifier extends StateNotifier<ScanState> {
         );
 
         // Still need billing cycle?
-        if (updated.needsCycle) {
+        if (updated.needsCycle && _l10n != null) {
+          final l = _l10n!;
           messages.add(ChatMessage(
             type: ChatMessageType.question,
-            text: 'Is ${updated.serviceName} billed monthly or yearly?',
+            text: l.scanBilledQuestion(updated.serviceName),
             questionType: QuestionType.choose,
-            options: const ['Monthly', 'Yearly', 'Weekly', 'Quarterly'],
+            options: [l.cycleMonthly, l.cycleYearly, l.cycleWeekly, l.cycleQuarterly],
           ));
           state = state.copyWith(
             messages: messages,
@@ -726,13 +772,20 @@ class ScanNotifier extends StateNotifier<ScanState> {
     if (currentResult.needsCycle) {
       final cycleLower = answer.toLowerCase();
       String? parsedCycle;
-      if (cycleLower.contains('month')) {
+      // Match against both English keywords and localised l10n values
+      final l = _l10n;
+      if (cycleLower.contains('month') ||
+          (l != null && answer == l.cycleMonthly)) {
         parsedCycle = 'monthly';
-      } else if (cycleLower.contains('year') || cycleLower.contains('annual')) {
+      } else if (cycleLower.contains('year') ||
+          cycleLower.contains('annual') ||
+          (l != null && answer == l.cycleYearly)) {
         parsedCycle = 'yearly';
-      } else if (cycleLower.contains('week')) {
+      } else if (cycleLower.contains('week') ||
+          (l != null && answer == l.cycleWeekly)) {
         parsedCycle = 'weekly';
-      } else if (cycleLower.contains('quarter')) {
+      } else if (cycleLower.contains('quarter') ||
+          (l != null && answer == l.cycleQuarterly)) {
         parsedCycle = 'quarterly';
       }
 
@@ -802,6 +855,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
   /// Shows what was found and asks the user to fill in the gaps.
   Future<void> _handleMissingData(ScanResult result) async {
     await Future.delayed(const Duration(milliseconds: 300));
+    final l = await _getL10n();
 
     final messages = <ChatMessage>[...state.messages];
 
@@ -811,17 +865,17 @@ class ScanNotifier extends StateNotifier<ScanState> {
       foundParts.add(result.serviceName);
     }
     if (result.nextRenewal != null) {
-      foundParts.add(
-          'renews ${result.nextRenewal!.day}/${result.nextRenewal!.month}/${result.nextRenewal!.year}');
+      final d = result.nextRenewal!;
+      foundParts.add(l.scanRenewsDate('${d.day}/${d.month}/${d.year}'));
     }
     if (result.billingCycle != null) {
-      foundParts.add(result.billingCycle!);
+      foundParts.add(_localiseCycle(result.billingCycle, l));
     }
 
     if (foundParts.isNotEmpty) {
       messages.add(ChatMessage(
         type: ChatMessageType.info,
-        text: 'Found: ${foundParts.join(' \u00B7 ')}',
+        text: l.scanFound(foundParts.join(' \u00B7 ')),
       ));
     }
 
@@ -840,7 +894,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
           : 'this subscription';
       messages.add(ChatMessage(
         type: ChatMessageType.question,
-        text: 'I couldn\'t find the price in this image. How much is $name?',
+        text: l.scanMissingPrice(name),
         questionType: QuestionType.choose,
         options: _suggestPrices(result),
       ));
@@ -849,9 +903,9 @@ class ScanNotifier extends StateNotifier<ScanState> {
     else if (result.needsCycle) {
       messages.add(ChatMessage(
         type: ChatMessageType.question,
-        text: 'Is ${result.serviceName} billed monthly or yearly?',
+        text: l.scanBilledQuestion(result.serviceName),
         questionType: QuestionType.choose,
-        options: const ['Monthly', 'Yearly', 'Weekly', 'Quarterly'],
+        options: [l.cycleMonthly, l.cycleYearly, l.cycleWeekly, l.cycleQuarterly],
       ));
     }
     // Price and cycle both present — nothing to ask, route to confirm
@@ -984,12 +1038,15 @@ class ScanNotifier extends StateNotifier<ScanState> {
     String? mimeType,
     String scenario = 'clear_email',
   }) async {
+    _escalationMessageShown = false;
+    final l = await _getL10n();
+
     state = state.copyWith(
       phase: ScanPhase.scanning,
       messages: [
-        const ChatMessage(
+        ChatMessage(
           type: ChatMessageType.system,
-          text: 'Screenshot received! Scanning for traps...',
+          text: l.scanAnalysing,
         ),
       ],
     );
@@ -1017,6 +1074,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
       final singleOutput = await service.analyseScreenshotWithTrap(
         imageBytes: imageBytes,
         mimeType: mimeType,
+        langCode: _langCode,
       );
 
       final result = singleOutput.subscription;
@@ -1024,11 +1082,15 @@ class ScanNotifier extends StateNotifier<ScanState> {
       // Check if we need to escalate to Sonnet (low confidence)
       ScanOutput bestOutput = singleOutput;
       if (_shouldEscalate(result)) {
-        _addSystemMessage('Taking a closer look\u2026');
+        if (!_escalationMessageShown) {
+          _addSystemMessage(l.scanEscalation);
+          _escalationMessageShown = true;
+        }
         bestOutput = await service.analyseScreenshotWithTrap(
           imageBytes: imageBytes,
           mimeType: mimeType,
           modelOverride: AppConstants.aiModelFallback,
+          langCode: _langCode,
         );
       }
 
@@ -1044,10 +1106,11 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
       if (!isSingleSource || mentionsMultiple) {
         // Re-scan with multi-extraction prompt for thorough extraction
-        _addSystemMessage('Checking for more subscriptions\u2026');
+        _addSystemMessage(l.scanSniffing);
         List<ScanOutput> outputs = await service.analyseScreenshotMulti(
           imageBytes: imageBytes,
           mimeType: mimeType,
+          langCode: _langCode,
         );
         outputs = outputs.where((o) => !o.subscription.isNotFound).toList();
 
@@ -1055,21 +1118,25 @@ class ScanNotifier extends StateNotifier<ScanState> {
         if (outputs.isEmpty ||
             (outputs.length == 1 &&
                 _shouldEscalate(outputs.first.subscription))) {
-          _addSystemMessage('Taking a closer look\u2026');
+          if (!_escalationMessageShown) {
+            _addSystemMessage(l.scanEscalation);
+            _escalationMessageShown = true;
+          }
           outputs = await service.analyseScreenshotMulti(
             imageBytes: imageBytes,
             mimeType: mimeType,
             modelOverride: AppConstants.aiModelFallback,
+            langCode: _langCode,
           );
           outputs =
               outputs.where((o) => !o.subscription.isNotFound).toList();
         } else if (outputs.length >= 5) {
-          _addSystemMessage(
-              'Found many subscriptions, taking a closer look\u2026');
+          _addSystemMessage(l.scanFoundFeast);
           outputs = await service.analyseScreenshotMulti(
             imageBytes: imageBytes,
             mimeType: mimeType,
             modelOverride: AppConstants.aiModelFallback,
+            langCode: _langCode,
           );
           outputs =
               outputs.where((o) => !o.subscription.isNotFound).toList();
@@ -1084,6 +1151,18 @@ class ScanNotifier extends StateNotifier<ScanState> {
             tier: 3,
           ));
           return;
+        }
+
+        // For single-result multi-scans, prefer the deep trap scan result
+        // over the multi prompt's weaker trap detection.
+        // For multi-result scans, each sub keeps its own per-sub trap.
+        if (outputs.length == 1 && bestOutput.trap.isTrap) {
+          outputs = [
+            ScanOutput(
+              subscription: outputs.first.subscription,
+              trap: bestOutput.trap,
+            ),
+          ];
         }
 
         if (outputs.length == 1) {
@@ -1113,15 +1192,174 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ),
         ],
       );
-    } catch (e) {
+    } on NoConnectionException {
+      debugPrint('[ScanNotifier] No connection during scan');
       state = state.copyWith(
         phase: ScanPhase.error,
-        errorMessage: e.toString(),
+        errorMessage: 'no_connection',
+        messages: [
+          ...state.messages,
+          const ChatMessage(
+            type: ChatMessageType.system,
+            text: 'No internet connection. Check your Wi-Fi or mobile data and try again.',
+          ),
+        ],
+      );
+    } on ApiLimitException {
+      debugPrint('[ScanNotifier] API rate limit hit');
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'api_limit',
+        messages: [
+          ...state.messages,
+          const ChatMessage(
+            type: ChatMessageType.system,
+            text: 'Too many requests — please wait a moment and try again.',
+          ),
+        ],
+      );
+    } on ApiUnavailableException catch (e) {
+      debugPrint('[ScanNotifier] API unavailable: $e');
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'api_unavailable',
+        messages: [
+          ...state.messages,
+          const ChatMessage(
+            type: ChatMessageType.system,
+            text: 'Our scanning service is temporarily down. Please try again in a few minutes.',
+          ),
+        ],
+      );
+    } catch (e) {
+      debugPrint('[ScanNotifier] Combined scan error: $e');
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'scan_error',
+        messages: [
+          ...state.messages,
+          const ChatMessage(
+            type: ChatMessageType.system,
+            text: 'Something went wrong. Please try again.',
+          ),
+        ],
+      );
+    }
+  }
+
+  /// Start a scan from pasted text (email, confirmation, etc.).
+  ///
+  /// Same flow as [startTrapScan] but uses text-only AI prompts.
+  Future<void> startTextScan({required String text}) async {
+    _escalationMessageShown = false;
+    final l = await _getL10n();
+
+    state = state.copyWith(
+      phase: ScanPhase.scanning,
+      messages: [
+        ChatMessage(
+          type: ChatMessageType.system,
+          text: l.textReceived,
+        ),
+      ],
+    );
+
+    try {
+      if (useMockData) {
+        final output = await AiScanService.mockWithTrap('clear_email');
+        await _handleSingleScanOutput(output);
+        return;
+      }
+
+      final service = AiScanService();
+
+      // Pass 1: Haiku (fast + cheap) — text-only
+      var bestOutput = await service.analyseTextWithTrap(
+        text: text,
+        langCode: _langCode,
+      );
+
+      // Check if Haiku struggled — escalate to Sonnet
+      if (_shouldEscalate(bestOutput.subscription)) {
+        if (!_escalationMessageShown) {
+          _addSystemMessage(l.scanEscalation);
+          _escalationMessageShown = true;
+        }
+        bestOutput = await service.analyseTextWithTrap(
+          text: text,
+          modelOverride: AppConstants.aiModelFallback,
+          langCode: _langCode,
+        );
+      }
+
+      // Handle result — same flow as image scan
+      if (bestOutput.subscription.isNotFound) {
+        await _handleNotFound(bestOutput.subscription);
+        return;
+      }
+
+      await _handleSingleScanOutput(bestOutput);
+    } on ScanLimitReachedException catch (e) {
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'scan_limit_reached',
         messages: [
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: 'Something went wrong: ${e.toString()}',
+            text: 'You\'ve used all ${e.limit} free scans. Upgrade to Pro for unlimited scanning!',
+          ),
+        ],
+      );
+    } on NoConnectionException {
+      debugPrint('[ScanNotifier] No connection during text scan');
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'no_connection',
+        messages: [
+          ...state.messages,
+          const ChatMessage(
+            type: ChatMessageType.system,
+            text: 'No internet connection. Check your Wi-Fi or mobile data and try again.',
+          ),
+        ],
+      );
+    } on ApiLimitException {
+      debugPrint('[ScanNotifier] API rate limit hit during text scan');
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'api_limit',
+        messages: [
+          ...state.messages,
+          const ChatMessage(
+            type: ChatMessageType.system,
+            text: 'Too many requests — please wait a moment and try again.',
+          ),
+        ],
+      );
+    } on ApiUnavailableException catch (e) {
+      debugPrint('[ScanNotifier] API unavailable during text scan: $e');
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'api_unavailable',
+        messages: [
+          ...state.messages,
+          const ChatMessage(
+            type: ChatMessageType.system,
+            text: 'Our scanning service is temporarily down. Please try again in a few minutes.',
+          ),
+        ],
+      );
+    } catch (e) {
+      debugPrint('[ScanNotifier] Text scan error: $e');
+      state = state.copyWith(
+        phase: ScanPhase.error,
+        errorMessage: 'scan_error',
+        messages: [
+          ...state.messages,
+          const ChatMessage(
+            type: ChatMessageType.system,
+            text: 'Something went wrong. Please try again.',
           ),
         ],
       );
@@ -1237,6 +1475,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
           type: ChatMessageType.result,
           text: '${subscription.serviceName} added with trial alerts.',
           scanResult: subscription,
+          fromTrapTracking: true,
         ),
       ],
     );

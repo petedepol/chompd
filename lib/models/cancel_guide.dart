@@ -11,7 +11,7 @@ class CancelGuide {
   /// Target platform: 'ios', 'android', 'web', 'all'.
   String platform;
 
-  /// Ordered cancellation steps.
+  /// Ordered cancellation steps (English default).
   List<String> steps;
 
   /// iOS Settings URL or deep link.
@@ -29,6 +29,12 @@ class CancelGuide {
   /// When these steps were last verified as correct.
   DateTime? lastVerified;
 
+  /// Localised steps keyed by language code: {'pl': [...], 'de': [...], ...}.
+  Map<String, List<String>> stepsLocalized;
+
+  /// Localised notes keyed by language code: {'pl': '...', 'de': '...', ...}.
+  Map<String, String> notesLocalized;
+
   CancelGuide({
     this.id = 0,
     required this.serviceName,
@@ -39,7 +45,15 @@ class CancelGuide {
     this.notes,
     required this.difficultyRating,
     this.lastVerified,
+    this.stepsLocalized = const {},
+    this.notesLocalized = const {},
   });
+
+  /// Returns localised steps for [langCode], falling back to English.
+  List<String> getSteps(String langCode) => stepsLocalized[langCode] ?? steps;
+
+  /// Returns localised notes for [langCode], falling back to English.
+  String? getNotes(String langCode) => notesLocalized[langCode] ?? notes;
 
   /// Colour representing difficulty.
   ///

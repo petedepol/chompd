@@ -45,17 +45,34 @@ const _countryToCurrency = <String, String>{
   'HR': 'EUR',
 };
 
-/// Detect currency from device locale country code.
-/// Falls back to USD (most global) if unknown.
+/// Detect currency from the device's **region** setting.
+///
+/// Uses [PlatformDispatcher.locale.countryCode] which reflects the device's
+/// region (e.g. Settings → General → Language & Region → Region) rather than
+/// the app language. Falls back to [Platform.localeName] parsing, then USD.
+///
+/// Example: A Polish phone set to English still returns PL → PLN.
 String _detectCurrencyFromLocale() {
   try {
-    final locale = Platform.localeName; // e.g. "en_GB", "pl_PL"
+    // Primary: PlatformDispatcher gives the device region, not just language.
+    final platformLocale = PlatformDispatcher.instance.locale;
+    final regionCode = platformLocale.countryCode?.toUpperCase();
+
+    if (regionCode != null && _countryToCurrency.containsKey(regionCode)) {
+      debugPrint('[CurrencyProvider] PlatformDispatcher region: '
+          '$regionCode → ${_countryToCurrency[regionCode]}');
+      return _countryToCurrency[regionCode]!;
+    }
+
+    // Fallback: parse Platform.localeName (e.g. "en_GB", "pl_PL").
+    final locale = Platform.localeName;
     final parts = locale.split(RegExp('[_-]'));
     final country =
         parts.length >= 2 ? parts[1].toUpperCase() : parts[0].toUpperCase();
 
     final detected = _countryToCurrency[country] ?? _kDefaultCurrency;
-    debugPrint('[CurrencyProvider] Locale: $locale → country: $country → $detected');
+    debugPrint('[CurrencyProvider] Platform.localeName fallback: '
+        '$locale → $country → $detected');
     return detected;
   } catch (_) {
     return _kDefaultCurrency;
@@ -79,10 +96,12 @@ class CurrencyNotifier extends StateNotifier<String> {
     if (saved != null) {
       state = saved;
     } else {
-      // First launch: detect from locale and persist
+      // First launch: detect from device region and persist
       final detected = _detectCurrencyFromLocale();
       state = detected;
       await prefs.setString(_kCurrencyKey, detected);
+      // Push to Supabase profile so the server knows the user's currency
+      SyncService.instance.syncProfile(currency: detected);
     }
   }
 

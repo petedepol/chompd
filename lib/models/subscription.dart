@@ -229,6 +229,10 @@ class Subscription {
   /// User explicitly said "keep it" — suppress nudges for 90 days.
   bool keepConfirmed = false;
 
+  /// User swiped to dismiss the cancelled card from the home screen graveyard.
+  /// The subscription still counts towards total savings — just hidden from the list.
+  bool cancelledDismissed = false;
+
   // ─── Sync Fields ───
 
   /// Last time this record was modified (for sync conflict resolution).
@@ -260,25 +264,26 @@ class Subscription {
 
   /// Localised renewal label. Pass [l] for full localisation.
   /// Falls back to English when [l] is null.
-  String localRenewalLabel(S? l) {
+  /// [locale] is passed to [DateHelpers.shortDate] for month name localisation.
+  String localRenewalLabel(S? l, {String? locale}) {
     final days = daysUntilRenewal;
     if (l != null) {
       if (days == 0) return l.renewsToday;
       if (days == 1) return l.renewsTomorrow;
       if (days > 1 && days <= 30) return l.renewsInDays(days);
-      if (days > 30) return l.renewsOnDate(DateHelpers.shortDate(nextRenewal));
+      if (days > 30) return l.renewsOnDate(DateHelpers.shortDate(nextRenewal, locale: locale));
       if (days == -1) return l.renewedYesterday;
       if (days >= -7) return l.renewedDaysAgo(-days);
-      return l.renewsOnDate(DateHelpers.shortDate(nextRenewal));
+      return l.renewsOnDate(DateHelpers.shortDate(nextRenewal, locale: locale));
     }
     // Fallback English (used in model-only contexts)
     if (days == 0) return 'Renews today';
     if (days == 1) return 'Renews tomorrow';
     if (days > 1 && days <= 30) return 'Renews in $days days';
-    if (days > 30) return 'Renews ${DateHelpers.shortDate(nextRenewal)}';
+    if (days > 30) return 'Renews ${DateHelpers.shortDate(nextRenewal, locale: locale)}';
     if (days == -1) return 'Renewed yesterday';
     if (days >= -7) return 'Renewed ${-days} days ago';
-    return 'Renews ${DateHelpers.shortDate(nextRenewal)}';
+    return 'Renews ${DateHelpers.shortDate(nextRenewal, locale: locale)}';
   }
 
   /// Days remaining in trial (null if not a trial).
@@ -515,12 +520,14 @@ class Subscription {
       'real_price': realPrice,
       'real_annual_cost': realAnnualCost,
       'trap_severity': trapSeverity,
+      'trap_warning_message': trapWarningMessage,
       'trial_expires_at': trialExpiresAt?.toUtc().toIso8601String(),
       'trial_reminder_set': trialReminderSet,
       'matched_service_id': matchedServiceId,
       'last_reviewed_at': lastReviewedAt?.toUtc().toIso8601String(),
       'last_nudged_at': lastNudgedAt?.toUtc().toIso8601String(),
       'keep_confirmed': keepConfirmed,
+      'cancelled_dismissed': cancelledDismissed,
       'reminders': reminders
           .map((r) => {
                 'daysBefore': r.daysBefore,
@@ -575,6 +582,7 @@ class Subscription {
       sub.realAnnualCost = (row['real_annual_cost'] as num).toDouble();
     }
     sub.trapSeverity = row['trap_severity'] as String?;
+    sub.trapWarningMessage = row['trap_warning_message'] as String?;
     if (row['trial_expires_at'] != null) {
       sub.trialExpiresAt = DateTime.parse(row['trial_expires_at'] as String);
     }
@@ -587,6 +595,7 @@ class Subscription {
       sub.lastNudgedAt = DateTime.parse(row['last_nudged_at'] as String);
     }
     sub.keepConfirmed = row['keep_confirmed'] as bool? ?? false;
+    sub.cancelledDismissed = row['cancelled_dismissed'] as bool? ?? false;
     if (row['deleted_at'] != null) {
       sub.deletedAt = DateTime.parse(row['deleted_at'] as String);
     }

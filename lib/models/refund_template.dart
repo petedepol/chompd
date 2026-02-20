@@ -9,6 +9,21 @@ class RefundTemplate {
   final String successRate;
   final String timeframe;
 
+  /// Localised name overrides keyed by language code.
+  final Map<String, String> nameLocalized;
+
+  /// Localised steps keyed by language code: {'pl': [...], 'de': [...], ...}.
+  final Map<String, List<String>> stepsLocalized;
+
+  /// Localised email template keyed by language code.
+  final Map<String, String> emailTemplateLocalized;
+
+  /// Localised success rate label keyed by language code.
+  final Map<String, String> successRateLocalized;
+
+  /// Localised timeframe label keyed by language code.
+  final Map<String, String> timeframeLocalized;
+
   const RefundTemplate({
     required this.id,
     required this.name,
@@ -18,7 +33,30 @@ class RefundTemplate {
     this.emailTemplate,
     required this.successRate,
     required this.timeframe,
+    this.nameLocalized = const {},
+    this.stepsLocalized = const {},
+    this.emailTemplateLocalized = const {},
+    this.successRateLocalized = const {},
+    this.timeframeLocalized = const {},
   });
+
+  /// Returns localised name for [langCode], falling back to English.
+  String getName(String langCode) => nameLocalized[langCode] ?? name;
+
+  /// Returns localised steps for [langCode], falling back to English.
+  List<String> getSteps(String langCode) => stepsLocalized[langCode] ?? steps;
+
+  /// Returns localised email template for [langCode], falling back to English.
+  String? getEmailTemplate(String langCode) =>
+      emailTemplateLocalized[langCode] ?? emailTemplate;
+
+  /// Returns localised success rate for [langCode], falling back to English.
+  String getSuccessRate(String langCode) =>
+      successRateLocalized[langCode] ?? successRate;
+
+  /// Returns localised timeframe for [langCode], falling back to English.
+  String getTimeframe(String langCode) =>
+      timeframeLocalized[langCode] ?? timeframe;
 }
 
 /// The four escalation paths for getting a refund.

@@ -26,6 +26,11 @@ class ServiceSyncService {
   /// Prevents concurrent sync operations.
   Completer<void>? _activeSyncCompleter;
 
+  /// Called after sync completes (success or fallback) so consumers can
+  /// refresh their in-memory caches. Set from the widget tree where
+  /// Riverpod is available.
+  VoidCallback? onSyncComplete;
+
   /// Whether Supabase is configured.
   bool get _hasSupabase =>
       const String.fromEnvironment('SUPABASE_URL').isNotEmpty;
@@ -47,6 +52,7 @@ class ServiceSyncService {
     _activeSyncCompleter = Completer<void>();
     try {
       await _doSync();
+      onSyncComplete?.call();
     } finally {
       _activeSyncCompleter!.complete();
       _activeSyncCompleter = null;

@@ -38,6 +38,9 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
 
   Subscription get sub => widget.subscription;
 
+  /// Current language code for localised content.
+  String get _lang => Localizations.localeOf(context).languageCode;
+
   /// Service-specific refund templates from the cache.
   List<RefundTemplateData> get _serviceTemplates {
     final notifier = ref.read(serviceCacheProvider.notifier);
@@ -49,7 +52,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
     setState(() {
       _selectedTemplate = template;
       _selectedServiceTemplate = null;
-      _stepChecks = List.filled(template.steps.length, false);
+      _stepChecks = List.filled(template.getSteps(_lang).length, false);
     });
   }
 
@@ -103,6 +106,8 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
     );
   }
 
+
+
   void _submitRequest() {
     HapticService.instance.selection();
     setState(() => _showConfirmation = true);
@@ -120,12 +125,13 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
         .replaceAll('{{date}}', dateFormat.format(sub.nextRenewal));
   }
 
-  /// Build generic dispute email (was in refund_paths_data.dart).
+  /// Build generic dispute email using localised template.
   String _buildDisputeEmail(Subscription sub) {
-    final dateFormat = DateFormat('d MMMM yyyy');
-    final template = _genericRefundPaths
-        .firstWhere((p) => p.id == 'direct_billing')
-        .emailTemplate!;
+    final dateFormat = DateFormat('d MMMM yyyy', _lang);
+    final directBilling = _genericRefundPaths
+        .firstWhere((p) => p.id == 'direct_billing');
+    final template = directBilling.getEmailTemplate(_lang) ??
+        directBilling.emailTemplate!;
 
     return template
         .replaceAll('{service_name}', sub.name)
@@ -309,6 +315,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
     final c = context.colors;
     final template = _selectedTemplate!;
     final isDirectBilling = template.path == RefundPath.directBilling;
+    final localSteps = template.getSteps(_lang);
 
     return PopScope(
       canPop: false,
@@ -332,7 +339,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      template.name,
+                      template.getName(_lang),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -362,7 +369,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        context.l10n.successRate(template.successRate),
+                        context.l10n.successRate(template.getSuccessRate(_lang)),
                         style: ChompdTypography.mono(
                           size: 11,
                           weight: FontWeight.w600,
@@ -376,7 +383,7 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                   const SizedBox(width: 8),
                   Flexible(
                     child: Text(
-                      template.timeframe,
+                      template.getTimeframe(_lang),
                       style: TextStyle(
                         fontSize: 11,
                         color: c.textDim,
@@ -400,13 +407,13 @@ class _RefundRescueScreenState extends ConsumerState<RefundRescueScreen> {
                       horizontal: 20, vertical: 4),
                   child: _StepCard(
                     index: index,
-                    text: template.steps[index],
+                    text: localSteps[index],
                     checked: _stepChecks[index],
                     onToggle: () => _toggleStep(index),
                   ),
                 );
               },
-              childCount: template.steps.length,
+              childCount: localSteps.length,
             ),
           ),
 
@@ -865,6 +872,7 @@ class _PathCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = context.colors;
+    final lang = Localizations.localeOf(context).languageCode;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -886,7 +894,7 @@ class _PathCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    template.name,
+                    template.getName(lang),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -895,7 +903,7 @@ class _PathCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    template.successRate,
+                    template.getSuccessRate(lang),
                     style: ChompdTypography.mono(
                       size: 11,
                       color: c.mint,
@@ -909,7 +917,7 @@ class _PathCard extends StatelessWidget {
             Flexible(
               flex: 0,
               child: Text(
-                template.timeframe,
+                template.getTimeframe(lang),
                 style: TextStyle(
                   fontSize: 10,
                   color: c.textDim,
@@ -1134,6 +1142,62 @@ const List<RefundTemplate> _genericRefundPaths = [
     url: 'https://reportaproblem.apple.com',
     successRate: '~80% for first request',
     timeframe: 'Usually refunded within 48 hours',
+    nameLocalized: {
+      'pl': 'Zwrot z Apple App Store',
+      'de': 'Apple App Store Erstattung',
+      'fr': 'Remboursement Apple App Store',
+      'es': 'Reembolso de Apple App Store',
+    },
+    stepsLocalized: {
+      'pl': [
+        'Przejdź na reportaproblem.apple.com',
+        'Zaloguj się swoim Apple ID',
+        'Znajdź obciążenie w historii zakupów',
+        'Dotknij „Zgłoś problem" obok obciążenia',
+        'Wybierz „Nie zamierzałem kupować tego przedmiotu" lub „Nie autoryzowałem tego zakupu"',
+        'Dodaj krótkie wyjaśnienie: „Zostałem wprowadzony w błąd warunkami okresu próbnego"',
+        'Wyślij zgłoszenie',
+      ],
+      'de': [
+        'Gehe auf reportaproblem.apple.com',
+        'Melde dich mit deiner Apple-ID an',
+        'Finde die Abbuchung in deinem Kaufverlauf',
+        'Tippe neben der Abbuchung auf „Problem melden"',
+        'Wähle „Ich wollte diesen Artikel nicht kaufen" oder „Ich habe diesen Kauf nicht autorisiert"',
+        'Füge eine kurze Erklärung hinzu: „Ich wurde durch die Testbedingungen irregeführt"',
+        'Sende deine Anfrage ab',
+      ],
+      'fr': [
+        'Va sur reportaproblem.apple.com',
+        'Connecte-toi avec ton identifiant Apple',
+        'Trouve le débit dans ton historique d\'achats',
+        'Appuie sur « Signaler un problème » à côté du débit',
+        'Sélectionne « Je n\'avais pas l\'intention d\'acheter cet article » ou « Je n\'ai pas autorisé cet achat »',
+        'Ajoute une brève explication : « J\'ai été induit en erreur par les conditions d\'essai »',
+        'Envoie ta demande',
+      ],
+      'es': [
+        'Ve a reportaproblem.apple.com',
+        'Inicia sesión con tu Apple ID',
+        'Encuentra el cargo en tu historial de compras',
+        'Toca "Informar de un problema" junto al cargo',
+        'Selecciona "No tenía intención de comprar este artículo" o "No autoricé esta compra"',
+        'Añade una breve explicación: "Me engañaron con los términos de la prueba"',
+        'Envía tu solicitud',
+      ],
+    },
+    successRateLocalized: {
+      'pl': '~80% przy pierwszym zgłoszeniu',
+      'de': '~80% beim ersten Antrag',
+      'fr': '~80% à la première demande',
+      'es': '~80% en la primera solicitud',
+    },
+    timeframeLocalized: {
+      'pl': 'Zwrot zwykle w ciągu 48 godzin',
+      'de': 'Normalerweise innerhalb von 48 Stunden erstattet',
+      'fr': 'Remboursement généralement sous 48 heures',
+      'es': 'Normalmente reembolsado en 48 horas',
+    },
   ),
   RefundTemplate(
     id: 'google_play',
@@ -1150,6 +1214,54 @@ const List<RefundTemplate> _genericRefundPaths = [
     url: 'https://play.google.com/store/account/orderhistory',
     successRate: '~70% for first request',
     timeframe: 'Usually 1\u20134 business days',
+    nameLocalized: {
+      'pl': 'Zwrot z Google Play',
+      'de': 'Google Play Erstattung',
+      'fr': 'Remboursement Google Play',
+      'es': 'Reembolso de Google Play',
+    },
+    stepsLocalized: {
+      'pl': [
+        'Przejdź na play.google.com/store/account/orderhistory',
+        'Znajdź obciążenie, które chcesz zakwestionować',
+        'Kliknij „Zgłoś problem"',
+        'Wybierz „Nie zamierzałem dokonywać tego zakupu" lub „Mój zakup nie działa zgodnie z oczekiwaniami"',
+        'Wypełnij szczegóły i wyślij',
+      ],
+      'de': [
+        'Gehe auf play.google.com/store/account/orderhistory',
+        'Finde die Abbuchung, die du anfechten möchtest',
+        'Klicke auf „Problem melden"',
+        'Wähle „Ich wollte diesen Kauf nicht tätigen" oder „Mein Kauf funktioniert nicht wie erwartet"',
+        'Fülle die Details aus und sende ab',
+      ],
+      'fr': [
+        'Va sur play.google.com/store/account/orderhistory',
+        'Trouve le débit que tu veux contester',
+        'Clique sur « Signaler un problème »',
+        'Sélectionne « Je n\'avais pas l\'intention de faire cet achat » ou « Mon achat ne fonctionne pas comme prévu »',
+        'Remplis les détails et envoie',
+      ],
+      'es': [
+        'Ve a play.google.com/store/account/orderhistory',
+        'Encuentra el cargo que quieres disputar',
+        'Haz clic en "Informar de un problema"',
+        'Selecciona "No quise hacer esta compra" o "Mi compra no funciona como esperaba"',
+        'Completa los detalles y envía',
+      ],
+    },
+    successRateLocalized: {
+      'pl': '~70% przy pierwszym zgłoszeniu',
+      'de': '~70% beim ersten Antrag',
+      'fr': '~70% à la première demande',
+      'es': '~70% en la primera solicitud',
+    },
+    timeframeLocalized: {
+      'pl': 'Zwykle 1\u20134 dni robocze',
+      'de': 'Normalerweise 1\u20134 Werktage',
+      'fr': 'Généralement 1 à 4 jours ouvrés',
+      'es': 'Normalmente 1\u20134 días hábiles',
+    },
   ),
   RefundTemplate(
     id: 'direct_billing',
@@ -1180,6 +1292,116 @@ Regards,
 [Your name]''',
     successRate: '~50\u201360% \u2014 varies by company',
     timeframe: '3\u201314 days depending on company',
+    nameLocalized: {
+      'pl': 'Napisz do firmy',
+      'de': 'E-Mail an das Unternehmen',
+      'fr': 'Envoyer un e-mail à l\'entreprise',
+      'es': 'Enviar correo a la empresa',
+    },
+    stepsLocalized: {
+      'pl': [
+        'Znajdź adres e-mail wsparcia firmy (sprawdź stopkę strony lub e-mail z potwierdzeniem)',
+        'Skopiuj gotowy e-mail z reklamacją poniżej',
+        'Wypełnij wyróżnione pola swoimi danymi',
+        'Wyślij e-mail',
+        'Jeśli brak odpowiedzi po 7 dniach, wyślij przypomnienie',
+        'Jeśli brak odpowiedzi po 14 dniach, eskaluj do obciążenia zwrotnego w banku',
+      ],
+      'de': [
+        'Finde die Support-E-Mail-Adresse des Unternehmens (prüfe den Website-Footer oder deine Bestätigungs-E-Mail)',
+        'Kopiere die vorbereitete Widerspruchs-E-Mail unten',
+        'Fülle die markierten Felder mit deinen Daten aus',
+        'Sende die E-Mail',
+        'Wenn nach 7 Tagen keine Antwort, schicke eine Erinnerung',
+        'Wenn nach 14 Tagen immer noch keine Antwort, eskaliere zur Rückbuchung bei der Bank',
+      ],
+      'fr': [
+        'Trouve l\'e-mail de support de l\'entreprise (vérifie le bas de page du site ou ton e-mail de confirmation)',
+        'Copie l\'e-mail de contestation pré-rédigé ci-dessous',
+        'Remplis les champs surlignés avec tes informations',
+        'Envoie l\'e-mail',
+        'Si pas de réponse après 7 jours, relance une fois',
+        'Si toujours pas de réponse après 14 jours, passe à la rétrofacturation bancaire',
+      ],
+      'es': [
+        'Encuentra el correo de soporte de la empresa (revisa el pie de la web o tu correo de confirmación)',
+        'Copia el correo de disputa preescrito abajo',
+        'Rellena los campos resaltados con tus datos',
+        'Envía el correo',
+        'Si no hay respuesta en 7 días, haz un seguimiento',
+        'Si sigue sin respuesta después de 14 días, escala a contracargo bancario',
+      ],
+    },
+    emailTemplateLocalized: {
+      'pl': '''Temat: Prośba o zwrot \u2014 Wprowadzające w błąd warunki subskrypcji
+
+Szanowna Obsługo,
+
+Zarejestrowałem się w usłudze {service_name} dnia {signup_date}, rozumiejąc, że jest to okres próbny za {trial_price}.
+
+Nie zostałem jasno poinformowany, że subskrypcja zostanie automatycznie przedłużona po cenie {real_price}. Warunki cenowe nie zostały przedstawione w sposób przejrzysty w momencie zakupu.
+
+Zgodnie z przepisami o ochronie konsumentów, proszę o pełny zwrot kwoty {charge_amount} pobranej dnia {charge_date}.
+
+Proszę o przetworzenie zwrotu w ciągu 14 dni.
+
+Z poważaniem,
+[Twoje imię i nazwisko]''',
+      'de': '''Betreff: Erstattungsanfrage \u2014 Irreführende Abonnementbedingungen
+
+Sehr geehrter Support,
+
+ich habe mich am {signup_date} für ein {trial_price}-Probeabo von {service_name} angemeldet.
+
+Ich wurde nicht klar darüber informiert, dass dieses automatisch zum Preis von {real_price} verlängert wird. Die Preisgestaltung wurde beim Kauf nicht transparent dargestellt.
+
+Gemäß den Verbraucherschutzgesetzen bitte ich um die vollständige Erstattung von {charge_amount}, die am {charge_date} abgebucht wurde.
+
+Bitte bearbeiten Sie diese Erstattung innerhalb von 14 Tagen.
+
+Mit freundlichen Grüßen,
+[Ihr Name]''',
+      'fr': '''Objet : Demande de remboursement \u2014 Conditions d'abonnement trompeuses
+
+Cher Support,
+
+Je me suis inscrit le {signup_date} à ce que je comprenais être un essai à {trial_price} de {service_name}.
+
+Je n'ai pas été clairement informé que cela serait automatiquement renouvelé au tarif de {real_price}. Les conditions tarifaires n'ont pas été présentées de manière transparente au moment de l'achat.
+
+Conformément aux lois sur la protection des consommateurs, je demande le remboursement intégral de {charge_amount} débité le {charge_date}.
+
+Merci de traiter ce remboursement dans un délai de 14 jours.
+
+Cordialement,
+[Votre nom]''',
+      'es': '''Asunto: Solicitud de reembolso \u2014 Términos de suscripción engañosos
+
+Estimado Soporte,
+
+Me registré el {signup_date} en lo que entendí como una prueba de {trial_price} de {service_name}.
+
+No fui informado claramente de que esto se renovaría automáticamente a {real_price}. Los términos de precios no se presentaron de forma transparente en el momento de la compra.
+
+De acuerdo con las leyes de protección al consumidor, solicito el reembolso completo de {charge_amount} cobrado el {charge_date}.
+
+Por favor, procesen este reembolso en un plazo de 14 días.
+
+Atentamente,
+[Su nombre]''',
+    },
+    successRateLocalized: {
+      'pl': '~50\u201360% \u2014 zależy od firmy',
+      'de': '~50\u201360% \u2014 variiert je nach Unternehmen',
+      'fr': '~50\u201360% \u2014 varie selon l\'entreprise',
+      'es': '~50\u201360% \u2014 varía según la empresa',
+    },
+    timeframeLocalized: {
+      'pl': '3\u201314 dni w zależności od firmy',
+      'de': '3\u201314 Tage je nach Unternehmen',
+      'fr': '3 à 14 jours selon l\'entreprise',
+      'es': '3\u201314 días según la empresa',
+    },
   ),
   RefundTemplate(
     id: 'bank_chargeback',
@@ -1198,5 +1420,57 @@ Regards,
     ],
     successRate: '~70\u201380% \u2014 banks are familiar with this pattern',
     timeframe: '5\u201310 business days',
+    nameLocalized: {
+      'pl': 'Obciążenie zwrotne w banku (ostateczność)',
+      'de': 'Bank-Rückbuchung (letzter Ausweg)',
+      'fr': 'Rétrofacturation bancaire (dernier recours)',
+      'es': 'Contracargo bancario (último recurso)',
+    },
+    stepsLocalized: {
+      'pl': [
+        'Otwórz aplikację bankową lub zadzwoń do banku',
+        'Znajdź transakcję, którą chcesz zakwestionować',
+        'Wybierz „Reklamuj transakcję" lub „Obciążenie zwrotne"',
+        'Powód: „Wprowadzające w błąd warunki subskrypcji" lub „Usługa niezgodna z opisem"',
+        'Przedstaw dowody: zrzut ekranu oryginalnej oferty z ceną okresu próbnego',
+        'Bank zbada sprawę \u2014 to zwykle trwa 5\u201310 dni roboczych',
+      ],
+      'de': [
+        'Öffne deine Banking-App oder rufe deine Bank an',
+        'Finde die Transaktion, die du anfechten möchtest',
+        'Wähle „Transaktion anfechten" oder „Rückbuchung"',
+        'Grund: „Irreführende Abonnementbedingungen" oder „Leistung nicht wie beschrieben"',
+        'Lege Beweise vor: Screenshot des Originalangebots mit dem Testpreis',
+        'Deine Bank wird ermitteln \u2014 das dauert normalerweise 5\u201310 Werktage',
+      ],
+      'fr': [
+        'Ouvre ton appli bancaire ou appelle ta banque',
+        'Trouve la transaction que tu veux contester',
+        'Sélectionne « Contester la transaction » ou « Rétrofacturation »',
+        'Motif : « Conditions d\'abonnement trompeuses » ou « Services non conformes à la description »',
+        'Fournis des preuves : capture d\'écran de l\'offre originale avec le prix d\'essai',
+        'Ta banque enquêtera \u2014 cela prend généralement 5 à 10 jours ouvrés',
+      ],
+      'es': [
+        'Abre tu app bancaria o llama a tu banco',
+        'Encuentra la transacción que quieres disputar',
+        'Selecciona "Disputar transacción" o "Contracargo"',
+        'Motivo: "Términos de suscripción engañosos" o "Servicios no según lo descrito"',
+        'Proporciona evidencia: captura de pantalla de la oferta original con el precio de prueba',
+        'Tu banco investigará \u2014 esto suele tardar 5\u201310 días hábiles',
+      ],
+    },
+    successRateLocalized: {
+      'pl': '~70\u201380% \u2014 banki znają ten schemat',
+      'de': '~70\u201380% \u2014 Banken kennen dieses Muster',
+      'fr': '~70\u201380% \u2014 les banques connaissent ce schéma',
+      'es': '~70\u201380% \u2014 los bancos están familiarizados con este patrón',
+    },
+    timeframeLocalized: {
+      'pl': '5\u201310 dni roboczych',
+      'de': '5\u201310 Werktage',
+      'fr': '5 à 10 jours ouvrés',
+      'es': '5\u201310 días hábiles',
+    },
   ),
 ];

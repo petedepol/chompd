@@ -24,6 +24,14 @@ const _localStatAmount = <String, double>{
   'JPY': 40000,
 };
 
+// ─── Layout constants for visual consistency ───
+const double _mascotSize = 140;
+const double _mascotGlowSize = 180;
+const double _topPadding = 40;
+const double _mascotToTitle = 20;
+const double _titleToBody = 10;
+const double _bodyToContent = 16;
+
 class OnboardingScreen extends ConsumerStatefulWidget {
   /// Called when the user finishes or skips onboarding.
   /// [openScan] is true when the user tapped "Scan a Screenshot".
@@ -96,26 +104,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return Scaffold(
       backgroundColor: c.bg,
-      body: Stack(
-        children: [
-          PageView(
-            controller: _pageController,
-            physics: const BouncingScrollPhysics(),
-            children: [
-              _buildWelcomePage(),
-              _buildHowItWorksPage(),
-              _buildNotificationsPage(),
-              _buildGetStartedPage(),
-            ],
-          ),
-          // Navigation indicators and buttons
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildBottomNavigation(),
-          ),
-        ],
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Scrollable page content
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const BouncingScrollPhysics(),
+                children: [
+                  _buildWelcomePage(),
+                  _buildHowItWorksPage(),
+                  _buildNotificationsPage(),
+                  _buildGetStartedPage(),
+                ],
+              ),
+            ),
+            // Fixed bottom navigation — always same position
+            _buildBottomNavigation(),
+          ],
+        ),
       ),
     );
   }
@@ -128,109 +136,103 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: _topPadding),
+            // Piranha mascot with subtle glow behind
+            Stack(
+              alignment: Alignment.center,
               children: [
-                const SizedBox(height: 48),
-                // Piranha mascot with subtle glow behind
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Background glow
-                    Container(
-                      width: 220,
-                      height: 220,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: RadialGradient(
-                          colors: [
-                            c.mint.withValues(alpha: 0.08),
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                    const MascotImage(
-                      asset: 'piranha_wave.png',
-                      size: 280,
-                      fadeIn: true,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                // Title
-                Text(
-                  context.l10n.onboardingTitle1,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: c.text,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                // Subtitle
-                Text(
-                  context.l10n.onboardingSubtitle1,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                    color: c.textMid,
-                    height: 1.5,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                // Confronting stat — localised amount
+                // Background glow
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
+                  width: _mascotGlowSize,
+                  height: _mascotGlowSize,
                   decoration: BoxDecoration(
-                    color: c.bgCard,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: c.border),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('💸', style: TextStyle(fontSize: 18)),
-                      const SizedBox(width: 10),
-                      Flexible(
-                        child: Text(
-                          context.l10n.onboardingStatWaste(Subscription.formatPrice(statAmount, currency, decimals: 0)),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: c.textMid,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        c.mint.withValues(alpha: 0.08),
+                        Colors.transparent,
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
-                // Ease-of-use tag
-                Text(
-                  '📸 ${context.l10n.onboardingEaseTag}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: c.mint,
-                  ),
-                  textAlign: TextAlign.center,
+                const MascotImage(
+                  asset: 'piranha_wave.png',
+                  size: _mascotSize,
+                  fadeIn: true,
                 ),
-                // Bottom clearance so content doesn't hide behind nav
-                const SizedBox(height: 100),
               ],
             ),
-          ),
+            const SizedBox(height: _mascotToTitle),
+            // Title
+            Text(
+              context.l10n.onboardingTitle1,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: _titleToBody),
+            // Subtitle
+            Text(
+              context.l10n.onboardingSubtitle1,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: c.textMid,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: _bodyToContent),
+            // Confronting stat — localised amount
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 12,
+              ),
+              decoration: BoxDecoration(
+                color: c.bgCard,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: c.border),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('💸', style: TextStyle(fontSize: 18)),
+                  const SizedBox(width: 10),
+                  Flexible(
+                    child: Text(
+                      context.l10n.onboardingStatWaste(Subscription.formatPrice(statAmount, currency, decimals: 0)),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: c.textMid,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: _bodyToContent),
+            // Ease-of-use tag
+            Text(
+              '📸 ${context.l10n.onboardingEaseTag}',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: c.mint,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -241,62 +243,56 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                const SizedBox(height: 48),
-                // Piranha mascot — with phone (scan tutorial)
-                const MascotImage(
-                  asset: 'piranha_full.png',
-                  size: 120,
-                  fadeIn: true,
-                ),
-                const SizedBox(height: 20),
-                // "How It Works" headline
-                Text(
-                  context.l10n.onboardingTitle2,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: c.text,
-                      ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                _buildStep(
-                  number: 1,
-                  icon: Icons.camera_alt,
-                  iconColor: c.mint,
-                  title: context.l10n.onboardingStep1Title,
-                  subtitle: context.l10n.onboardingStep1Subtitle,
-                  isLast: false,
-                ),
-                _buildStep(
-                  number: 2,
-                  icon: Icons.auto_awesome,
-                  iconColor: c.purple,
-                  title: context.l10n.onboardingStep2Title,
-                  subtitle: context.l10n.onboardingStep2Subtitle,
-                  isLast: false,
-                ),
-                _buildStep(
-                  number: 3,
-                  icon: Icons.check_circle,
-                  iconColor: c.mint,
-                  title: context.l10n.onboardingStep3Title,
-                  subtitle: context.l10n.onboardingStep3Subtitle,
-                  isLast: true,
-                ),
-                // Bottom clearance
-                const SizedBox(height: 100),
-              ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: _topPadding),
+            // Piranha mascot — with phone (scan tutorial)
+            const MascotImage(
+              asset: 'piranha_full.png',
+              size: _mascotSize,
+              fadeIn: true,
             ),
-          ),
+            const SizedBox(height: _mascotToTitle),
+            // "How It Works" headline
+            Text(
+              context.l10n.onboardingTitle2,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: _titleToBody + 6),
+            _buildStep(
+              number: 1,
+              icon: Icons.camera_alt,
+              iconColor: c.mint,
+              title: context.l10n.onboardingStep1Title,
+              subtitle: context.l10n.onboardingStep1Subtitle,
+              isLast: false,
+            ),
+            _buildStep(
+              number: 2,
+              icon: Icons.auto_awesome,
+              iconColor: c.purple,
+              title: context.l10n.onboardingStep2Title,
+              subtitle: context.l10n.onboardingStep2Subtitle,
+              isLast: false,
+            ),
+            _buildStep(
+              number: 3,
+              icon: Icons.check_circle,
+              iconColor: c.mint,
+              title: context.l10n.onboardingStep3Title,
+              subtitle: context.l10n.onboardingStep3Subtitle,
+              isLast: true,
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -394,107 +390,55 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 48),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Piranha mascot — alert
-                      const MascotImage(
-                        asset: 'piranha_alert.png',
-                        size: 160,
-                        fadeIn: true,
-                      ),
-                      const SizedBox(height: 28),
-                      // Title
-                      Text(
-                        context.l10n.onboardingTitle3,
-                        style:
-                            Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: c.text,
-                                ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      // Subtitle
-                      Text(
-                        context.l10n.onboardingSubtitle3,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: c.textMid,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      // What you get — compact feature pills (mint)
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        alignment: WrapAlignment.center,
-                        children: [
-                          _notifFeature(context.l10n.onboardingNotifMorning),
-                          _notifFeature(context.l10n.onboardingNotif7days),
-                          _notifFeature(context.l10n.onboardingNotifTrial),
-                        ],
-                      ),
-                    ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: _topPadding),
+            // Piranha mascot — alert
+            const MascotImage(
+              asset: 'piranha_alert.png',
+              size: _mascotSize,
+              fadeIn: true,
+            ),
+            const SizedBox(height: _mascotToTitle),
+            // Title
+            Text(
+              context.l10n.onboardingTitle3,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
                   ),
-                ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: _titleToBody),
+            // Subtitle
+            Text(
+              context.l10n.onboardingSubtitle3,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: c.textMid,
+                height: 1.5,
               ),
-              // Action buttons
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        await NotificationService.instance.requestPermission();
-                        _nextPage();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: c.mint,
-                        foregroundColor: c.bg,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: Text(
-                        context.l10n.allowNotifications,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: _nextPage,
-                    child: Text(
-                      context.l10n.maybeLater,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: c.textDim,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: _bodyToContent + 4),
+            // What you get — compact feature pills (mint)
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                _notifFeature(context.l10n.onboardingNotifMorning),
+                _notifFeature(context.l10n.onboardingNotif7days),
+                _notifFeature(context.l10n.onboardingNotifTrial),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -505,164 +449,68 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     final c = context.colors;
     return FadeTransition(
       opacity: _fadeAnimation,
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              const SizedBox(height: 48),
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      // Piranha mascot — celebrate (static PNG for now — GIF has dark background)
-                      const MascotImage(
-                        asset: 'piranha_celebrate.png',
-                        size: 160,
-                        fadeIn: true,
-                      ),
-                      const SizedBox(height: 16),
-                      // Title
-                      Text(
-                        context.l10n.onboardingTitle4,
-                        style:
-                            Theme.of(context).textTheme.titleLarge?.copyWith(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: c.text,
-                                ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      // Subtitle — more urgency
-                      Text(
-                        context.l10n.onboardingSubtitle4,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w400,
-                          color: c.textMid,
-                          height: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      // Scan preview — shows what the scan result looks like
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final width = constraints.maxWidth * 0.65;
-                          return Container(
-                            width: width,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.3),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 8),
-                                ),
-                              ],
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            child: Image.asset(
-                              'assets/mascot/6_subs_found.png',
-                              fit: BoxFit.contain,
-                            ),
-                          );
-                        },
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(height: _topPadding),
+            // Piranha mascot — celebrate (static PNG for now — GIF has dark background)
+            const MascotImage(
+              asset: 'piranha_celebrate.png',
+              size: _mascotSize,
+              fadeIn: true,
+            ),
+            const SizedBox(height: _mascotToTitle),
+            // Title
+            Text(
+              context.l10n.onboardingTitle4,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: c.text,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: _titleToBody),
+            // Subtitle — more urgency
+            Text(
+              context.l10n.onboardingSubtitle4,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w400,
+                color: c.textMid,
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: _bodyToContent),
+            // Scan preview — shows what the scan result looks like
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final width = constraints.maxWidth * 0.65;
+                return Container(
+                  width: width,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                ),
-              ),
-              // Action buttons
-              Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            c.mint,
-                            c.mintDark,
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: ElevatedButton(
-                        onPressed: () => _completeOnboarding(openScan: true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.transparent,
-                          foregroundColor: c.bg,
-                          elevation: 0,
-                          shadowColor: Colors.transparent,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.camera_alt, size: 18),
-                            const SizedBox(width: 8),
-                            Text(
-                              context.l10n.scanAScreenshot,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    'assets/mascot/6_subs_found.png',
+                    fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () => _completeOnboarding(openManualAdd: true),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: c.textMid,
-                        side: BorderSide(
-                          color: c.border,
-                          width: 1,
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
-                      child: Text(
-                        context.l10n.addManually,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: _completeOnboarding,
-                    child: Text(
-                      context.l10n.skipForNow,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: c.textDim,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
     );
@@ -690,20 +538,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  // ─── Bottom Navigation ───
+  // ─── Bottom Navigation — fixed position on all pages ───
   Widget _buildBottomNavigation() {
     final c = context.colors;
-    return Container(
-      padding: const EdgeInsets.only(
-        left: 24,
-        right: 24,
-        bottom: 24,
-        top: 16,
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Dot indicators
+          // Dot indicators — always same position
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(4, (index) {
@@ -721,37 +564,179 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               );
             }),
           ),
-          // Show Next button only on pages 1-2
-          if (_currentPage < 2) ...[
-            const SizedBox(height: 20),
-            Align(
-              alignment: Alignment.centerRight,
-              child: GestureDetector(
-                onTap: _nextPage,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      context.l10n.next,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: c.mint,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(
-                      Icons.arrow_forward,
-                      size: 18,
-                      color: c.mint,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          const SizedBox(height: 20),
+          // Page-specific buttons
+          if (_currentPage < 2)
+            _buildNextButton()
+          else if (_currentPage == 2)
+            _buildNotificationButtons()
+          else
+            _buildGetStartedButtons(),
         ],
       ),
+    );
+  }
+
+  /// Pages 0-1: simple "Next →" right-aligned
+  Widget _buildNextButton() {
+    final c = context.colors;
+    return Align(
+      alignment: Alignment.centerRight,
+      child: GestureDetector(
+        onTap: _nextPage,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.l10n.next,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: c.mint,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(
+              Icons.arrow_forward,
+              size: 18,
+              color: c.mint,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Page 2: "Allow Notifications" + "Maybe Later"
+  Widget _buildNotificationButtons() {
+    final c = context.colors;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () async {
+              await NotificationService.instance.requestPermission();
+              _nextPage();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: c.mint,
+              foregroundColor: c.bg,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: Text(
+              context.l10n.allowNotifications,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        TextButton(
+          onPressed: _nextPage,
+          child: Text(
+            context.l10n.maybeLater,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: c.textDim,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Page 3: "Scan a Screenshot" + "Add Manually" + "Skip for now"
+  Widget _buildGetStartedButtons() {
+    final c = context.colors;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [c.mint, c.mintDark],
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: ElevatedButton(
+              onPressed: () => _completeOnboarding(openScan: true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                foregroundColor: c.bg,
+                elevation: 0,
+                shadowColor: Colors.transparent,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.camera_alt, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.scanAScreenshot,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton(
+            onPressed: () => _completeOnboarding(openManualAdd: true),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: c.textMid,
+              side: BorderSide(
+                color: c.border,
+                width: 1,
+              ),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            child: Text(
+              context.l10n.addManually,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        TextButton(
+          onPressed: _completeOnboarding,
+          child: Text(
+            context.l10n.skipForNow,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: c.textDim,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

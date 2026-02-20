@@ -57,6 +57,7 @@ class _InsightCardState extends State<InsightCard> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Emoji + headline
             Row(

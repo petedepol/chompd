@@ -13,6 +13,9 @@ const _kLocaleKey = 'user_locale';
 const supportedLanguages = [
   {'code': 'en', 'name': 'English', 'native': 'English'},
   {'code': 'pl', 'name': 'Polish', 'native': 'Polski'},
+  {'code': 'de', 'name': 'German', 'native': 'Deutsch'},
+  {'code': 'fr', 'name': 'French', 'native': 'Français'},
+  {'code': 'es', 'name': 'Spanish', 'native': 'Español'},
 ];
 
 /// Detect language from device locale.

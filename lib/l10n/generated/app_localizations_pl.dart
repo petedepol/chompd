@@ -57,6 +57,9 @@ class SPl extends S {
   String get free => 'Darmowy';
 
   @override
+  String get tierTrial => 'Próba';
+
+  @override
   String get onboardingTitle1 => 'Odgryź się subskrypcjom';
 
   @override
@@ -270,7 +273,7 @@ class SPl extends S {
   String get scanTitle => 'Skan AI';
 
   @override
-  String get scanAnalysing => 'Analizuję Twój zrzut ekranu...';
+  String get scanAnalysing => 'Nom nom... przeżuwam twój zrzut ekranu 🐟';
 
   @override
   String get scanIdleTitle => 'Skanuj zrzut ekranu';
@@ -293,6 +296,19 @@ class SPl extends S {
       'Brak dostępu do galerii zdjęć. Sprawdź uprawnienia.';
 
   @override
+  String get pasteEmailText => 'Wklej tekst e-maila';
+
+  @override
+  String get pasteTextHint =>
+      'Wklej tutaj tekst e-maila z subskrypcją lub potwierdzeniem...';
+
+  @override
+  String get scanText => 'Skanuj tekst';
+
+  @override
+  String get textReceived => 'Nom nom... przeżuwam twój tekst 🐟';
+
+  @override
   String get smartMove => 'Sprytne!';
 
   @override
@@ -307,7 +323,46 @@ class SPl extends S {
   String get addedToUnchompd => 'Dodane do Twojego Unchompd';
 
   @override
-  String get analysing => 'Analiza...';
+  String get analysing => 'Prawie gotowe... jeszcze jeden kęs';
+
+  @override
+  String get scanSniffing => 'Wyszukuję podejrzane opłaty...';
+
+  @override
+  String get scanFoundFeast =>
+      'Znalazłem ucztę! Przegryzam się przez wszystko...';
+
+  @override
+  String get scanEscalation => 'Wzywam większą rybę na pomoc... 🦈';
+
+  @override
+  String get scanAlmostDone => 'Prawie gotowe... jeszcze jeden kęs';
+
+  @override
+  String scanFoundCount(int count) {
+    return 'Znaleziono $count subskrypcji';
+  }
+
+  @override
+  String get scanTapToExpand => 'Dotknij, aby rozwinąć i edytować';
+
+  @override
+  String get scanCancelledHint =>
+      'Niektóre subskrypcje zostały anulowane i wkrótce wygasną — odznaczyliśmy je za Ciebie.';
+
+  @override
+  String get scanAlreadyCancelled => 'Już anulowana';
+
+  @override
+  String get scanExpires => 'Wygasa';
+
+  @override
+  String get scanSkipAll => 'Pomiń wszystko';
+
+  @override
+  String scanAddSelected(int count) {
+    return '+ Dodaj $count wybranych';
+  }
 
   @override
   String get confidence => 'pewność';
@@ -544,6 +599,11 @@ class SPl extends S {
 
   @override
   String get cancelSubscription => 'Anuluj subskrypcję';
+
+  @override
+  String cancelSubscriptionConfirm(String name) {
+    return 'Anulować $name?';
+  }
 
   @override
   String cancelPlatformPickerTitle(String name) {
@@ -1050,11 +1110,22 @@ class SPl extends S {
   String get priceToday => 'DZIŚ';
 
   @override
+  String get priceNow => 'TERAZ';
+
+  @override
   String get priceThen => 'POTEM';
+
+  @override
+  String get priceRenewsAt => 'ODNAWIA SIĘ ZA';
 
   @override
   String dayTrial(String days) {
     return '$days-dniowy trial';
+  }
+
+  @override
+  String monthIntro(String months) {
+    return '$months-mies. oferta wstępna';
   }
 
   @override
@@ -1470,6 +1541,36 @@ class SPl extends S {
   String get cycleYearlyShort => 'rok';
 
   @override
+  String scanFound(String details) {
+    return 'Znaleziono: $details';
+  }
+
+  @override
+  String scanRenewsDate(String date) {
+    return 'odnawia się $date';
+  }
+
+  @override
+  String scanChargeFound(String price, String cycle) {
+    return 'Znaleziono opłatę za $price/$cycle.';
+  }
+
+  @override
+  String scanWhichService(String name, String price, String cycle) {
+    return 'Znaleziono opłatę za $name na $price/$cycle. Jaka to usługa?';
+  }
+
+  @override
+  String scanBilledQuestion(String name) {
+    return 'Czy $name jest rozliczane miesięcznie czy rocznie?';
+  }
+
+  @override
+  String scanMissingPrice(String name) {
+    return 'Nie znalazłem ceny na tym zdjęciu. Ile kosztuje $name?';
+  }
+
+  @override
   String get categoryStreaming => 'Streaming';
 
   @override
@@ -1642,6 +1743,11 @@ class SPl extends S {
   }
 
   @override
+  String annualSavingsHint(String name) {
+    return 'Sprawdź ustawienia konta $name, aby znaleźć opcję rozliczenia rocznego';
+  }
+
+  @override
   String get seeAll => 'Zobacz wszystkie';
 
   @override
@@ -1680,6 +1786,9 @@ class SPl extends S {
   String get insightLearnMore => 'Dowiedz się więcej';
 
   @override
+  String get insightProLabel => 'WSKAZÓWKA PRO';
+
+  @override
   String get insightUnlockPro => 'Odblokuj z Pro';
 
   @override
@@ -1688,4 +1797,120 @@ class SPl extends S {
 
   @override
   String get insightProTeaserTitle => 'Spersonalizowane porady oszczędnościowe';
+
+  @override
+  String trialBannerDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days dni',
+      few: '$days dni',
+      one: '1 dzień',
+    );
+    return 'Wersja próbna · $_temp0';
+  }
+
+  @override
+  String get trialBannerExpired => 'Wersja próbna wygasła';
+
+  @override
+  String get trialBannerUpgrade => 'Odblokuj';
+
+  @override
+  String get trialPromptTitle => 'Wypróbuj wszystko za darmo przez 7 dni';
+
+  @override
+  String get trialPromptSubtitle =>
+      'Pełny dostęp Pro — bez zobowiązań, bez płatności.';
+
+  @override
+  String get trialPromptFeature1 => 'Nieograniczona liczba subskrypcji';
+
+  @override
+  String get trialPromptFeature2 => 'Skaner Pułapek AI — bez limitu';
+
+  @override
+  String get trialPromptFeature3 => 'Zaawansowane przypomnienia (7d, 3d, 1d)';
+
+  @override
+  String get trialPromptFeature4 => 'Panel wydatków i statystyki';
+
+  @override
+  String get trialPromptFeature5 => 'Przewodniki anulowania i zwrotów';
+
+  @override
+  String get trialPromptFeature6 =>
+      'Inteligentne powiadomienia i karty oszczędności';
+
+  @override
+  String get trialPromptLegal =>
+      'Po 7 dniach: śledź do 3 subskrypcji za darmo, lub odblokuj wszystko za 24,99 zł — jednorazowo, na zawsze.';
+
+  @override
+  String get trialPromptCta => 'Rozpocznij bezpłatny okres próbny';
+
+  @override
+  String get trialPromptDismiss => 'Pomiń na razie';
+
+  @override
+  String get trialExpiredTitle => 'Twój 7-dniowy okres próbny się zakończył';
+
+  @override
+  String trialExpiredSubtitle(int count, String price) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subskrypcji',
+      few: '$count subskrypcje',
+      one: '1 subskrypcję',
+    );
+    return 'Śledziłeś $_temp0 o wartości $price/mies.';
+  }
+
+  @override
+  String trialExpiredFrozen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subskrypcji jest zamrożonych',
+      few: '$count subskrypcje są zamrożone',
+      one: '1 subskrypcja jest zamrożona',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trialExpiredCta => 'Odblokuj Chompd Pro — 24,99 zł';
+
+  @override
+  String get trialExpiredDismiss => 'Kontynuuj z darmową wersją';
+
+  @override
+  String get frozenSectionHeader => 'ZAMROŻONE — ULEPSZ, ABY ODBLOKOWAĆ';
+
+  @override
+  String get frozenBadge => 'ZAMROŻONE';
+
+  @override
+  String get frozenTapToUpgrade => 'Kliknij, aby ulepszyć';
+
+  @override
+  String cancelledStatusExpires(String date) {
+    return 'Anulowana — wygasa $date';
+  }
+
+  @override
+  String cancelledStatusExpired(String date) {
+    return 'Anulowana — wygasła $date';
+  }
+
+  @override
+  String get reactivateSubscription => 'Reaktywuj subskrypcję';
+
+  @override
+  String get scanErrorGeneric =>
+      'Nie udało się odczytać tego zdjęcia. Spróbuj inny zrzut ekranu.';
+
+  @override
+  String get scanErrorEmpty => 'Plik graficzny jest pusty. Spróbuj ponownie.';
 }

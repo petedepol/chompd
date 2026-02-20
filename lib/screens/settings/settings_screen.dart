@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../config/constants.dart';
 import '../../config/theme.dart';
@@ -9,6 +10,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/budget_provider.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/entitlement_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/sync_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -17,6 +19,8 @@ import '../../providers/locale_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/haptic_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/purchase_service.dart';
+import '../../services/sync_service.dart';
 import '../../utils/csv_export.dart';
 import '../../utils/l10n_extension.dart';
 import '../paywall/paywall_screen.dart';
@@ -43,6 +47,7 @@ class SettingsScreen extends ConsumerWidget {
     final prefs = ref.watch(notificationPrefsProvider);
     final summary = ref.watch(notificationSummaryProvider);
     final prefsNotifier = ref.read(notificationPrefsProvider.notifier);
+    final ent = ref.watch(entitlementProvider);
 
     return Scaffold(
       backgroundColor: c.bg,
@@ -258,7 +263,7 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 12),
 
                   _ReminderScheduleCard(
-                    isPro: prefs.isPro,
+                    hasSmartReminders: ent.hasSmartReminders,
                     activeReminderDays: prefs.activeReminderDays,
                   ),
 
@@ -287,8 +292,8 @@ class SettingsScreen extends ConsumerWidget {
 
                   const SizedBox(height: 28),
 
-                  // ─── Chompd Pro ───
-                  if (!prefs.isPro) ...[
+                  // ─── Chompd Pro (hidden for Pro/Trial users) ───
+                  if (ent.isFree) ...[
                     Row(
                       children: [
                         Icon(
@@ -540,10 +545,16 @@ class SettingsScreen extends ConsumerWidget {
                   const SizedBox(height: 6),
                   _InfoRow(
                     label: context.l10n.tier,
-                    value: prefs.isPro ? context.l10n.pro : context.l10n.free,
-                    valueColor: prefs.isPro
+                    value: ent.isPro
+                        ? context.l10n.pro
+                        : ent.isTrial
+                            ? '${context.l10n.tierTrial} (${ent.trialDaysRemaining}d)'
+                            : context.l10n.free,
+                    valueColor: ent.isPro
                         ? c.mint
-                        : c.textDim,
+                        : ent.isTrial
+                            ? c.amber
+                            : c.textDim,
                   ),
                   const SizedBox(height: 6),
                   _InfoRow(
@@ -942,8 +953,37 @@ class _AccountSection extends ConsumerWidget {
                   label: context.l10n.signInWithApple,
                   onTap: () async {
                     Navigator.pop(ctx);
-                    await AuthService.instance.linkAppleSignIn();
-                    ref.invalidate(authProvider);
+                    try {
+                      final restored =
+                          await AuthService.instance.linkAppleSignIn();
+                      ref.invalidate(authProvider);
+
+                      if (restored) {
+                        // Existing Apple account found — pull their data.
+                        // Fetch Pro status first (gates sync push logic).
+                        await PurchaseService.instance.fetchProStatus();
+                        // Restore subscriptions + traps from remote.
+                        await SyncService.instance.restoreFromRemote();
+                        // Pull any remaining changes.
+                        await SyncService.instance.pullAndMerge();
+                        // Reload local state so the UI updates.
+                        await ref
+                            .read(subscriptionsProvider.notifier)
+                            .reload();
+                      }
+                    } on AppleSignInCancelledException {
+                      // User dismissed the sheet — do nothing.
+                    } on AppleSignInException catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(e.message),
+                            backgroundColor:
+                                Theme.of(context).colorScheme.error,
+                          ),
+                        );
+                      }
+                    }
                   },
                 ),
                 const SizedBox(height: 10),
@@ -1239,11 +1279,11 @@ class _ToggleSwitch extends StatelessWidget {
 
 /// Reminder schedule card showing free vs pro tiers.
 class _ReminderScheduleCard extends StatelessWidget {
-  final bool isPro;
+  final bool hasSmartReminders;
   final List<int> activeReminderDays;
 
   const _ReminderScheduleCard({
-    required this.isPro,
+    required this.hasSmartReminders,
     required this.activeReminderDays,
   });
 
@@ -1266,7 +1306,7 @@ class _ReminderScheduleCard extends StatelessWidget {
                 day: 7,
                 label: context.l10n.timelineLabel7d,
                 isActive: activeReminderDays.contains(7),
-                isPro: true,
+                showLock: !hasSmartReminders,
               ),
               _TimelineConnector(
                 isActive: activeReminderDays.contains(7),
@@ -1275,7 +1315,7 @@ class _ReminderScheduleCard extends StatelessWidget {
                 day: 3,
                 label: context.l10n.timelineLabel3d,
                 isActive: activeReminderDays.contains(3),
-                isPro: true,
+                showLock: !hasSmartReminders,
               ),
               _TimelineConnector(
                 isActive: activeReminderDays.contains(3),
@@ -1284,7 +1324,7 @@ class _ReminderScheduleCard extends StatelessWidget {
                 day: 1,
                 label: context.l10n.timelineLabel1d,
                 isActive: activeReminderDays.contains(1),
-                isPro: true,
+                showLock: !hasSmartReminders,
               ),
               _TimelineConnector(
                 isActive: activeReminderDays.contains(1),
@@ -1293,12 +1333,12 @@ class _ReminderScheduleCard extends StatelessWidget {
                 day: 0,
                 label: context.l10n.timelineLabelDayOf,
                 isActive: activeReminderDays.contains(0),
-                isPro: false,
+                showLock: false,
               ),
             ],
           ),
 
-          if (!isPro) ...[
+          if (!hasSmartReminders) ...[
             const SizedBox(height: 14),
             GestureDetector(
               onTap: () => showPaywall(
@@ -1355,13 +1395,13 @@ class _TimelineDot extends StatelessWidget {
   final int day;
   final String label;
   final bool isActive;
-  final bool isPro;
+  final bool showLock;
 
   const _TimelineDot({
     required this.day,
     required this.label,
     required this.isActive,
-    required this.isPro,
+    required this.showLock,
   });
 
   @override
@@ -1392,7 +1432,7 @@ class _TimelineDot extends StatelessWidget {
                   color: c.mint,
                 )
               : Icon(
-                  isPro ? Icons.lock_outline_rounded : Icons.check_rounded,
+                  showLock ? Icons.lock_outline_rounded : Icons.check_rounded,
                   size: 10,
                   color: c.textDim,
                 ),
@@ -1668,29 +1708,27 @@ class _ExportButtonState extends State<_ExportButton> {
     final c = context.colors;
     setState(() => _exporting = true);
     try {
-      final allSubs = widget.ref.read(subscriptionsProvider);
-      final path = await CsvExport.exportToFile(allSubs);
+      final activeSubs = widget.ref
+          .read(subscriptionsProvider)
+          .where((s) => s.isActive)
+          .toList();
+      final path = await CsvExport.exportToFile(activeSubs);
       HapticService.instance.success();
       setState(() {
         _exporting = false;
         _lastPath = path;
       });
+
+      // Open the share sheet so the user can save/send the CSV
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: c.bgElevated,
-            content: Text(
-              context.l10n.exportSuccess(allSubs.length),
-              style: TextStyle(
-                color: c.text,
-                fontSize: 12,
-              ),
-            ),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
+        final box = context.findRenderObject() as RenderBox?;
+        final origin = box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : const Rect.fromLTWH(0, 0, 100, 100);
+        await Share.shareXFiles(
+          [XFile(path, mimeType: 'text/csv')],
+          subject: 'Chompd Subscriptions Export',
+          sharePositionOrigin: origin,
         );
       }
     } catch (e) {

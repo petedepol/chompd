@@ -26,8 +26,8 @@ class ChompdColors {
 
   // ─── Text ───
   static const text = Color(0xFFF0F5F3);
-  static const textMid = Color(0xFF8A9B95);
-  static const textDim = Color(0xFF5A6B65);
+  static const textMid = Color(0xFFA6B6B0);
+  static const textDim = Color(0xFF70837D);
 
   // ─── Accent: Teal (primary) ───
   static const mint = Color(0xFF4ECCA3);

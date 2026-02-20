@@ -49,5 +49,7 @@
 	<string>Chompd uses the camera to scan subscription screenshots, receipts, and confirmation emails.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Chompd needs access to your photo library to scan subscription screenshots.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

@@ -1,5 +1,3 @@
-import 'dart:developer' as developer;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/theme.dart';
@@ -7,6 +5,7 @@ import '../../models/cancel_guide_v2.dart';
 import '../../models/subscription.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/haptic_service.dart';
+import '../../services/review_service.dart';
 import '../../utils/l10n_extension.dart';
 import '../../widgets/cancel_celebration.dart';
 import '../refund/refund_rescue_screen.dart';
@@ -29,6 +28,9 @@ class CancelGuideScreen extends ConsumerStatefulWidget {
 
 class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
   late List<bool> _completed;
+
+  /// Current language code for localised content.
+  String get _lang => Localizations.localeOf(context).languageCode;
 
   @override
   void initState() {
@@ -66,135 +68,56 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
 
   void _handleCancelSubscription() {
     HapticService.instance.light();
-    _showCancelReasonSheet();
+    _showCancelConfirmDialog();
   }
 
-  void _showCancelReasonSheet() {
+  void _showCancelConfirmDialog() {
     final c = context.colors;
-    showModalBottomSheet(
+    final sub = widget.subscription;
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => Container(
-        padding: EdgeInsets.fromLTRB(
-          20, 20, 20, MediaQuery.of(ctx).padding.bottom + 20,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: c.bgElevated,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
-        decoration: BoxDecoration(
-          color: c.bgElevated,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        title: Text(
+          context.l10n.cancelSubscriptionConfirm(sub.name),
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: c.text,
+          ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: c.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(
+              context.l10n.keep,
+              style: TextStyle(color: c.textMid),
             ),
-            const SizedBox(height: 16),
-
-            Text(
-              context.l10n.whyCancelling,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: c.text,
-              ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _completeCancellation();
+            },
+            child: Text(
+              context.l10n.cancelSubscription,
+              style: TextStyle(color: c.red, fontWeight: FontWeight.w600),
             ),
-            const SizedBox(height: 4),
-            Text(
-              context.l10n.whyCancellingHint,
-              style: TextStyle(
-                fontSize: 12,
-                color: c.textDim,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            ..._cancelReasons(context).map((reason) => Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.of(ctx).pop();
-                      _completeCancellation(reason);
-                    },
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
-                      decoration: BoxDecoration(
-                        color: c.bgCard,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: c.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            reason.emoji,
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              reason.label,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: c.text,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 18,
-                            color: c.textDim,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )),
-
-            // Skip option
-            Center(
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.of(ctx).pop();
-                  _completeCancellation(null);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Text(
-                    context.l10n.skip,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: c.textDim,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  void _completeCancellation(_CancelReason? reason) {
+  void _completeCancellation() {
     final sub = widget.subscription;
-
-    // Log the reason (for analytics later)
-    if (reason != null) {
-      debugPrint('[CancelGuide] ${sub.name} cancelled: ${reason.label}');
-    }
-
     ref.read(subscriptionsProvider.notifier).cancel(sub.uid);
+
+    // Record cancellation for review prompt
+    ReviewService.instance.recordCancel();
 
     if (mounted) {
       Navigator.of(context).pop(); // Pop the cancel guide
@@ -204,25 +127,13 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
         barrierColor: Colors.transparent,
         builder: (ctx) => CancelCelebration(
           subscription: sub,
-          onDismiss: () => Navigator.of(ctx).pop(),
+          onDismiss: () {
+            Navigator.of(ctx).pop();
+            // Request review after celebration is dismissed
+            ReviewService.instance.maybeRequestReview();
+          },
         ),
       );
-    }
-  }
-
-  List<_CancelReason> _cancelReasons(BuildContext context) => [
-    _CancelReason('\uD83D\uDCB8', context.l10n.reasonTooExpensive),
-    _CancelReason('\uD83D\uDE34', context.l10n.reasonDontUse),
-    _CancelReason('\u23F8\uFE0F', context.l10n.reasonBreak),
-    _CancelReason('\uD83D\uDD04', context.l10n.reasonSwitching),
-    _CancelReason('\uD83E\uDD37', context.l10n.other),
-  ];
-
-  void _handleOpenCancelPage() {
-    HapticService.instance.light();
-    final url = widget.guideData.bestCancelUrl;
-    if (url != null) {
-      developer.log('Opening cancellation URL: $url', name: 'CancelGuide');
     }
   }
 
@@ -263,21 +174,15 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
             const SizedBox(height: 24),
 
             // Warning/Notes Card (if present)
-            if (widget.guideData.warningText != null) ...[
+            if (widget.guideData.getWarningText(_lang) != null) ...[
               _buildNotesCard(),
               const SizedBox(height: 24),
             ],
 
             // Pro tip card (if present)
-            if (widget.guideData.proTip != null) ...[
+            if (widget.guideData.getProTip(_lang) != null) ...[
               _buildProTipCard(),
               const SizedBox(height: 24),
-            ],
-
-            // Open Cancel Page Button
-            if (widget.guideData.bestCancelUrl != null) ...[
-              _buildOpenCancelPageButton(),
-              const SizedBox(height: 16),
             ],
 
             // I've Cancelled Button
@@ -392,6 +297,8 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
     final c = context.colors;
     final isCompleted = _completed[index];
     final step = widget.guideData.steps[index];
+    final localTitle = step.getTitle(_lang);
+    final localDetail = step.getDetail(_lang);
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -441,7 +348,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  step.title,
+                  localTitle,
                   style: TextStyle(
                     color: c.text,
                     fontSize: 14,
@@ -449,10 +356,10 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
                     height: 1.5,
                   ),
                 ),
-                if (step.detail.isNotEmpty && step.detail != step.title) ...[
+                if (localDetail.isNotEmpty && localDetail != localTitle) ...[
                   const SizedBox(height: 2),
                   Text(
-                    step.detail,
+                    localDetail,
                     style: TextStyle(
                       color: c.textMid,
                       fontSize: 13,
@@ -492,7 +399,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
           ),
           Expanded(
             child: Text(
-              widget.guideData.warningText!,
+              widget.guideData.getWarningText(_lang)!,
               style: TextStyle(
                 color: c.text,
                 fontSize: 14,
@@ -529,7 +436,7 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
           ),
           Expanded(
             child: Text(
-              widget.guideData.proTip!,
+              widget.guideData.getProTip(_lang)!,
               style: TextStyle(
                 color: c.text,
                 fontSize: 14,
@@ -538,32 +445,6 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildOpenCancelPageButton() {
-    final c = context.colors;
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: _handleOpenCancelPage,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: c.mint,
-          foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          elevation: 0,
-        ),
-        child: Text(
-          context.l10n.openCancelPage,
-          style: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
       ),
     );
   }
@@ -678,8 +559,3 @@ class _CancelGuideScreenState extends ConsumerState<CancelGuideScreen> {
 
 }
 
-class _CancelReason {
-  final String emoji;
-  final String label;
-  const _CancelReason(this.emoji, this.label);
-}

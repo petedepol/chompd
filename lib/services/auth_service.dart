@@ -1,3 +1,9 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Handles anonymous auth and account upgrade.
@@ -39,12 +45,91 @@ class AuthService {
   String? get email =>
       isConfigured ? _client.auth.currentUser?.email : null;
 
-  /// Link anonymous account to Apple Sign-In via OAuth.
-  Future<void> linkAppleSignIn() async {
-    await _client.auth.signInWithOAuth(
-      OAuthProvider.apple,
-      redirectTo: 'io.chompd.app://login-callback/',
-    );
+  /// Sign in with Apple — restores existing accounts on reinstall.
+  ///
+  /// On a fresh install the app creates an anonymous user. When the user
+  /// taps "Sign in with Apple", we need to check whether an Apple-linked
+  /// account already exists in Supabase:
+  ///
+  /// 1. Get the Apple credential (native sheet).
+  /// 2. Sign out of the current anonymous session so [signInWithIdToken]
+  ///    returns the **existing** Apple-linked user instead of linking to
+  ///    the throwaway anonymous account.
+  /// 3. Call [signInWithIdToken] — Supabase returns the existing user if
+  ///    one is found, or creates a new one.
+  ///
+  /// Returns `true` if an existing account was restored (user ID changed),
+  /// `false` if this was a first-time Apple sign-in.
+  ///
+  /// Throws [AppleSignInCancelledException] if the user dismissed the sheet.
+  /// Throws [AppleSignInException] for all other failures.
+  Future<bool> linkAppleSignIn() async {
+    // Generate a cryptographically secure nonce.
+    final rawNonce = _generateNonce();
+    final hashedNonce = sha256.convert(utf8.encode(rawNonce)).toString();
+
+    try {
+      // Present the native Apple Sign-In sheet.
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+        nonce: hashedNonce,
+      );
+
+      final idToken = credential.identityToken;
+      if (idToken == null) {
+        throw AppleSignInException('Apple returned no identity token.');
+      }
+
+      // Remember the current anonymous user ID.
+      final previousUserId = _client.auth.currentUser?.id;
+      final wasAnonymous = _client.auth.currentUser?.isAnonymous ?? true;
+
+      // Sign out of the anonymous session BEFORE calling signInWithIdToken.
+      // Without this, Supabase links Apple to the current anonymous user
+      // instead of returning the existing Apple-linked account.
+      if (wasAnonymous) {
+        await _client.auth.signOut();
+        debugPrint('[AuthService] Signed out anonymous session ($previousUserId)');
+      }
+
+      // Sign in with the Apple credential.
+      // Supabase will return the existing Apple-linked user if one exists,
+      // or create a brand new user.
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.apple,
+        idToken: idToken,
+        nonce: rawNonce,
+      );
+
+      final newUserId = _client.auth.currentUser?.id;
+      final restored = previousUserId != null && newUserId != previousUserId;
+
+      debugPrint('[AuthService] Apple sign-in complete'
+          ' (prev=$previousUserId, new=$newUserId,'
+          ' restored=$restored)');
+
+      return restored;
+    } on SignInWithAppleAuthorizationException catch (e) {
+      if (e.code == AuthorizationErrorCode.canceled) {
+        throw AppleSignInCancelledException();
+      }
+      debugPrint('[AuthService] Apple sign-in failed: ${e.code} ${e.message}');
+      throw AppleSignInException(
+        'Apple sign-in failed. Please try again.',
+      );
+    } catch (e) {
+      // Re-throw our own exceptions unchanged.
+      if (e is AppleSignInCancelledException || e is AppleSignInException) {
+        rethrow;
+      }
+      debugPrint('[AuthService] Apple sign-in error: $e');
+      throw AppleSignInException(
+        'Something went wrong. Please try again.',
+      );
+    }
   }
 
   /// Link anonymous account to Google Sign-In via OAuth.
@@ -70,4 +155,26 @@ class AuthService {
   /// Auth state change stream for listening to sign-in/sign-out events.
   Stream<AuthState> get onAuthStateChange =>
       isConfigured ? _client.auth.onAuthStateChange : const Stream.empty();
+
+  /// Generate a cryptographically secure random nonce (32 bytes, URL-safe).
+  static String _generateNonce([int length = 32]) {
+    const charset =
+        '0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._';
+    final random = Random.secure();
+    return List.generate(length, (_) => charset[random.nextInt(charset.length)])
+        .join();
+  }
+}
+
+/// Thrown when the user cancels the Apple Sign-In sheet.
+/// UI should fail silently — no error message needed.
+class AppleSignInCancelledException implements Exception {}
+
+/// Thrown for non-cancellation Apple Sign-In errors.
+class AppleSignInException implements Exception {
+  final String message;
+  const AppleSignInException(this.message);
+
+  @override
+  String toString() => message;
 }

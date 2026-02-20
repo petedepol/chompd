@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../config/constants.dart';
 import '../services/purchase_service.dart';
+import 'entitlement_provider.dart';
 import 'subscriptions_provider.dart';
 import 'scan_provider.dart';
 
@@ -47,42 +47,36 @@ final purchaseProvider =
   return PurchaseNotifier();
 });
 
-/// Convenience: is the user a Pro subscriber?
-final isProProvider = Provider<bool>((ref) {
-  return true; // DEV OVERRIDE — always Pro for testing
-  // return ref.watch(purchaseProvider) == PurchaseState.pro;
-});
-
 /// Convenience: can the user add more subscriptions?
 final canAddSubProvider = Provider<bool>((ref) {
-  final isPro = ref.watch(isProProvider);
-  if (isPro) return true;
+  final ent = ref.watch(entitlementProvider);
+  if (ent.hasUnlimitedSubs) return true;
   final count = ref.watch(subscriptionsProvider).length;
-  return count < AppConstants.freeMaxSubscriptions;
+  return count < ent.maxSubscriptions;
 });
 
 /// Convenience: can the user perform more AI scans?
 final canScanProvider = Provider<bool>((ref) {
-  final isPro = ref.watch(isProProvider);
-  if (isPro) return true;
+  final ent = ref.watch(entitlementProvider);
+  if (ent.hasUnlimitedScans) return true;
   final usedScans = ref.watch(scanCounterProvider);
-  return usedScans < AppConstants.freeMaxScans;
+  return usedScans < ent.maxScans;
 });
 
 /// Remaining subscription slots.
 final remainingSubsProvider = Provider<int>((ref) {
-  final isPro = ref.watch(isProProvider);
-  if (isPro) return 999;
+  final ent = ref.watch(entitlementProvider);
+  if (ent.hasUnlimitedSubs) return 999;
   final count = ref.watch(subscriptionsProvider).length;
-  return (AppConstants.freeMaxSubscriptions - count).clamp(0, 999);
+  return (ent.maxSubscriptions - count).clamp(0, 999);
 });
 
 /// Remaining scan slots.
 final remainingScansProvider = Provider<int>((ref) {
-  final isPro = ref.watch(isProProvider);
-  if (isPro) return 999;
+  final ent = ref.watch(entitlementProvider);
+  if (ent.hasUnlimitedScans) return 999;
   final usedScans = ref.watch(scanCounterProvider);
-  return (AppConstants.freeMaxScans - usedScans).clamp(0, 999);
+  return (ent.maxScans - usedScans).clamp(0, 999);
 });
 
 /// What triggered the paywall (for analytics and messaging).
@@ -91,5 +85,6 @@ enum PaywallTrigger {
   scanLimit,
   reminderUpgrade,
   settingsUpgrade,
+  trialExpired,
   manual,
 }

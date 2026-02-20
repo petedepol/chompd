@@ -139,6 +139,15 @@ class ServiceCacheNotifier extends StateNotifier<List<ServiceCache>> {
     return service?.supabaseId;
   }
 
+  /// Async version of [matchServiceId] that refreshes the cache from Isar
+  /// if it's empty (e.g. first launch where sync hasn't completed yet).
+  Future<String?> matchServiceIdAsync(String name) async {
+    if (state.isEmpty) {
+      await refresh();
+    }
+    return matchServiceId(name);
+  }
+
   // ─── Pricing helpers (match old API) ───
 
   /// Find the tier whose monthly price is closest to the user's actual price.
@@ -199,6 +208,67 @@ class ServiceCacheNotifier extends StateNotifier<List<ServiceCache>> {
     }
 
     return null;
+  }
+
+  /// Look for alternate tiers whose name contains "(1-year)" or "(2-year)"
+  /// and derive an annual cost from their monthly price.
+  ///
+  /// Returns the cheapest annual cost found (in [displayCurrency]) paired
+  /// with the user's current monthly price × 12, or null if no yearly tiers
+  /// exist.
+  ({double monthly, double annual})? resolveAnnualFromAlternateTiers(
+    ServiceCache service,
+    String displayCurrency,
+  ) {
+    final info = service.toServiceInfo();
+    final tiers = service.parsedTiers;
+
+    double? cheapestAnnual;
+
+    for (final t in tiers) {
+      final nameLower = t.tier.toLowerCase();
+
+      // Match tiers named like "Standard (1-year)", "Premium (2-year)"
+      final is1Year = nameLower.contains('(1-year)');
+      final is2Year = nameLower.contains('(2-year)');
+      if (!is1Year && !is2Year) continue;
+
+      final monthlyPrice = _resolveMonthlyPrice(t, info, displayCurrency);
+      if (monthlyPrice == null) continue;
+
+      // Monthly price in these tiers is the per-month cost for that
+      // commitment length. Total cost = monthly × months in plan.
+      final months = is1Year ? 12 : 24;
+      final totalCost = monthlyPrice * months;
+
+      // Normalise to annual: 1-year is already annual; for 2-year divide by 2
+      final annualCost = is1Year ? totalCost : totalCost / 2;
+
+      if (cheapestAnnual == null || annualCost < cheapestAnnual) {
+        cheapestAnnual = annualCost;
+      }
+    }
+
+    if (cheapestAnnual == null) return null;
+
+    // We need a reference monthly price to compute savings.
+    // Look for the cheapest non-yearly tier monthly price.
+    double? refMonthly;
+    for (final t in tiers) {
+      final nameLower = t.tier.toLowerCase();
+      if (nameLower.contains('(1-year)') || nameLower.contains('(2-year)')) {
+        continue;
+      }
+      final m = _resolveMonthlyPrice(t, info, displayCurrency);
+      if (m != null && (refMonthly == null || m < refMonthly)) {
+        refMonthly = m;
+      }
+    }
+
+    // Fall back: caller will use the subscription's own monthly × 12
+    refMonthly ??= cheapestAnnual / 12;
+
+    return (monthly: refMonthly, annual: cheapestAnnual);
   }
 
   double? _resolveMonthlyPrice(

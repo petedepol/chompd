@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/constants.dart';
+import 'auth_service.dart';
 
 /// Purchase state for the one-time Pro unlock.
 enum PurchaseState {
@@ -28,6 +30,10 @@ enum PurchaseState {
 /// - Receipt validation
 /// - Purchase restoration
 /// - Cross-platform entitlement management
+///
+/// The Supabase `profiles.is_pro` flag is the single source of truth.
+/// On startup, [fetchProStatus] reads it before sync runs.
+/// On purchase, [purchasePro] writes it back.
 class PurchaseService {
   PurchaseService._();
   static final instance = PurchaseService._();
@@ -40,6 +46,12 @@ class PurchaseService {
 
   /// Callbacks for state changes.
   final List<VoidCallback> _listeners = [];
+
+  /// Whether Supabase is configured.
+  bool get _hasSupabase =>
+      const String.fromEnvironment('SUPABASE_URL').isNotEmpty;
+
+  SupabaseClient get _client => Supabase.instance.client;
 
   // ─── Initialisation ───
 
@@ -61,6 +73,71 @@ class PurchaseService {
     debugPrint('[PurchaseService] Initialised — state: $_state');
   }
 
+  // ─── Supabase Pro Status ───
+
+  /// Fetch `is_pro` from the Supabase `profiles` table.
+  ///
+  /// This is the single source of truth for Pro status. Must be called
+  /// after auth is ready and BEFORE sync runs, so push logic sees the
+  /// correct state.
+  ///
+  /// Gracefully falls back to current state on failure (offline, no
+  /// Supabase, etc.) — never blocks the app from launching.
+  Future<void> fetchProStatus() async {
+    if (!_hasSupabase) {
+      debugPrint('[PurchaseService] Skip Pro check — Supabase not configured');
+      return;
+    }
+    final userId = AuthService.instance.userId;
+    if (userId == null) {
+      debugPrint('[PurchaseService] Skip Pro check — no userId');
+      return;
+    }
+
+    try {
+      final row = await _client
+          .from('profiles')
+          .select('is_pro')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (row != null && row['is_pro'] == true) {
+        if (_state != PurchaseState.pro) {
+          debugPrint('[PurchaseService] Supabase says Pro — upgrading state');
+          _setState(PurchaseState.pro);
+        }
+      } else {
+        debugPrint(
+          '[PurchaseService] Supabase says free '
+          '(is_pro: ${row?['is_pro']})',
+        );
+      }
+    } catch (e) {
+      debugPrint('[PurchaseService] Pro status fetch failed: $e');
+      // Keep current state — don't downgrade on network failure
+    }
+  }
+
+  /// Write `is_pro = true` to the Supabase `profiles` table.
+  ///
+  /// Called after a successful App Store purchase or restore.
+  /// Fire-and-forget — local state is already set.
+  Future<void> _syncProToSupabase() async {
+    if (!_hasSupabase) return;
+    final userId = AuthService.instance.userId;
+    if (userId == null) return;
+
+    try {
+      await _client
+          .from('profiles')
+          .update({'is_pro': true, 'pro_purchased_at': DateTime.now().toUtc().toIso8601String()})
+          .eq('id', userId);
+      debugPrint('[PurchaseService] Synced is_pro=true to Supabase');
+    } catch (e) {
+      debugPrint('[PurchaseService] Failed to sync Pro to Supabase: $e');
+    }
+  }
+
   // ─── State ───
 
   PurchaseState get state => _state;
@@ -79,6 +156,7 @@ class PurchaseService {
   ///
   /// In production: launches RevenueCat purchase flow.
   /// For prototype: simulates a successful purchase after 1.5s delay.
+  /// On success, writes `is_pro = true` to Supabase profiles.
   Future<bool> purchasePro() async {
     if (_state == PurchaseState.pro) return true;
 
@@ -95,12 +173,14 @@ class PurchaseService {
       //   final result = await Purchases.purchasePackage(package);
       //   if (result.entitlements.all['pro']?.isActive == true) {
       //     _setState(PurchaseState.pro);
+      //     _syncProToSupabase();
       //     return true;
       //   }
       // }
 
       // Simulate success
       _setState(PurchaseState.pro);
+      _syncProToSupabase();
       debugPrint('[PurchaseService] Purchase successful');
       return true;
     } catch (e) {
@@ -112,21 +192,40 @@ class PurchaseService {
 
   /// Restore a previous purchase.
   ///
-  /// In production: calls RevenueCat restorePurchases.
+  /// Checks Supabase `profiles.is_pro` first (covers cross-device restore),
+  /// then falls back to App Store / RevenueCat restore.
   Future<bool> restorePurchase() async {
     _setState(PurchaseState.restoring);
 
     try {
+      // 1. Check Supabase first (cross-device source of truth)
+      if (_hasSupabase && AuthService.instance.userId != null) {
+        final userId = AuthService.instance.userId!;
+        final row = await _client
+            .from('profiles')
+            .select('is_pro')
+            .eq('id', userId)
+            .maybeSingle();
+
+        if (row != null && row['is_pro'] == true) {
+          _setState(PurchaseState.pro);
+          debugPrint('[PurchaseService] Restored Pro from Supabase');
+          return true;
+        }
+      }
+
+      // 2. Fall back to App Store / RevenueCat restore
       await Future.delayed(const Duration(milliseconds: 1000));
 
       // In production:
       // final info = await Purchases.restorePurchases();
       // if (info.entitlements.all['pro']?.isActive == true) {
       //   _setState(PurchaseState.pro);
+      //   _syncProToSupabase();
       //   return true;
       // }
 
-      // Simulate: no previous purchase found
+      // No purchase found anywhere
       _setState(PurchaseState.free);
       debugPrint('[PurchaseService] No purchase to restore');
       return false;

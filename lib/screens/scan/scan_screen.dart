@@ -9,17 +9,32 @@ import '../../models/scan_result.dart';
 import '../../models/subscription.dart';
 import '../../models/trap_result.dart';
 import '../../providers/currency_provider.dart';
+import '../../providers/entitlement_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/scan_provider.dart';
 import '../../providers/service_cache_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../services/merchant_db.dart';
+import '../../services/review_service.dart';
 import '../../services/unmatched_service_logger.dart';
+import '../../utils/date_helpers.dart';
 import '../../utils/l10n_extension.dart';
 import '../../widgets/mascot_image.dart';
 import '../../widgets/scan_shimmer.dart';
 import '../../widgets/toast_overlay.dart';
 import '../paywall/paywall_screen.dart';
+import 'trap_warning_card.dart';
+
+/// Localised short cycle label for scan result display.
+String _cycleShortLabel(BuildContext context, String? cycle) {
+  final l = context.l10n;
+  return switch (cycle?.toLowerCase()) {
+    'yearly' => l.cycleYearlyShort,
+    'weekly' => l.cycleWeeklyShort,
+    'quarterly' => l.cycleQuarterlyShort,
+    _ => l.cycleMonthlyShort,
+  };
+}
 
 /// The AI scan screen with conversational Q&A flow.
 ///
@@ -98,9 +113,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               Expanded(
                 child: scanState.phase == ScanPhase.idle
                     ? _buildIdleView(scanCounter)
-                    : scanState.phase == ScanPhase.trapSkipped
-                        ? _buildTrapSkippedView(scanState)
-                        : _buildChatView(scanState),
+                    : scanState.phase == ScanPhase.trapDetected
+                        ? _buildTrapDetectedView(scanState)
+                        : scanState.phase == ScanPhase.trapSkipped
+                            ? _buildTrapSkippedView(scanState)
+                            : _buildChatView(scanState),
               ),
 
               // ─── Bottom Action Bar ───
@@ -129,7 +146,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   Widget _buildTopBar(
       BuildContext context, ScanState scanState, int scanCount) {
     final c = context.colors;
-    final isPro = ref.watch(isProProvider);
+    final ent = ref.watch(entitlementProvider);
+    final hasUnlimitedScans = ent.hasUnlimitedScans;
     final remaining = ref.watch(remainingScansProvider);
 
     return Padding(
@@ -183,14 +201,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
                     ),
                   ],
                 ),
-                if (scanState.phase == ScanPhase.scanning)
-                  Text(
-                    context.l10n.scanAnalysing,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: c.purple,
-                    ),
-                  ),
               ],
             ),
           ),
@@ -199,7 +209,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: isPro
+              color: hasUnlimitedScans
                   ? c.mint.withValues(alpha: 0.12)
                   : (remaining == 0
                       ? c.red.withValues(alpha: 0.12)
@@ -207,11 +217,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              isPro ? context.l10n.proInfinity : context.l10n.scansLeftCount(remaining),
+              hasUnlimitedScans ? context.l10n.proInfinity : context.l10n.scansLeftCount(remaining),
               style: ChompdTypography.mono(
                 size: 9,
                 weight: FontWeight.w700,
-                color: isPro
+                color: hasUnlimitedScans
                     ? c.mint
                     : (remaining == 0
                         ? c.red
@@ -341,6 +351,37 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             ),
           ),
 
+          const SizedBox(height: 12),
+
+          // Paste email text button
+          GestureDetector(
+            onTap: _showPasteTextSheet,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: c.border),
+              ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.content_paste, size: 18, color: c.textMid),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.pasteEmailText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: c.textMid,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           const Spacer(),
         ],
       ),
@@ -367,10 +408,13 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       if (picked == null) return; // User cancelled
 
       final bytes = await picked.readAsBytes();
+      final ext = picked.path.toLowerCase();
       final mimeType = picked.mimeType ??
-          (picked.path.toLowerCase().endsWith('.png')
+          (ext.endsWith('.png')
               ? 'image/png'
-              : 'image/jpeg');
+              : (ext.endsWith('.heic') || ext.endsWith('.heif'))
+                  ? 'image/heic'
+                  : 'image/jpeg');
 
       ref.read(scanCounterProvider.notifier).increment();
       ref.read(scanProvider.notifier).startTrapScan(
@@ -390,6 +434,40 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         ),
       );
     }
+  }
+
+  /// Show bottom sheet for pasting email/confirmation text.
+  void _showPasteTextSheet() {
+    final canScan = ref.read(canScanProvider);
+    if (!canScan) {
+      showPaywall(context, trigger: PaywallTrigger.scanLimit);
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _PasteTextSheet(
+        onScanText: (text) {
+          ref.read(scanCounterProvider.notifier).increment();
+          ref.read(scanProvider.notifier).startTextScan(text: text);
+        },
+      ),
+    );
+  }
+
+  // ─── Trap Detected Warning View ───
+
+  Widget _buildTrapDetectedView(ScanState scanState) {
+    final sub = scanState.currentResult;
+    final trap = scanState.trapResult;
+    if (sub == null || trap == null) return _buildChatView(scanState);
+
+    return TrapWarningCard(
+      subscription: sub,
+      trap: trap,
+    );
   }
 
   // ─── Trap Skipped Celebration View ───
@@ -605,7 +683,9 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         return _ResultMessage(
           text: msg.text,
           result: msg.scanResult!,
-          onAdd: () => _addSubscription(msg.scanResult!),
+          onAdd: msg.fromTrapTracking
+              ? null
+              : () => _addSubscription(msg.scanResult!),
         );
 
       case ChatMessageType.multiResult:
@@ -716,8 +796,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         sub.cancelledDate = now;
       }
 
-      // Try to match against the service database
-      final matchedId = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+      // Try to match against the service database (async — refreshes cache if empty)
+      final matchedId = await ref.read(serviceCacheProvider.notifier).matchServiceIdAsync(sub.name);
       sub.matchedServiceId = matchedId;
 
       // Log unmatched services for future database expansion
@@ -799,8 +879,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       ..source = SubscriptionSource.aiScan
       ..createdAt = now;
 
-    // Match against service database
-    final matchedIdSingle = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+    // Match against service database (async — refreshes cache if empty)
+    final matchedIdSingle = await ref.read(serviceCacheProvider.notifier).matchServiceIdAsync(sub.name);
     sub.matchedServiceId = matchedIdSingle;
     if (matchedIdSingle == null) {
       UnmatchedServiceLogger.instance.log(
@@ -813,17 +893,21 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
     ref.read(subscriptionsProvider.notifier).add(sub);
 
+    // Record successful scan for review prompt
+    ReviewService.instance.recordScan();
+
     // Show toast
     setState(() {
       _showToast = true;
       _toastResult = result;
     });
 
-    // Pop back to home after delay
+    // Pop back to home after delay — then maybe request review
     Future.delayed(const Duration(milliseconds: 2000), () {
       if (mounted) {
         ref.read(scanProvider.notifier).reset();
         Navigator.of(context).pop();
+        ReviewService.instance.maybeRequestReview();
       }
     });
   }
@@ -869,8 +953,8 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
         ..source = SubscriptionSource.aiScan
         ..createdAt = now;
 
-      // Match against service database
-      final matchedIdAll = ref.read(serviceCacheProvider.notifier).matchServiceId(sub.name);
+      // Match against service database (async — refreshes cache if empty)
+      final matchedIdAll = await ref.read(serviceCacheProvider.notifier).matchServiceIdAsync(sub.name);
       sub.matchedServiceId = matchedIdAll;
       if (matchedIdAll == null) {
         UnmatchedServiceLogger.instance.log(
@@ -884,6 +968,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       ref.read(subscriptionsProvider.notifier).add(sub);
     }
 
+    // Record successful scans for review prompt
+    for (int i = 0; i < results.length; i++) {
+      ReviewService.instance.recordScan();
+    }
+
     // Show toast for first result
     if (results.isNotEmpty) {
       setState(() {
@@ -892,11 +981,12 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       });
     }
 
-    // Pop back after delay
+    // Pop back after delay — then maybe request review
     Future.delayed(const Duration(milliseconds: 2000), () {
       if (mounted) {
         ref.read(scanProvider.notifier).reset();
         Navigator.of(context).pop();
+        ReviewService.instance.maybeRequestReview();
       }
     });
   }
@@ -1646,12 +1736,12 @@ class _AnswerMessage extends StatelessWidget {
 class _ResultMessage extends StatefulWidget {
   final String text;
   final ScanResult result;
-  final VoidCallback onAdd;
+  final VoidCallback? onAdd;
 
   const _ResultMessage({
     required this.text,
     required this.result,
-    required this.onAdd,
+    this.onAdd,
   });
 
   @override
@@ -1699,12 +1789,14 @@ class _ResultMessageState extends State<_ResultMessage>
             children: [
               const Text('\u2705', style: TextStyle(fontSize: 14)),
               const SizedBox(width: 8),
-              Text(
-                widget.text,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: c.mint,
+              Flexible(
+                child: Text(
+                  widget.text,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: c.mint,
+                  ),
                 ),
               ),
             ],
@@ -1762,7 +1854,7 @@ class _ResultMessageState extends State<_ResultMessage>
                       Row(
                         children: [
                           Text(
-                            '${Subscription.formatPrice(r.price ?? 0, r.currency)}/${r.billingCycle == 'monthly' ? 'mo' : r.billingCycle ?? 'mo'}',
+                            '${Subscription.formatPrice(r.price ?? 0, r.currency)}/${_cycleShortLabel(context, r.billingCycle)}',
                             style: ChompdTypography.mono(
                               size: 12,
                               weight: FontWeight.w700,
@@ -1799,6 +1891,7 @@ class _ResultMessageState extends State<_ResultMessage>
             ),
           ),
 
+          if (widget.onAdd != null) ...[
           const SizedBox(height: 12),
 
           // Add button with pulse
@@ -1845,6 +1938,7 @@ class _ResultMessageState extends State<_ResultMessage>
               );
             },
           ),
+          ],
         ],
       ),
     );
@@ -1881,12 +1975,14 @@ class _MultiResultMessage extends StatelessWidget {
             children: [
               const Text('\u2705', style: TextStyle(fontSize: 14)),
               const SizedBox(width: 8),
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: c.mint,
+              Flexible(
+                child: Text(
+                  text,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: c.mint,
+                  ),
                 ),
               ),
             ],
@@ -2109,18 +2205,11 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
     return Color(int.parse('FF$h', radix: 16));
   }
 
-  static String _cycleLabel(String? cycle) {
-    return switch (cycle?.toLowerCase()) {
-      'yearly' => 'yr',
-      'weekly' => 'wk',
-      'quarterly' => 'qtr',
-      _ => 'mo',
-    };
-  }
+  static String _cycleLabel(BuildContext context, String? cycle) =>
+      _cycleShortLabel(context, cycle);
 
-  static String _formatShortDate(DateTime date) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  String _formatShortDate(DateTime date) {
+    return DateHelpers.shortDate(date, locale: Localizations.localeOf(context).languageCode);
   }
 
   String _getEffectiveCycle(int i) {
@@ -2162,7 +2251,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                   const Text('\u2705', style: TextStyle(fontSize: 16)),
                   const SizedBox(width: 8),
                   Text(
-                    'Found ${widget.outputs.length} subscriptions',
+                    context.l10n.scanFoundCount(widget.outputs.length),
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -2176,7 +2265,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Text(
-                'Tap to expand and edit details',
+                context.l10n.scanTapToExpand,
                 style: TextStyle(
                   fontSize: 12,
                   color: c.textMid,
@@ -2205,7 +2294,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Some subscriptions are already cancelled and will expire soon — we\'ve unticked them for you.',
+                          context.l10n.scanCancelledHint,
                           style: TextStyle(
                             fontSize: 11,
                             color: c.blue.withValues(alpha: 0.9),
@@ -2235,7 +2324,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                   GestureDetector(
                     onTap: () => widget.onAddSelected([], {}),
                     child: Text(
-                      'Skip all',
+                      context.l10n.scanSkipAll,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -2281,7 +2370,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                             const SizedBox(width: 4),
                             Text(
                               _selectedCount > 0
-                                  ? 'Add $_selectedCount selected'
+                                  ? context.l10n.scanAddSelected(_selectedCount)
                                   : 'Select subscriptions',
                               style: TextStyle(
                                 fontSize: 13,
@@ -2418,7 +2507,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                           ),
                           if (isExpiring)
                             Text(
-                              'Already cancelled${scan.nextRenewal != null ? ' · Expires ${_formatShortDate(scan.nextRenewal!)}' : ''}',
+                              '${context.l10n.scanAlreadyCancelled}${scan.nextRenewal != null ? ' · ${context.l10n.scanExpires} ${_formatShortDate(scan.nextRenewal!)}' : ''}',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: c.textDim,
@@ -2426,7 +2515,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                             )
                           else
                             Text(
-                              '${Subscription.formatPrice(_getEffectivePrice(i), _getEffectiveCurrency(i))}/${_cycleLabel(_getEffectiveCycle(i))}',
+                              '${Subscription.formatPrice(_getEffectivePrice(i), _getEffectiveCurrency(i))}/${_cycleLabel(context, _getEffectiveCycle(i))}',
                               style: ChompdTypography.mono(
                                 size: 11,
                                 color: c.textMid,
@@ -2454,7 +2543,7 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                             ),
                             const SizedBox(width: 3),
                             Text(
-                              'Expires',
+                              context.l10n.scanExpires,
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w700,
@@ -2795,6 +2884,176 @@ class _OptionPillState extends State<_OptionPill> {
             fontSize: 12,
             fontWeight: FontWeight.w500,
             color: _pressed ? c.purple : c.textMid,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Paste Text Bottom Sheet ───
+
+/// Modal bottom sheet for pasting email/confirmation text for AI analysis.
+class _PasteTextSheet extends StatefulWidget {
+  final ValueChanged<String> onScanText;
+
+  const _PasteTextSheet({required this.onScanText});
+
+  @override
+  State<_PasteTextSheet> createState() => _PasteTextSheetState();
+}
+
+class _PasteTextSheetState extends State<_PasteTextSheet> {
+  final _textController = TextEditingController();
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: Container(
+        padding: EdgeInsets.only(bottom: bottomInset),
+        decoration: BoxDecoration(
+          color: c.bgElevated,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: c.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Title
+              Row(
+                children: [
+                  Icon(Icons.content_paste, size: 18, color: c.purple),
+                  const SizedBox(width: 8),
+                  Text(
+                    context.l10n.pasteEmailText,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: c.text,
+                    ),
+                  ),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Icon(Icons.close_rounded, size: 20, color: c.textDim),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Text input
+              TextField(
+                controller: _textController,
+                maxLines: 8,
+                minLines: 6,
+                maxLength: 5000,
+                onChanged: (_) => setState(() {}),
+                style: TextStyle(fontSize: 13, color: c.text),
+                decoration: InputDecoration(
+                  hintText: context.l10n.pasteTextHint,
+                  hintStyle: TextStyle(color: c.textDim, fontSize: 13),
+                  filled: true,
+                  fillColor: c.bgCard,
+                  contentPadding: const EdgeInsets.all(14),
+                  counterStyle: TextStyle(color: c.textDim, fontSize: 10),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: c.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: c.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: c.purple),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Scan Text button
+              GestureDetector(
+                onTap: _textController.text.trim().isEmpty
+                    ? null
+                    : () {
+                        final text = _textController.text.trim();
+                        Navigator.of(context).pop();
+                        widget.onScanText(text);
+                      },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  decoration: BoxDecoration(
+                    gradient: _textController.text.trim().isNotEmpty
+                        ? LinearGradient(
+                            colors: [c.purple, const Color(0xFF8B5CF6)],
+                          )
+                        : null,
+                    color: _textController.text.trim().isEmpty ? c.border : null,
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: _textController.text.trim().isNotEmpty
+                        ? [
+                            BoxShadow(
+                              color: c.purple.withValues(alpha: 0.27),
+                              blurRadius: 20,
+                              offset: const Offset(0, 4),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.document_scanner_outlined,
+                        size: 18,
+                        color: _textController.text.trim().isNotEmpty
+                            ? Colors.white
+                            : c.textDim,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        context.l10n.scanText,
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: _textController.text.trim().isNotEmpty
+                              ? Colors.white
+                              : c.textDim,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

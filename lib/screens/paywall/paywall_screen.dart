@@ -64,6 +64,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         return context.l10n.paywallLimitReminders;
       case PaywallTrigger.settingsUpgrade:
         return context.l10n.paywallGeneric;
+      case PaywallTrigger.trialExpired:
+        return context.l10n.paywallGeneric;
       case PaywallTrigger.manual:
         return context.l10n.paywallGeneric;
     }

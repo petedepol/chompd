@@ -6,12 +6,12 @@ class AppConstants {
 
   // ─── Free Tier Limits ───
   static const int freeMaxSubscriptions = 3;
-  static const int freeMaxScans = 3;
+  static const int freeMaxScans = 1;
 
   // ─── AI Configuration ───
   static const String aiModel = 'claude-haiku-4-5-20251001';
   static const String aiModelFallback = 'claude-sonnet-4-5-20250929';
-  static const double scanCostEstimate = 0.0015; // USD per scan
+  static const double scanCostEstimate = 0.006; // USD per scan (Haiku 4.5)
 
   // ─── Animation Durations ───
   static const Duration scanShimmer = Duration(milliseconds: 1800);
@@ -25,6 +25,11 @@ class AppConstants {
   // ─── Pro Pricing ───
   static const double proPrice = 4.99; // GBP, one-time
   static const String proCurrency = 'GBP';
+
+  // ─── Trial ───
+  static const int trialDurationDays = 7;
+  static const String trialProductId = '7_day_trial';       // Tier 0 non-consumable
+  static const String proProductId = 'chompd_pro_lifetime';  // £4.99 non-consumable
 
   // ─── Reminder Schedule (Pro) ───
   static const List<int> proReminderDays = [7, 3, 1, 0]; // 0 = morning-of

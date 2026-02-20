@@ -38,7 +38,7 @@ final insightsProvider = Provider<List<Insight>>((ref) {
   final l = lookupS(locale);
   final fx = ExchangeRateService.instance;
   final active = subs.where((s) => s.isActive).toList();
-  final cancelled = subs.where((s) => !s.isActive).toList();
+  final cancelled = subs.where((s) => !s.isActive && s.cancelledDate != null).toList();
   final insights = <Insight>[];
 
   if (active.isEmpty) return insights;

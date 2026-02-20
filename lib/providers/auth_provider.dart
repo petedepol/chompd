@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -38,6 +40,8 @@ class AuthServiceState {
 
 /// Manages auth state and listens for auth changes.
 class AuthNotifier extends StateNotifier<AuthServiceState> {
+  StreamSubscription<dynamic>? _authSub;
+
   AuthNotifier() : super(const AuthServiceState()) {
     _init();
   }
@@ -57,7 +61,8 @@ class AuthNotifier extends StateNotifier<AuthServiceState> {
 
     // Listen for auth changes (sign-in, sign-out, token refresh)
     try {
-      auth.onAuthStateChange.listen((event) {
+      _authSub = auth.onAuthStateChange.listen((event) {
+        if (!mounted) return;
         final user = event.session?.user;
         if (user == null) {
           state = const AuthServiceState(status: AuthStatus.offline);
@@ -73,6 +78,13 @@ class AuthNotifier extends StateNotifier<AuthServiceState> {
     } catch (e) {
       debugPrint('[AuthProvider] Stream error: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    _authSub = null;
+    super.dispose();
   }
 }
 

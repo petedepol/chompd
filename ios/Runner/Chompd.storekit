@@ -1,0 +1,28 @@
+{
+  "identifier" : "C40MPDA1B2",
+  "type" : "Configuration",
+  "version" : 3,
+  "storekit_version" : 2,
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "identifier" : "chompd_pro_lifetime",
+      "internalID" : "1",
+      "localizations" : [
+        {
+          "description" : "One-time payment. Unlock everything forever.",
+          "displayName" : "Chompd Pro \u2014 Lifetime",
+          "locale" : "en_GB"
+        }
+      ],
+      "productID" : "chompd_pro_lifetime",
+      "referenceName" : "Chompd Pro Lifetime",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_storeKitErrors" : []
+  }
+}

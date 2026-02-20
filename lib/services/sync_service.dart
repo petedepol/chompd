@@ -33,17 +33,29 @@ class SyncService {
 
   /// Push a single subscription to Supabase (upsert by user_id + uid).
   Future<void> pushSubscription(Subscription sub) async {
-    if (!_hasSupabase || !await isOnline) return;
+    if (!_hasSupabase) {
+      debugPrint('[Sync] Skip push "${sub.name}" — Supabase not configured');
+      return;
+    }
+    if (!await isOnline) {
+      debugPrint('[Sync] Skip push "${sub.name}" — offline');
+      return;
+    }
     final userId = AuthService.instance.userId;
-    if (userId == null) return;
+    if (userId == null) {
+      debugPrint('[Sync] Skip push "${sub.name}" — no userId');
+      return;
+    }
 
     try {
+      debugPrint('[Sync] Pushing subscription: ${sub.uid} (${sub.name})');
       await _client.from('subscriptions').upsert(
         sub.toSupabaseMap(userId),
         onConflict: 'user_id,uid',
       );
+      debugPrint('[Sync] Pushed "${sub.name}" OK');
     } catch (e) {
-      debugPrint('[Sync] Push subscription failed: $e');
+      debugPrint('[Sync] Push "${sub.name}" FAILED: $e');
     }
   }
 
@@ -54,31 +66,31 @@ class SyncService {
     if (userId == null) return;
 
     try {
+      debugPrint('[Sync] Pushing dodged trap: ${trap.serviceName}');
       await _client.from('dodged_traps').insert(
         trap.toSupabaseMap(userId),
       );
     } catch (e) {
-      debugPrint('[Sync] Push dodged trap failed: $e');
+      debugPrint('[Sync] Push dodged trap "${trap.serviceName}" FAILED: $e');
     }
   }
 
-  /// Soft-delete a subscription in Supabase.
+  /// Hard-delete a subscription from Supabase.
   Future<void> pushDelete(String uid) async {
     if (!_hasSupabase || !await isOnline) return;
     final userId = AuthService.instance.userId;
     if (userId == null) return;
 
     try {
+      debugPrint('[Sync] Pushing hard delete: $uid');
       await _client
           .from('subscriptions')
-          .update({
-            'deleted_at': DateTime.now().toUtc().toIso8601String(),
-            'updated_at': DateTime.now().toUtc().toIso8601String(),
-          })
+          .delete()
           .eq('user_id', userId)
           .eq('uid', uid);
+      debugPrint('[Sync] Hard deleted "$uid" OK');
     } catch (e) {
-      debugPrint('[Sync] Push delete failed: $e');
+      debugPrint('[Sync] Push delete "$uid" FAILED: $e');
     }
   }
 
@@ -88,9 +100,19 @@ class SyncService {
   ///
   /// Called on app start and when connectivity is restored.
   Future<void> pullAndMerge() async {
-    if (!_hasSupabase || !await isOnline) return;
+    if (!_hasSupabase) {
+      debugPrint('[Sync] Skip pull — Supabase not configured');
+      return;
+    }
+    if (!await isOnline) {
+      debugPrint('[Sync] Skip pull — offline');
+      return;
+    }
     final userId = AuthService.instance.userId;
-    if (userId == null) return;
+    if (userId == null) {
+      debugPrint('[Sync] Skip pull — no userId');
+      return;
+    }
 
     try {
       // 1. Fetch all remote subscriptions
@@ -99,7 +121,10 @@ class SyncService {
           .select()
           .eq('user_id', userId);
 
+      debugPrint('[Sync] Pulled ${remote.length} remote subs');
+
       // 2. Merge remote into local (last-write-wins)
+      int pulledCount = 0;
       for (final row in remote) {
         final remoteSub = Subscription.fromSupabaseMap(row);
         final localSub = await _isar.subscriptions
@@ -112,37 +137,75 @@ class SyncService {
           await _isar.writeTxn(() async {
             await _isar.subscriptions.put(remoteSub);
           });
+          pulledCount++;
         } else if (remoteSub.updatedAt.isAfter(localSub.updatedAt)) {
           // Remote is newer — overwrite local (preserve Isar ID)
           remoteSub.id = localSub.id;
           await _isar.writeTxn(() async {
             await _isar.subscriptions.put(remoteSub);
           });
+          pulledCount++;
         }
         // else: local is newer or same — skip (will be pushed below)
       }
 
-      // 3. Push local records that don't exist remotely or are newer
-      final localSubs = await _isar.subscriptions.where().findAll();
-      final remoteUids = remote.map((r) => r['uid'] as String).toSet();
+      if (pulledCount > 0) {
+        debugPrint('[Sync] Merged $pulledCount new/updated subs from remote');
+      }
 
+      // 3. Bulk push: push every local sub that doesn't exist remotely
+      //    or has a newer updatedAt locally. This catches subs added
+      //    while offline, before sync was working (schema fixes), or
+      //    on a different device.
+      final localSubs = await _isar.subscriptions.where().findAll();
+      final remoteByUid = <String, Map<String, dynamic>>{};
+      for (final row in remote) {
+        remoteByUid[row['uid'] as String] = row;
+      }
+
+      final toPush = <Subscription>[];
       for (final local in localSubs) {
-        if (!remoteUids.contains(local.uid)) {
-          // Exists locally but not remotely — push to remote
-          await pushSubscription(local);
+        final remoteRow = remoteByUid[local.uid];
+        if (remoteRow == null) {
+          // Local-only — never been pushed
+          toPush.add(local);
         } else {
-          // Both exist — push if local is newer
-          final remoteRow = remote.firstWhere((r) => r['uid'] == local.uid);
-          final remoteUpdatedAt = DateTime.parse(remoteRow['updated_at'] as String);
+          final remoteUpdatedAt =
+              DateTime.parse(remoteRow['updated_at'] as String);
           if (local.updatedAt.isAfter(remoteUpdatedAt)) {
-            await pushSubscription(local);
+            // Local is newer — needs update
+            toPush.add(local);
           }
         }
       }
 
+      if (toPush.isNotEmpty) {
+        debugPrint(
+          '[Sync] Bulk pushing ${toPush.length} unsynced local subs...',
+        );
+        int pushed = 0;
+        int failed = 0;
+        for (final sub in toPush) {
+          try {
+            await _client.from('subscriptions').upsert(
+              sub.toSupabaseMap(userId),
+              onConflict: 'user_id,uid',
+            );
+            pushed++;
+          } catch (e) {
+            debugPrint('[Sync] Bulk push "${sub.name}" FAILED: $e');
+            failed++;
+          }
+        }
+        debugPrint('[Sync] Bulk push complete: $pushed OK, $failed failed');
+      } else {
+        debugPrint('[Sync] All local subs in sync — nothing to push');
+      }
+
       debugPrint('[Sync] Pull & merge complete');
-    } catch (e) {
-      debugPrint('[Sync] Pull & merge failed: $e');
+    } catch (e, st) {
+      debugPrint('[Sync] Pull & merge FAILED: $e');
+      debugPrint('[Sync] Stack trace: $st');
     }
   }
 
@@ -197,8 +260,9 @@ class SyncService {
         debugPrint('[Sync] Restored ${remoteSubs.length} subs + ${remoteTraps.length} traps from remote');
       }
       return restored;
-    } catch (e) {
-      debugPrint('[Sync] Restore failed: $e');
+    } catch (e, st) {
+      debugPrint('[Sync] Restore FAILED: $e');
+      debugPrint('[Sync] Stack trace: $st');
       return false;
     }
   }

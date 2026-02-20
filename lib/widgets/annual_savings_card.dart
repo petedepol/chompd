@@ -136,17 +136,32 @@ class _ServiceRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
 
-          // Service name
+          // Service name + hint
           Expanded(
-            child: Text(
-              item.service.name,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: c.text,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.service.name,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: c.text,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  context.l10n.annualSavingsHint(item.service.name),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: c.textDim,
+                    height: 1.3,
+                  ),
+                ),
+              ],
             ),
           ),
+          const SizedBox(width: 8),
 
           // Savings amount
           Text(

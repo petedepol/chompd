@@ -9,6 +9,7 @@ import '../../providers/annual_savings_provider.dart';
 import '../../providers/currency_provider.dart';
 import '../../providers/insights_provider.dart';
 import '../../providers/nudge_provider.dart';
+import '../../providers/entitlement_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../providers/subscriptions_provider.dart';
 import '../../providers/trap_stats_provider.dart';
@@ -20,7 +21,6 @@ import '../../widgets/category_bar.dart';
 import '../../widgets/confetti_overlay.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/insight_card.dart';
-import '../../widgets/milestone_card.dart';
 import '../../widgets/money_saved_counter.dart';
 import '../../widgets/quick_add_sheet.dart';
 import '../../widgets/spending_ring.dart';
@@ -29,6 +29,7 @@ import '../../widgets/mascot_image.dart';
 import '../../widgets/nudge_card.dart';
 import '../../widgets/service_insight_card.dart';
 import '../../widgets/trap_stats_card.dart';
+import '../../widgets/trial_banner.dart';
 import '../../providers/combined_insights_provider.dart';
 import '../../providers/budget_provider.dart';
 import '../detail/add_edit_screen.dart';
@@ -60,6 +61,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _showConfetti = false;
   final Set<String> _dismissedCards = {};
   int _carouselPage = 0;
+  bool _scanPressed = false;
 
   void _showAddOptions(BuildContext context, WidgetRef ref) {
     HapticService.instance.selection();
@@ -67,7 +69,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final canScan = ref.read(canScanProvider);
     final remainingSubs = ref.read(remainingSubsProvider);
     final remainingScans = ref.read(remainingScansProvider);
-    final isPro = ref.read(isProProvider);
+    final ent = ref.read(entitlementProvider);
     final c = context.colors;
 
     showModalBottomSheet(
@@ -98,7 +100,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            if (!isPro)
+            if (ent.isFree)
               Padding(
                 padding: const EdgeInsets.only(bottom: 14),
                 child: Container(
@@ -212,6 +214,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final c = context.colors;
     final subscriptions = ref.watch(subscriptionsProvider);
     final cancelledSubs = ref.watch(cancelledSubsProvider);
+    final frozenSubs = ref.watch(frozenSubsProvider);
     final expiringTrials = ref.watch(expiringTrialsProvider);
     final totalSaved = ref.watch(totalSavedProvider);
 
@@ -337,7 +340,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
 
-              // ─── Scan Button (right-aligned, below header) ───
+              // ─── Scan Button (piranha mascot, right-aligned) ───
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
@@ -345,34 +348,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     alignment: Alignment.centerRight,
                     child: GestureDetector(
                       onTap: () => _showAddOptions(context, ref),
-                      child: Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [c.mint, c.mintDark],
+                      onTapDown: (_) => setState(() => _scanPressed = true),
+                      onTapUp: (_) => setState(() => _scanPressed = false),
+                      onTapCancel: () => setState(() => _scanPressed = false),
+                      child: AnimatedScale(
+                        scale: _scanPressed ? 0.92 : 1.0,
+                        duration: const Duration(milliseconds: 100),
+                        child: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: c.mint.withValues(alpha: 0.35),
+                                blurRadius: 16,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                           ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: c.mint.withValues(alpha: 0.30),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
+                          child: ClipOval(
+                            child: Image.asset(
+                              'assets/images/scan_button.png',
+                              width: 64,
+                              height: 64,
+                              fit: BoxFit.cover,
                             ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: const Icon(
-                          Icons.camera_alt_rounded,
-                          size: 24,
-                          color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
+              ),
+
+              // ─── Trial Banner ───
+              const SliverToBoxAdapter(
+                child: TrialBanner(),
               ),
 
               // ─── Spending Ring ───
@@ -525,20 +537,39 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: const EdgeInsets.fromLTRB(0, 4, 0, 12),
                     child: Column(
                       children: [
-                        SizedBox(
-                          height: 200,
-                          child: PageView.builder(
-                            itemCount: cards.length,
-                            controller: PageController(
-                              viewportFraction: 0.9,
+                        // Swipeable carousel with dynamic height.
+                        // Uses GestureDetector + AnimatedSwitcher instead of
+                        // PageView so cards size to their content.
+                        GestureDetector(
+                          onHorizontalDragEnd: cards.length > 1
+                              ? (details) {
+                                  final v = details.primaryVelocity ?? 0;
+                                  if (v < -200 && _carouselPage < cards.length - 1) {
+                                    setState(() => _carouselPage++);
+                                    HapticService.instance.selection();
+                                  } else if (v > 200 && _carouselPage > 0) {
+                                    setState(() => _carouselPage--);
+                                    HapticService.instance.selection();
+                                  }
+                                }
+                              : null,
+                          behavior: HitTestBehavior.opaque,
+                          child: AnimatedSize(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            alignment: Alignment.topCenter,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                switchInCurve: Curves.easeIn,
+                                switchOutCurve: Curves.easeOut,
+                                child: KeyedSubtree(
+                                  key: ValueKey('carousel_$_carouselPage'),
+                                  child: cards[_carouselPage],
+                                ),
+                              ),
                             ),
-                            onPageChanged: (i) => setState(() => _carouselPage = i),
-                            itemBuilder: (context, index) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 4),
-                                child: cards[index],
-                              );
-                            },
                           ),
                         ),
                         if (cards.length > 1) ...[
@@ -670,6 +701,56 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
 
+              // ─── Section: Frozen — Upgrade to Unlock ───
+              if (frozenSubs.isNotEmpty) ...[
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.lock_outline_rounded,
+                          size: 14,
+                          color: c.textDim,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          context.l10n.frozenSectionHeader,
+                          style: ChompdTypography.sectionLabel.copyWith(
+                            color: c.textDim,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final frozen = frozenSubs[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 6),
+                          child: _FrozenCard(
+                            subscription: frozen,
+                            onTap: () {
+                              HapticService.instance.light();
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => const PaywallScreen(),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                      },
+                      childCount: frozenSubs.length,
+                    ),
+                  ),
+                ),
+              ],
+
               // ─── Section: Cancelled — Money Saved ───
               if (cancelledSubs.isNotEmpty) ...[
                 SliverToBoxAdapter(
@@ -698,9 +779,41 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         final cancelled = cancelledSubs[index];
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 5),
-                          child: AnimatedListItem(
-                            index: index,
-                            child: _CancelledCard(cancelled: cancelled),
+                          child: Dismissible(
+                            key: ValueKey(cancelled.uid),
+                            direction: DismissDirection.endToStart,
+                            onDismissed: (_) {
+                              ref
+                                  .read(subscriptionsProvider.notifier)
+                                  .dismissCancelled(cancelled.uid);
+                            },
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: 20),
+                              decoration: BoxDecoration(
+                                color: c.textDim.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(
+                                Icons.visibility_off_rounded,
+                                color: c.textDim,
+                                size: 20,
+                              ),
+                            ),
+                            child: AnimatedListItem(
+                              index: index,
+                              child: GestureDetector(
+                                onTap: () {
+                                  HapticService.instance.light();
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (_) => DetailScreen(subscription: cancelled),
+                                    ),
+                                  );
+                                },
+                                child: _CancelledCard(cancelled: cancelled),
+                              ),
+                            ),
                           ),
                         );
                       },
@@ -709,39 +822,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
 
-                // ─── Milestone Track ───
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 16, 0, 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Row(
-                            children: [
-                              const Text(
-                                '\uD83C\uDFC6 ',
-                                style: TextStyle(fontSize: 14),
-                              ),
-                              Text(
-                                context.l10n.sectionMilestones,
-                                style: ChompdTypography.sectionLabel.copyWith(
-                                  color: c.mint,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        MilestoneTrack(
-                          totalSaved: totalSaved,
-                          currencyCode: ref.watch(currencyProvider),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // ─── Milestone Track — disabled for v1 launch ───
               ],
 
               // Bottom padding
@@ -923,22 +1004,158 @@ class _TrialAlertBanner extends StatelessWidget {
   }
 }
 
+/// Frozen subscription card — reduced opacity with lock badge overlay.
+///
+/// Tapping opens the paywall so the user can upgrade and unfreeze.
+class _FrozenCard extends ConsumerWidget {
+  final Subscription subscription;
+  final VoidCallback? onTap;
+
+  const _FrozenCard({required this.subscription, this.onTap});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = context.colors;
+    final displayCurrency = ref.watch(currencyProvider);
+
+    final brandColor = () {
+      if (subscription.brandColor == null) return c.textDim;
+      final hex = subscription.brandColor!.replaceFirst('#', '');
+      return Color(int.parse('FF$hex', radix: 16));
+    }();
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Opacity(
+        opacity: 0.5,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: c.bgCard,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: c.border),
+          ),
+          child: Row(
+            children: [
+              // Icon
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: brandColor.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  subscription.iconName ??
+                      (subscription.name.isNotEmpty
+                          ? subscription.name[0]
+                          : '?'),
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: brandColor,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Name + "Tap to upgrade"
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      subscription.name,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: c.text,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      context.l10n.frozenTapToUpgrade,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: c.textDim,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Price (dimmed)
+              Text(
+                Subscription.formatPrice(
+                  subscription.price,
+                  displayCurrency,
+                ),
+                style: ChompdTypography.mono(
+                  size: 13,
+                  weight: FontWeight.w600,
+                  color: c.textDim,
+                ),
+              ),
+              const SizedBox(width: 8),
+
+              // Lock badge
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                decoration: BoxDecoration(
+                  color: c.amber.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.lock_rounded,
+                      size: 11,
+                      color: c.amber,
+                    ),
+                    const SizedBox(width: 3),
+                    Text(
+                      context.l10n.frozenBadge,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: c.amber,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 /// Cancelled subscription card with savings display — graveyard style.
-class _CancelledCard extends StatelessWidget {
+class _CancelledCard extends ConsumerWidget {
   final Subscription cancelled;
 
   const _CancelledCard({required this.cancelled});
 
   int get _monthsSinceCancelled {
-    if (cancelled.cancelledDate == null) return 0;
-    return DateTime.now().difference(cancelled.cancelledDate!).inDays ~/ 30;
+    final cancelDate = cancelled.cancelledDate ?? cancelled.createdAt;
+    final days = DateTime.now().difference(cancelDate).inDays;
+    // At least 1 — the next payment you avoided by cancelling.
+    return (days ~/ 30).clamp(1, days + 30);
   }
 
-  double get _saved => cancelled.monthlyEquivalent * _monthsSinceCancelled;
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
+    final displayCurrency = ref.watch(currencyProvider);
+    // Use monthlyEquivalentIn so card amounts match totalSavedProvider header
+    final saved = cancelled.monthlyEquivalentIn(displayCurrency) * _monthsSinceCancelled;
 
     final brandColor = () {
       if (cancelled.brandColor == null) return c.textDim;
@@ -1006,12 +1223,18 @@ class _CancelledCard extends StatelessWidget {
 
             // Savings
             Text(
-              '+${Subscription.formatPrice(_saved, cancelled.currency, decimals: 0)}',
+              '+${Subscription.formatPrice(saved, displayCurrency, decimals: 0)}',
               style: ChompdTypography.mono(
                 size: 13,
                 weight: FontWeight.w700,
                 color: c.mint,
               ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: c.textDim,
             ),
           ],
         ),

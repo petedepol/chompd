@@ -3,6 +3,8 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 import '../config/constants.dart';
 import '../l10n/generated/app_localizations.dart';
@@ -51,9 +53,8 @@ class ScheduledNotification {
 
 /// Notification service for scheduling renewal reminders and trial alerts.
 ///
-/// For v1 prototype, this manages the scheduling logic and stores
-/// pending notifications in memory. In production, this will use
-/// flutter_local_notifications for actual OS-level notifications.
+/// Schedules OS-level notifications via flutter_local_notifications and
+/// keeps an in-memory mirror in [_scheduled] for UI display.
 ///
 /// Reminder tiers:
 /// - **Free:** Morning-of renewal only (day 0)
@@ -71,7 +72,7 @@ class NotificationService {
   /// Whether the notification service has been initialised.
   bool _initialised = false;
 
-  /// In-memory store of scheduled notifications (production: OS scheduler).
+  /// In-memory mirror of scheduled notifications (also scheduled with OS).
   final List<ScheduledNotification> _scheduled = [];
 
   /// Notification ID counter.
@@ -114,8 +115,12 @@ class NotificationService {
 
     await _plugin.initialize(settings: initSettings);
 
+    tz.initializeTimeZones();
+
     _initialised = true;
     debugPrint('[NotificationService] Initialised');
+
+    await _restorePendingNotifications();
   }
 
   /// Update Pro status (affects which reminder tiers are available).
@@ -180,6 +185,64 @@ class NotificationService {
 
   bool get hasPermission => _permissionGranted;
 
+  // ─── OS Scheduling ───
+
+  /// Schedule a single notification with the OS via flutter_local_notifications.
+  ///
+  /// Converts the [notification]'s [DateTime] to a [tz.TZDateTime] and calls
+  /// `zonedSchedule`. No-ops if the scheduled time is in the past.
+  Future<void> _scheduleOSNotification(
+    ScheduledNotification notification,
+  ) async {
+    final scheduledTZ = tz.TZDateTime.from(
+      notification.scheduledAt,
+      tz.local,
+    );
+
+    // Don't schedule if in the past
+    if (scheduledTZ.isBefore(tz.TZDateTime.now(tz.local))) return;
+
+    await _plugin.zonedSchedule(
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+      scheduledDate: scheduledTZ,
+      notificationDetails: NotificationDetails(
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+        android: AndroidNotificationDetails(
+          notification.channelId,
+          notification.channelId == NotificationChannels.renewalReminder
+              ? 'Renewal Reminders'
+              : notification.channelId == NotificationChannels.trialExpiry
+                  ? 'Trial Expiry Alerts'
+                  : 'Morning Digest',
+          importance: notification.priority == NotificationPriority.high
+              ? Importance.high
+              : Importance.defaultImportance,
+          priority: notification.priority == NotificationPriority.high
+              ? Priority.high
+              : Priority.defaultPriority,
+        ),
+      ),
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+    );
+  }
+
+  /// Re-populate pending count from the OS after a cold start.
+  ///
+  /// The in-memory [_scheduled] list doesn't survive app restarts, but
+  /// OS-scheduled notifications do. This logs the count for diagnostics.
+  Future<void> _restorePendingNotifications() async {
+    final pending = await _plugin.pendingNotificationRequests();
+    debugPrint(
+      '[NotificationService] Restored ${pending.length} pending OS notifications',
+    );
+  }
+
   // ─── Scheduling ───
 
   /// Schedule all reminders for a subscription.
@@ -191,7 +254,7 @@ class NotificationService {
     if (!sub.isActive) return;
 
     // Clear existing reminders for this subscription
-    cancelReminders(sub.uid);
+    await cancelReminders(sub.uid);
 
     final l = await _getL10n();
 
@@ -232,6 +295,7 @@ class NotificationService {
         );
 
         _scheduled.add(notification);
+        await _scheduleOSNotification(notification);
         debugPrint('[NotificationService] Scheduled: $notification');
       }
     }
@@ -273,6 +337,7 @@ class NotificationService {
         );
 
         _scheduled.add(notification);
+        await _scheduleOSNotification(notification);
         debugPrint('[NotificationService] Trial alert: $notification');
       }
     }
@@ -305,6 +370,7 @@ class NotificationService {
         subscriptionUid: subscriptionUid,
       );
       _scheduled.add(notification);
+      await _scheduleOSNotification(notification);
       debugPrint('[NotificationService] Trap alert 72h: $notification');
     }
 
@@ -321,6 +387,7 @@ class NotificationService {
         subscriptionUid: subscriptionUid,
       );
       _scheduled.add(notification);
+      await _scheduleOSNotification(notification);
       debugPrint('[NotificationService] Trap alert 24h: $notification');
     }
 
@@ -337,6 +404,7 @@ class NotificationService {
         subscriptionUid: subscriptionUid,
       );
       _scheduled.add(notification);
+      await _scheduleOSNotification(notification);
       debugPrint('[NotificationService] Trap alert 2h: $notification');
     }
 
@@ -352,6 +420,7 @@ class NotificationService {
       subscriptionUid: subscriptionUid,
     );
     _scheduled.add(afterNotif);
+    await _scheduleOSNotification(afterNotif);
     debugPrint('[NotificationService] Trap post-conversion: $afterNotif');
   }
 
@@ -366,7 +435,13 @@ class NotificationService {
   }) async {
     if (!_initialised || !_permissionGranted) return;
 
-    // Cancel any existing digest
+    // Cancel any existing digest (both in-memory and OS)
+    final existingDigests = _scheduled
+        .where((n) => n.channelId == NotificationChannels.morningDigest)
+        .toList();
+    for (final d in existingDigests) {
+      await _plugin.cancel(id: d.id);
+    }
     _scheduled.removeWhere(
       (n) => n.channelId == NotificationChannels.morningDigest,
     );
@@ -412,26 +487,31 @@ class NotificationService {
     );
 
     _scheduled.add(notification);
+    await _scheduleOSNotification(notification);
     debugPrint('[NotificationService] Morning digest: $notification');
   }
 
   /// Cancel all reminders for a specific subscription.
-  void cancelReminders(String subscriptionUid) {
-    final removed = _scheduled
+  Future<void> cancelReminders(String subscriptionUid) async {
+    final toCancel = _scheduled
         .where((n) => n.subscriptionUid == subscriptionUid)
         .toList();
 
+    for (final n in toCancel) {
+      await _plugin.cancel(id: n.id);
+    }
     _scheduled.removeWhere((n) => n.subscriptionUid == subscriptionUid);
 
-    if (removed.isNotEmpty) {
+    if (toCancel.isNotEmpty) {
       debugPrint(
-        '[NotificationService] Cancelled ${removed.length} reminders for $subscriptionUid',
+        '[NotificationService] Cancelled ${toCancel.length} reminders for $subscriptionUid',
       );
     }
   }
 
   /// Cancel all scheduled notifications.
-  void cancelAll() {
+  Future<void> cancelAll() async {
+    await _plugin.cancelAll();
     _scheduled.clear();
     debugPrint('[NotificationService] All notifications cancelled');
   }
@@ -530,5 +610,30 @@ class NotificationService {
     }
 
     return parts.join('\n');
+  }
+
+  // ─── Debug ───
+
+  /// Fire a test notification immediately for development verification.
+  ///
+  /// TODO: Remove before App Store submission.
+  Future<void> debugFireTestNotification() async {
+    await _plugin.show(
+      id: 99999,
+      title: '🐟 Chompd Test',
+      body: 'Notifications are working!',
+      notificationDetails: const NotificationDetails(
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+        android: AndroidNotificationDetails(
+          'test_channel',
+          'Test Notifications',
+        ),
+      ),
+    );
+    debugPrint('[NotificationService] Test notification fired');
   }
 }

@@ -90,7 +90,9 @@ class ShareHandler {
         ? 'image/png'
         : path.endsWith('.webp')
             ? 'image/webp'
-            : 'image/jpeg';
+            : (path.endsWith('.heic') || path.endsWith('.heif'))
+                ? 'image/heic'
+                : 'image/jpeg';
 
     // Increment scan counter and start the scan.
     cont.read(scanCounterProvider.notifier).increment();

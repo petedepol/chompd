@@ -18,6 +18,7 @@
   "edit": "Edytuj",
   "pro": "Pro",
   "free": "Darmowy",
+  "tierTrial": "Próba",
 
   "onboardingTitle1": "Odgryź się subskrypcjom",
   "onboardingSubtitle1": "Chompd śledzi każdą subskrypcję, wyłapuje ukryte pułapki i pomaga anulować to, czego nie potrzebujesz.",
@@ -104,13 +105,17 @@
   },
 
   "scanTitle": "Skan AI",
-  "scanAnalysing": "Analizuję Twój zrzut ekranu...",
+  "scanAnalysing": "Nom nom... przeżuwam twój zrzut ekranu 🐟",
   "scanIdleTitle": "Skanuj zrzut ekranu",
   "scanIdleSubtitle": "Udostępnij zrzut ekranu z e-maila potwierdzającego,\nwyciągu bankowego lub paragonu z App Store.",
   "takePhoto": "Zrób zdjęcie",
   "chooseFromGallery": "Wybierz z galerii",
   "cameraPermError": "Brak dostępu do kamery. Sprawdź uprawnienia.",
   "galleryPermError": "Brak dostępu do galerii zdjęć. Sprawdź uprawnienia.",
+  "pasteEmailText": "Wklej tekst e-maila",
+  "pasteTextHint": "Wklej tutaj tekst e-maila z subskrypcją lub potwierdzeniem...",
+  "scanText": "Skanuj tekst",
+  "textReceived": "Nom nom... przeżuwam twój tekst 🐟",
   "smartMove": "Sprytne!",
   "youSkipped": "Pominąłeś {service}",
   "@youSkipped": {
@@ -118,7 +123,20 @@
   },
   "saved": "ZAOSZCZĘDZONE",
   "addedToUnchompd": "Dodane do Twojego Unchompd",
-  "analysing": "Analiza...",
+  "analysing": "Prawie gotowe... jeszcze jeden kęs",
+  "scanSniffing": "Wyszukuję podejrzane opłaty...",
+  "scanFoundFeast": "Znalazłem ucztę! Przegryzam się przez wszystko...",
+  "scanEscalation": "Wzywam większą rybę na pomoc... 🦈",
+  "scanAlmostDone": "Prawie gotowe... jeszcze jeden kęs",
+  "scanFoundCount": "Znaleziono {count} subskrypcji",
+  "@scanFoundCount": { "placeholders": { "count": { "type": "int" } } },
+  "scanTapToExpand": "Dotknij, aby rozwinąć i edytować",
+  "scanCancelledHint": "Niektóre subskrypcje zostały anulowane i wkrótce wygasną — odznaczyliśmy je za Ciebie.",
+  "scanAlreadyCancelled": "Już anulowana",
+  "scanExpires": "Wygasa",
+  "scanSkipAll": "Pomiń wszystko",
+  "scanAddSelected": "+ Dodaj {count} wybranych",
+  "@scanAddSelected": { "placeholders": { "count": { "type": "int" } } },
   "confidence": "pewność",
   "typeYourAnswer": "Wpisz odpowiedź...",
   "addToChompd": "Dodaj do Chompd",
@@ -233,6 +251,10 @@
   "sourceQuickAdd": "Szybkie dodawanie",
   "sourceManual": "Ręcznie",
   "cancelSubscription": "Anuluj subskrypcję",
+  "cancelSubscriptionConfirm": "Anulować {name}?",
+  "@cancelSubscriptionConfirm": {
+    "placeholders": { "name": {"type": "String"} }
+  },
   "cancelPlatformPickerTitle": "Jak płacisz za {name}?",
   "@cancelPlatformPickerTitle": {
     "placeholders": { "name": {"type": "String"} }
@@ -449,10 +471,15 @@
   "nudgeKeepIt": "Zostaw",
   "trialLabel": "TRIAL",
   "priceToday": "DZIŚ",
+  "priceNow": "TERAZ",
   "priceThen": "POTEM",
   "dayTrial": "{days}-dniowy trial",
   "@dayTrial": {
     "placeholders": { "days": {"type": "String"} }
+  },
+  "monthIntro": "{months}-mies. oferta wstępna",
+  "@monthIntro": {
+    "placeholders": { "months": {"type": "String"} }
   },
   "realCostFirstYear": "Realny koszt w pierwszym roku: {amount}",
   "@realCostFirstYear": {
@@ -692,6 +719,14 @@
   "cycleQuarterlyShort": "kw.",
   "cycleYearlyShort": "rok",
 
+  "scanFound": "Znaleziono: {details}",
+  "scanRenewsDate": "odnawia się {date}",
+  "scanChargeFound": "Znaleziono opłatę za {price}/{cycle}.",
+  "scanWhichService": "Znaleziono opłatę za {name} na {price}/{cycle}. Jaka to usługa?",
+  "scanBilledQuestion": "Czy {name} jest rozliczane miesięcznie czy rocznie?",
+  "scanMissingPrice": "Nie znalazłem ceny na tym zdjęciu. Ile kosztuje {name}?",
+  "priceRenewsAt": "ODNAWIA SIĘ ZA",
+
   "categoryStreaming": "Streaming",
   "categoryMusic": "Muzyka",
   "categoryAi": "AI",
@@ -766,6 +801,10 @@
   "@annualSavingsCoverage": {
     "placeholders": { "matched": {"type": "int"}, "total": {"type": "int"} }
   },
+  "annualSavingsHint": "Sprawdź ustawienia konta {name}, aby znaleźć opcję rozliczenia rocznego",
+  "@annualSavingsHint": {
+    "placeholders": { "name": {"type": "String"} }
+  },
   "seeAll": "Zobacz wszystkie",
   "allSavingsTitle": "Oszcz\u0119dno\u015bci roczne",
   "allSavingsSubtitle": "Zmie\u0144 te miesi\u0119czne plany na roczne, \u017ceby zaoszcz\u0119dzi\u0107",
@@ -784,7 +823,55 @@
   "insightDidYouKnow": "CZY WIESZ, ŻE...?",
   "insightSaveMoney": "OSZCZĘDŹ",
   "insightLearnMore": "Dowiedz się więcej",
+  "insightProLabel": "WSKAZÓWKA PRO",
   "insightUnlockPro": "Odblokuj z Pro",
   "insightProTeaser": "Przejdź na Pro, aby otrzymywać spersonalizowane porady oszczędnościowe.",
-  "insightProTeaserTitle": "Spersonalizowane porady oszczędnościowe"
+  "insightProTeaserTitle": "Spersonalizowane porady oszczędnościowe",
+
+  "trialBannerDays": "Wersja próbna \u00B7 {days, plural, =1{1 dzień} few{{days} dni} other{{days} dni}}",
+  "@trialBannerDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "trialBannerExpired": "Wersja próbna wygasła",
+  "trialBannerUpgrade": "Odblokuj",
+
+  "trialPromptTitle": "Wypróbuj wszystko za darmo przez 7 dni",
+  "trialPromptSubtitle": "Pełny dostęp Pro \u2014 bez zobowiązań, bez płatności.",
+  "trialPromptFeature1": "Nieograniczona liczba subskrypcji",
+  "trialPromptFeature2": "Skaner Pułapek AI \u2014 bez limitu",
+  "trialPromptFeature3": "Zaawansowane przypomnienia (7d, 3d, 1d)",
+  "trialPromptFeature4": "Panel wydatków i statystyki",
+  "trialPromptFeature5": "Przewodniki anulowania i zwrotów",
+  "trialPromptFeature6": "Inteligentne powiadomienia i karty oszczędności",
+  "trialPromptLegal": "Po 7 dniach: śledź do 3 subskrypcji za darmo, lub odblokuj wszystko za 24,99 zł \u2014 jednorazowo, na zawsze.",
+  "trialPromptCta": "Rozpocznij bezpłatny okres próbny",
+  "trialPromptDismiss": "Pomiń na razie",
+
+  "trialExpiredTitle": "Twój 7-dniowy okres próbny się zakończył",
+  "trialExpiredSubtitle": "Śledziłeś {count, plural, =1{1 subskrypcję} few{{count} subskrypcje} other{{count} subskrypcji}} o wartości {price}/mies.",
+  "@trialExpiredSubtitle": {
+    "placeholders": { "count": {"type": "int"}, "price": {"type": "String"} }
+  },
+  "trialExpiredFrozen": "{count, plural, =1{1 subskrypcja jest zamrożona} few{{count} subskrypcje są zamrożone} other{{count} subskrypcji jest zamrożonych}}",
+  "@trialExpiredFrozen": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "trialExpiredCta": "Odblokuj Chompd Pro \u2014 24,99 zł",
+  "trialExpiredDismiss": "Kontynuuj z darmową wersją",
+
+  "frozenSectionHeader": "ZAMRO\u017BONE \u2014 ULEPSZ, ABY ODBLOKOWA\u0106",
+  "frozenBadge": "ZAMRO\u017BONE",
+  "frozenTapToUpgrade": "Kliknij, aby ulepszy\u0107",
+
+  "cancelledStatusExpires": "Anulowana \u2014 wygasa {date}",
+  "@cancelledStatusExpires": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "cancelledStatusExpired": "Anulowana \u2014 wygasła {date}",
+  "@cancelledStatusExpired": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "reactivateSubscription": "Reaktywuj subskrypcję",
+  "scanErrorGeneric": "Nie udało się odczytać tego zdjęcia. Spróbuj inny zrzut ekranu.",
+  "scanErrorEmpty": "Plik graficzny jest pusty. Spróbuj ponownie."
 }

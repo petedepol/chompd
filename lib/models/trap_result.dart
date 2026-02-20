@@ -6,6 +6,7 @@ class TrapResult {
   final bool isTrap;
   final TrapType? trapType;
   final TrapSeverity severity;
+  final String? scenario; // 'trial_to_paid', 'renewal_notice', 'price_increase', 'new_signup', 'other'
   final double? trialPrice;
   final int? trialDurationDays;
   final double? realPrice;
@@ -19,6 +20,7 @@ class TrapResult {
     required this.isTrap,
     this.trapType,
     required this.severity,
+    this.scenario,
     this.trialPrice,
     this.trialDurationDays,
     this.realPrice,
@@ -46,6 +48,7 @@ class TrapResult {
       isTrap: json['is_trap'] == true,
       trapType: json['trap_type'] is String ? _parseTrapType(json['trap_type'] as String) : null,
       severity: _parseSeverity(json['severity'] is String ? json['severity'] as String : 'low'),
+      scenario: json['scenario'] is String ? json['scenario'] as String : null,
       trialPrice: json['trial_price'] is num ? (json['trial_price'] as num).toDouble() : null,
       trialDurationDays: json['trial_duration_days'] is num ? (json['trial_duration_days'] as num).toInt() : null,
       realPrice: json['real_price'] is num ? (json['real_price'] as num).toDouble() : null,

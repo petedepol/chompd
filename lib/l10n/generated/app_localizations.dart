@@ -5,7 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'app_localizations_de.dart';
 import 'app_localizations_en.dart';
+import 'app_localizations_es.dart';
+import 'app_localizations_fr.dart';
 import 'app_localizations_pl.dart';
 
 // ignore_for_file: type=lint
@@ -93,7 +96,10 @@ abstract class S {
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
+    Locale('de'),
     Locale('en'),
+    Locale('es'),
+    Locale('fr'),
     Locale('pl')
   ];
 
@@ -192,6 +198,12 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Free'**
   String get free;
+
+  /// No description provided for @tierTrial.
+  ///
+  /// In en, this message translates to:
+  /// **'Trial'**
+  String get tierTrial;
 
   /// No description provided for @onboardingTitle1.
   ///
@@ -514,7 +526,7 @@ abstract class S {
   /// No description provided for @scanAnalysing.
   ///
   /// In en, this message translates to:
-  /// **'Analysing your screenshot...'**
+  /// **'Nom nom... chewing through your screenshot 🐟'**
   String get scanAnalysing;
 
   /// No description provided for @scanIdleTitle.
@@ -553,6 +565,30 @@ abstract class S {
   /// **'Could not access photo library. Check permissions.'**
   String get galleryPermError;
 
+  /// No description provided for @pasteEmailText.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste email text'**
+  String get pasteEmailText;
+
+  /// No description provided for @pasteTextHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Paste your subscription email or confirmation text here...'**
+  String get pasteTextHint;
+
+  /// No description provided for @scanText.
+  ///
+  /// In en, this message translates to:
+  /// **'Scan Text'**
+  String get scanText;
+
+  /// No description provided for @textReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Nom nom... chewing through your text 🐟'**
+  String get textReceived;
+
   /// No description provided for @smartMove.
   ///
   /// In en, this message translates to:
@@ -580,8 +616,74 @@ abstract class S {
   /// No description provided for @analysing.
   ///
   /// In en, this message translates to:
-  /// **'Analysing...'**
+  /// **'Almost done... one last bite'**
   String get analysing;
+
+  /// No description provided for @scanSniffing.
+  ///
+  /// In en, this message translates to:
+  /// **'Sniffing out sneaky charges...'**
+  String get scanSniffing;
+
+  /// No description provided for @scanFoundFeast.
+  ///
+  /// In en, this message translates to:
+  /// **'Found a feast! Chomping through them all...'**
+  String get scanFoundFeast;
+
+  /// No description provided for @scanEscalation.
+  ///
+  /// In en, this message translates to:
+  /// **'Calling in a bigger fish for backup... 🦈'**
+  String get scanEscalation;
+
+  /// No description provided for @scanAlmostDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost done... one last bite'**
+  String get scanAlmostDone;
+
+  /// No description provided for @scanFoundCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Found {count} subscriptions'**
+  String scanFoundCount(int count);
+
+  /// No description provided for @scanTapToExpand.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to expand and edit details'**
+  String get scanTapToExpand;
+
+  /// No description provided for @scanCancelledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Some subscriptions are already cancelled and will expire soon — we\'ve unticked them for you.'**
+  String get scanCancelledHint;
+
+  /// No description provided for @scanAlreadyCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Already cancelled'**
+  String get scanAlreadyCancelled;
+
+  /// No description provided for @scanExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires'**
+  String get scanExpires;
+
+  /// No description provided for @scanSkipAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip all'**
+  String get scanSkipAll;
+
+  /// No description provided for @scanAddSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'+ Add {count} selected'**
+  String scanAddSelected(int count);
 
   /// No description provided for @confidence.
   ///
@@ -978,6 +1080,12 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Cancel Subscription'**
   String get cancelSubscription;
+
+  /// No description provided for @cancelSubscriptionConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel {name}?'**
+  String cancelSubscriptionConfirm(String name);
 
   /// No description provided for @cancelPlatformPickerTitle.
   ///
@@ -1843,17 +1951,35 @@ abstract class S {
   /// **'TODAY'**
   String get priceToday;
 
+  /// No description provided for @priceNow.
+  ///
+  /// In en, this message translates to:
+  /// **'NOW'**
+  String get priceNow;
+
   /// No description provided for @priceThen.
   ///
   /// In en, this message translates to:
   /// **'THEN'**
   String get priceThen;
 
+  /// No description provided for @priceRenewsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'RENEWS AT'**
+  String get priceRenewsAt;
+
   /// No description provided for @dayTrial.
   ///
   /// In en, this message translates to:
   /// **'{days}-day trial'**
   String dayTrial(String days);
+
+  /// No description provided for @monthIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'{months}-month intro'**
+  String monthIntro(String months);
 
   /// No description provided for @realCostFirstYear.
   ///
@@ -2383,6 +2509,42 @@ abstract class S {
   /// **'yr'**
   String get cycleYearlyShort;
 
+  /// No description provided for @scanFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Found: {details}'**
+  String scanFound(String details);
+
+  /// No description provided for @scanRenewsDate.
+  ///
+  /// In en, this message translates to:
+  /// **'renews {date}'**
+  String scanRenewsDate(String date);
+
+  /// No description provided for @scanChargeFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Found a charge for {price}/{cycle}.'**
+  String scanChargeFound(String price, String cycle);
+
+  /// No description provided for @scanWhichService.
+  ///
+  /// In en, this message translates to:
+  /// **'Found a charge for {name} at {price}/{cycle}. Which service is this?'**
+  String scanWhichService(String name, String price, String cycle);
+
+  /// No description provided for @scanBilledQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Is {name} billed monthly or yearly?'**
+  String scanBilledQuestion(String name);
+
+  /// No description provided for @scanMissingPrice.
+  ///
+  /// In en, this message translates to:
+  /// **'I couldn\'t find the price in this image. How much is {name}?'**
+  String scanMissingPrice(String name);
+
   /// No description provided for @categoryStreaming.
   ///
   /// In en, this message translates to:
@@ -2689,6 +2851,12 @@ abstract class S {
   /// **'Based on {matched} of {total} subscriptions'**
   String annualSavingsCoverage(int matched, int total);
 
+  /// No description provided for @annualSavingsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your {name} account settings for annual billing options'**
+  String annualSavingsHint(String name);
+
   /// No description provided for @seeAll.
   ///
   /// In en, this message translates to:
@@ -2755,6 +2923,12 @@ abstract class S {
   /// **'Learn more'**
   String get insightLearnMore;
 
+  /// No description provided for @insightProLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'PRO INSIGHT'**
+  String get insightProLabel;
+
   /// No description provided for @insightUnlockPro.
   ///
   /// In en, this message translates to:
@@ -2772,6 +2946,168 @@ abstract class S {
   /// In en, this message translates to:
   /// **'Personalised savings tips'**
   String get insightProTeaserTitle;
+
+  /// No description provided for @trialBannerDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro trial · {days, plural, =1{1 day left} other{{days} days left}}'**
+  String trialBannerDays(int days);
+
+  /// No description provided for @trialBannerExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Pro trial expired'**
+  String get trialBannerExpired;
+
+  /// No description provided for @trialBannerUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade'**
+  String get trialBannerUpgrade;
+
+  /// No description provided for @trialPromptTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Try everything free for 7 days'**
+  String get trialPromptTitle;
+
+  /// No description provided for @trialPromptSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Pro access — no commitment, no payment.'**
+  String get trialPromptSubtitle;
+
+  /// No description provided for @trialPromptFeature1.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited subscriptions'**
+  String get trialPromptFeature1;
+
+  /// No description provided for @trialPromptFeature2.
+  ///
+  /// In en, this message translates to:
+  /// **'AI Trap Scanner — unlimited scans'**
+  String get trialPromptFeature2;
+
+  /// No description provided for @trialPromptFeature3.
+  ///
+  /// In en, this message translates to:
+  /// **'Advance renewal reminders (7d, 3d, 1d)'**
+  String get trialPromptFeature3;
+
+  /// No description provided for @trialPromptFeature4.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending dashboard & insights'**
+  String get trialPromptFeature4;
+
+  /// No description provided for @trialPromptFeature5.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel guides & refund tips'**
+  String get trialPromptFeature5;
+
+  /// No description provided for @trialPromptFeature6.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart nudges & savings cards'**
+  String get trialPromptFeature6;
+
+  /// No description provided for @trialPromptLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'After 7 days: track up to 3 subscriptions free, or unlock everything for £4.99 — once, forever.'**
+  String get trialPromptLegal;
+
+  /// No description provided for @trialPromptCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Start Free Trial'**
+  String get trialPromptCta;
+
+  /// No description provided for @trialPromptDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get trialPromptDismiss;
+
+  /// No description provided for @trialExpiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your 7-day trial has ended'**
+  String get trialExpiredTitle;
+
+  /// No description provided for @trialExpiredSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You tracked {count, plural, =1{1 subscription} other{{count} subscriptions}} worth {price}/month.'**
+  String trialExpiredSubtitle(int count, String price);
+
+  /// No description provided for @trialExpiredFrozen.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 subscription is now frozen} other{{count} subscriptions are now frozen}}'**
+  String trialExpiredFrozen(int count);
+
+  /// No description provided for @trialExpiredCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock Chompd Pro — £4.99'**
+  String get trialExpiredCta;
+
+  /// No description provided for @trialExpiredDismiss.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with free tier'**
+  String get trialExpiredDismiss;
+
+  /// No description provided for @frozenSectionHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'FROZEN — UPGRADE TO UNLOCK'**
+  String get frozenSectionHeader;
+
+  /// No description provided for @frozenBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'FROZEN'**
+  String get frozenBadge;
+
+  /// No description provided for @frozenTapToUpgrade.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to upgrade'**
+  String get frozenTapToUpgrade;
+
+  /// No description provided for @cancelledStatusExpires.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled — expires {date}'**
+  String cancelledStatusExpires(String date);
+
+  /// No description provided for @cancelledStatusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled — expired {date}'**
+  String cancelledStatusExpired(String date);
+
+  /// No description provided for @reactivateSubscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Reactivate Subscription'**
+  String get reactivateSubscription;
+
+  /// No description provided for @scanErrorGeneric.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn’t read this image. Please try a different screenshot.'**
+  String get scanErrorGeneric;
+
+  /// No description provided for @scanErrorEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Image file appears to be empty. Please try again.'**
+  String get scanErrorEmpty;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {
@@ -2784,7 +3120,7 @@ class _SDelegate extends LocalizationsDelegate<S> {
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'pl'].contains(locale.languageCode);
+      <String>['de', 'en', 'es', 'fr', 'pl'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_SDelegate old) => false;
@@ -2793,8 +3129,14 @@ class _SDelegate extends LocalizationsDelegate<S> {
 S lookupS(Locale locale) {
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
+    case 'de':
+      return SDe();
     case 'en':
       return SEn();
+    case 'es':
+      return SEs();
+    case 'fr':
+      return SFr();
     case 'pl':
       return SPl();
   }

@@ -75,7 +75,9 @@ class _CancelCelebrationState extends State<CancelCelebration>
     return GestureDetector(
       onTap: widget.onDismiss,
       child: Container(
-        color: c.bg.withValues(alpha: 0.92),
+        color: Colors.black.withValues(alpha: 0.85),
+        width: double.infinity,
+        height: double.infinity,
         child: Stack(
           children: [
             // Confetti
@@ -83,69 +85,83 @@ class _CancelCelebrationState extends State<CancelCelebration>
               child: ConfettiOverlay(),
             ),
 
-            // Content
-            Center(
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, child) {
-                  return Opacity(
-                    opacity: _opacityAnimation.value,
-                    child: Transform.scale(
-                      scale: _scaleAnimation.value,
-                      child: child,
-                    ),
-                  );
-                },
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Celebrate mascot
-                    const MascotImage(
-                      asset: 'piranha_celebrate.png',
-                      size: 80,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Headline
-                    Text(
-                      context.l10n.celebrationTitle,
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w700,
-                        color: c.text,
+            // Content — centred with safe area padding
+            SafeArea(
+              child: Center(
+                child: AnimatedBuilder(
+                  animation: _controller,
+                  builder: (context, child) {
+                    return Opacity(
+                      opacity: _opacityAnimation.value,
+                      child: Transform.scale(
+                        scale: _scaleAnimation.value,
+                        child: child,
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Celebrate mascot
+                        const MascotImage(
+                          asset: 'piranha_celebrate.png',
+                          size: 80,
+                        ),
+                        const SizedBox(height: 24),
 
-                    // Savings amount
-                    Text(
-                      context.l10n.celebrationSavePerYear(Subscription.formatPrice(yearly, currency, decimals: 0)),
-                      style: ChompdTypography.mono(
-                        size: 24,
-                        weight: FontWeight.w700,
-                        color: c.mint,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
+                        // Headline
+                        Text(
+                          context.l10n.celebrationTitle,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w700,
+                            color: c.text,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
 
-                    Text(
-                      context.l10n.celebrationByDropping(widget.subscription.name),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: c.textMid,
-                      ),
-                    ),
-                    const SizedBox(height: 32),
+                        // Savings amount
+                        Text(
+                          context.l10n.celebrationSavePerYear(Subscription.formatPrice(yearly, currency, decimals: 0)),
+                          textAlign: TextAlign.center,
+                          style: ChompdTypography.mono(
+                            size: 24,
+                            weight: FontWeight.w700,
+                            color: c.mint,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
 
-                    // Tap to dismiss hint
-                    Text(
-                      context.l10n.tapAnywhereToContinue,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: c.textDim.withValues(alpha: 0.5),
-                      ),
+                        Text(
+                          context.l10n.celebrationByDropping(widget.subscription.name),
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: c.textMid,
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Tap to dismiss hint
+                        Text(
+                          context.l10n.tapAnywhereToContinue,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.white.withValues(alpha: 0.6),
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.5),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),

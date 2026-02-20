@@ -60,6 +60,11 @@ void main() async {
   // Initialise the purchase service
   await PurchaseService.instance.init();
 
+  // Fetch Pro status from Supabase BEFORE sync runs.
+  // profiles.is_pro is the source of truth — ensures push logic
+  // and feature gates see the correct Pro state immediately.
+  await PurchaseService.instance.fetchProStatus();
+
   // Load persisted dodged traps
   await DodgedTrapRepository.instance.load();
 

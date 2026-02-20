@@ -18,6 +18,7 @@
   "edit": "Edit",
   "pro": "Pro",
   "free": "Free",
+  "tierTrial": "Trial",
 
   "onboardingTitle1": "Bite Back at Subscriptions",
   "onboardingSubtitle1": "Chompd tracks every subscription, catches hidden traps, and helps you cancel what you don\u2019t need.",
@@ -104,13 +105,17 @@
   },
 
   "scanTitle": "AI Scan",
-  "scanAnalysing": "Analysing your screenshot...",
+  "scanAnalysing": "Nom nom... chewing through your screenshot 🐟",
   "scanIdleTitle": "Scan a Screenshot",
   "scanIdleSubtitle": "Share a screenshot of a confirmation email,\nbank statement, or app store receipt.",
   "takePhoto": "Take Photo",
   "chooseFromGallery": "Choose from Gallery",
   "cameraPermError": "Could not access camera. Check permissions.",
   "galleryPermError": "Could not access photo library. Check permissions.",
+  "pasteEmailText": "Paste email text",
+  "pasteTextHint": "Paste your subscription email or confirmation text here...",
+  "scanText": "Scan Text",
+  "textReceived": "Nom nom... chewing through your text 🐟",
   "smartMove": "Smart move!",
   "youSkipped": "You skipped {service}",
   "@youSkipped": {
@@ -118,7 +123,20 @@
   },
   "saved": "SAVED",
   "addedToUnchompd": "Added to your Unchompd total",
-  "analysing": "Analysing...",
+  "analysing": "Almost done... one last bite",
+  "scanSniffing": "Sniffing out sneaky charges...",
+  "scanFoundFeast": "Found a feast! Chomping through them all...",
+  "scanEscalation": "Calling in a bigger fish for backup... 🦈",
+  "scanAlmostDone": "Almost done... one last bite",
+  "scanFoundCount": "Found {count} subscriptions",
+  "@scanFoundCount": { "placeholders": { "count": { "type": "int" } } },
+  "scanTapToExpand": "Tap to expand and edit details",
+  "scanCancelledHint": "Some subscriptions are already cancelled and will expire soon — we've unticked them for you.",
+  "scanAlreadyCancelled": "Already cancelled",
+  "scanExpires": "Expires",
+  "scanSkipAll": "Skip all",
+  "scanAddSelected": "+ Add {count} selected",
+  "@scanAddSelected": { "placeholders": { "count": { "type": "int" } } },
   "confidence": "confidence",
   "typeYourAnswer": "Type your answer...",
   "addToChompd": "Add to Chompd",
@@ -233,6 +251,10 @@
   "sourceQuickAdd": "Quick Add",
   "sourceManual": "Manual",
   "cancelSubscription": "Cancel Subscription",
+  "cancelSubscriptionConfirm": "Cancel {name}?",
+  "@cancelSubscriptionConfirm": {
+    "placeholders": { "name": {"type": "String"} }
+  },
   "cancelPlatformPickerTitle": "How do you pay for {name}?",
   "@cancelPlatformPickerTitle": {
     "placeholders": { "name": {"type": "String"} }
@@ -449,10 +471,16 @@
   "nudgeKeepIt": "Keep it",
   "trialLabel": "TRIAL",
   "priceToday": "TODAY",
+  "priceNow": "NOW",
   "priceThen": "THEN",
+  "priceRenewsAt": "RENEWS AT",
   "dayTrial": "{days}-day trial",
   "@dayTrial": {
     "placeholders": { "days": {"type": "String"} }
+  },
+  "monthIntro": "{months}-month intro",
+  "@monthIntro": {
+    "placeholders": { "months": {"type": "String"} }
   },
   "realCostFirstYear": "Real cost first year: {amount}",
   "@realCostFirstYear": {
@@ -692,6 +720,31 @@
   "cycleQuarterlyShort": "qtr",
   "cycleYearlyShort": "yr",
 
+  "scanFound": "Found: {details}",
+  "@scanFound": {
+    "placeholders": { "details": {"type": "String"} }
+  },
+  "scanRenewsDate": "renews {date}",
+  "@scanRenewsDate": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "scanChargeFound": "Found a charge for {price}/{cycle}.",
+  "@scanChargeFound": {
+    "placeholders": { "price": {"type": "String"}, "cycle": {"type": "String"} }
+  },
+  "scanWhichService": "Found a charge for {name} at {price}/{cycle}. Which service is this?",
+  "@scanWhichService": {
+    "placeholders": { "name": {"type": "String"}, "price": {"type": "String"}, "cycle": {"type": "String"} }
+  },
+  "scanBilledQuestion": "Is {name} billed monthly or yearly?",
+  "@scanBilledQuestion": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "scanMissingPrice": "I couldn't find the price in this image. How much is {name}?",
+  "@scanMissingPrice": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+
   "categoryStreaming": "Streaming",
   "categoryMusic": "Music",
   "categoryAi": "AI",
@@ -766,6 +819,10 @@
   "@annualSavingsCoverage": {
     "placeholders": { "matched": {"type": "int"}, "total": {"type": "int"} }
   },
+  "annualSavingsHint": "Check your {name} account settings for annual billing options",
+  "@annualSavingsHint": {
+    "placeholders": { "name": {"type": "String"} }
+  },
   "seeAll": "See all",
   "allSavingsTitle": "Annual Savings",
   "allSavingsSubtitle": "Switch these monthly plans to yearly to save",
@@ -784,7 +841,55 @@
   "insightDidYouKnow": "DID YOU KNOW?",
   "insightSaveMoney": "SAVE MONEY",
   "insightLearnMore": "Learn more",
+  "insightProLabel": "PRO INSIGHT",
   "insightUnlockPro": "Unlock with Pro",
   "insightProTeaser": "Upgrade to Pro to get personalised savings tips.",
-  "insightProTeaserTitle": "Personalised savings tips"
+  "insightProTeaserTitle": "Personalised savings tips",
+
+  "trialBannerDays": "Pro trial \u00B7 {days, plural, =1{1 day left} other{{days} days left}}",
+  "@trialBannerDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "trialBannerExpired": "Pro trial expired",
+  "trialBannerUpgrade": "Upgrade",
+
+  "trialPromptTitle": "Try everything free for 7 days",
+  "trialPromptSubtitle": "Full Pro access \u2014 no commitment, no payment.",
+  "trialPromptFeature1": "Unlimited subscriptions",
+  "trialPromptFeature2": "AI Trap Scanner \u2014 unlimited scans",
+  "trialPromptFeature3": "Advance renewal reminders (7d, 3d, 1d)",
+  "trialPromptFeature4": "Spending dashboard & insights",
+  "trialPromptFeature5": "Cancel guides & refund tips",
+  "trialPromptFeature6": "Smart nudges & savings cards",
+  "trialPromptLegal": "After 7 days: track up to 3 subscriptions free, or unlock everything for \u00A34.99 \u2014 once, forever.",
+  "trialPromptCta": "Start Free Trial",
+  "trialPromptDismiss": "Skip for now",
+
+  "trialExpiredTitle": "Your 7-day trial has ended",
+  "trialExpiredSubtitle": "You tracked {count, plural, =1{1 subscription} other{{count} subscriptions}} worth {price}/month.",
+  "@trialExpiredSubtitle": {
+    "placeholders": { "count": {"type": "int"}, "price": {"type": "String"} }
+  },
+  "trialExpiredFrozen": "{count, plural, =1{1 subscription is now frozen} other{{count} subscriptions are now frozen}}",
+  "@trialExpiredFrozen": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "trialExpiredCta": "Unlock Chompd Pro \u2014 \u00A34.99",
+  "trialExpiredDismiss": "Continue with free tier",
+
+  "frozenSectionHeader": "FROZEN \u2014 UPGRADE TO UNLOCK",
+  "frozenBadge": "FROZEN",
+  "frozenTapToUpgrade": "Tap to upgrade",
+
+  "cancelledStatusExpires": "Cancelled \u2014 expires {date}",
+  "@cancelledStatusExpires": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "cancelledStatusExpired": "Cancelled \u2014 expired {date}",
+  "@cancelledStatusExpired": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "reactivateSubscription": "Reactivate Subscription",
+  "scanErrorGeneric": "Couldn\u2019t read this image. Please try a different screenshot.",
+  "scanErrorEmpty": "Image file appears to be empty. Please try again."
 }

@@ -28,17 +28,44 @@ class ServiceInsight {
   /// Polish title (nullable).
   String? titlePl;
 
+  /// German title (nullable).
+  String? titleDe;
+
+  /// French title (nullable).
+  String? titleFr;
+
+  /// Spanish title (nullable).
+  String? titleEs;
+
   /// English body text.
   late String body;
 
   /// Polish body text (nullable).
   String? bodyPl;
 
+  /// German body text (nullable).
+  String? bodyDe;
+
+  /// French body text (nullable).
+  String? bodyFr;
+
+  /// Spanish body text (nullable).
+  String? bodyEs;
+
   /// Optional CTA button text (English).
   String? actionLabel;
 
   /// Optional CTA button text (Polish).
   String? actionLabelPl;
+
+  /// Optional CTA button text (German).
+  String? actionLabelDe;
+
+  /// Optional CTA button text (French).
+  String? actionLabelFr;
+
+  /// Optional CTA button text (Spanish).
+  String? actionLabelEs;
 
   /// Action type: 'info', 'cancel_reminder', 'plan_change', 'external_link'.
   String? actionType;
@@ -59,10 +86,19 @@ class ServiceInsight {
       ..insightType = row['insight_type'] as String? ?? 'hidden_perk'
       ..title = row['title'] as String? ?? ''
       ..titlePl = row['title_pl'] as String?
+      ..titleDe = row['title_de'] as String?
+      ..titleFr = row['title_fr'] as String?
+      ..titleEs = row['title_es'] as String?
       ..body = row['body'] as String? ?? ''
       ..bodyPl = row['body_pl'] as String?
+      ..bodyDe = row['body_de'] as String?
+      ..bodyFr = row['body_fr'] as String?
+      ..bodyEs = row['body_es'] as String?
       ..actionLabel = row['action_label'] as String?
       ..actionLabelPl = row['action_label_pl'] as String?
+      ..actionLabelDe = row['action_label_de'] as String?
+      ..actionLabelFr = row['action_label_fr'] as String?
+      ..actionLabelEs = row['action_label_es'] as String?
       ..actionType = row['action_type'] as String?
       ..priority = (row['priority'] as num?)?.toInt() ?? 0
       ..isDismissed = false;

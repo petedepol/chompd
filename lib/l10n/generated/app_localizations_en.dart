@@ -57,6 +57,9 @@ class SEn extends S {
   String get free => 'Free';
 
   @override
+  String get tierTrial => 'Trial';
+
+  @override
   String get onboardingTitle1 => 'Bite Back at Subscriptions';
 
   @override
@@ -263,7 +266,7 @@ class SEn extends S {
   String get scanTitle => 'AI Scan';
 
   @override
-  String get scanAnalysing => 'Analysing your screenshot...';
+  String get scanAnalysing => 'Nom nom... chewing through your screenshot 🐟';
 
   @override
   String get scanIdleTitle => 'Scan a Screenshot';
@@ -286,6 +289,19 @@ class SEn extends S {
       'Could not access photo library. Check permissions.';
 
   @override
+  String get pasteEmailText => 'Paste email text';
+
+  @override
+  String get pasteTextHint =>
+      'Paste your subscription email or confirmation text here...';
+
+  @override
+  String get scanText => 'Scan Text';
+
+  @override
+  String get textReceived => 'Nom nom... chewing through your text 🐟';
+
+  @override
   String get smartMove => 'Smart move!';
 
   @override
@@ -300,7 +316,45 @@ class SEn extends S {
   String get addedToUnchompd => 'Added to your Unchompd total';
 
   @override
-  String get analysing => 'Analysing...';
+  String get analysing => 'Almost done... one last bite';
+
+  @override
+  String get scanSniffing => 'Sniffing out sneaky charges...';
+
+  @override
+  String get scanFoundFeast => 'Found a feast! Chomping through them all...';
+
+  @override
+  String get scanEscalation => 'Calling in a bigger fish for backup... 🦈';
+
+  @override
+  String get scanAlmostDone => 'Almost done... one last bite';
+
+  @override
+  String scanFoundCount(int count) {
+    return 'Found $count subscriptions';
+  }
+
+  @override
+  String get scanTapToExpand => 'Tap to expand and edit details';
+
+  @override
+  String get scanCancelledHint =>
+      'Some subscriptions are already cancelled and will expire soon — we\'ve unticked them for you.';
+
+  @override
+  String get scanAlreadyCancelled => 'Already cancelled';
+
+  @override
+  String get scanExpires => 'Expires';
+
+  @override
+  String get scanSkipAll => 'Skip all';
+
+  @override
+  String scanAddSelected(int count) {
+    return '+ Add $count selected';
+  }
 
   @override
   String get confidence => 'confidence';
@@ -535,6 +589,11 @@ class SEn extends S {
 
   @override
   String get cancelSubscription => 'Cancel Subscription';
+
+  @override
+  String cancelSubscriptionConfirm(String name) {
+    return 'Cancel $name?';
+  }
 
   @override
   String cancelPlatformPickerTitle(String name) {
@@ -1034,11 +1093,22 @@ class SEn extends S {
   String get priceToday => 'TODAY';
 
   @override
+  String get priceNow => 'NOW';
+
+  @override
   String get priceThen => 'THEN';
+
+  @override
+  String get priceRenewsAt => 'RENEWS AT';
 
   @override
   String dayTrial(String days) {
     return '$days-day trial';
+  }
+
+  @override
+  String monthIntro(String months) {
+    return '$months-month intro';
   }
 
   @override
@@ -1441,6 +1511,36 @@ class SEn extends S {
   String get cycleYearlyShort => 'yr';
 
   @override
+  String scanFound(String details) {
+    return 'Found: $details';
+  }
+
+  @override
+  String scanRenewsDate(String date) {
+    return 'renews $date';
+  }
+
+  @override
+  String scanChargeFound(String price, String cycle) {
+    return 'Found a charge for $price/$cycle.';
+  }
+
+  @override
+  String scanWhichService(String name, String price, String cycle) {
+    return 'Found a charge for $name at $price/$cycle. Which service is this?';
+  }
+
+  @override
+  String scanBilledQuestion(String name) {
+    return 'Is $name billed monthly or yearly?';
+  }
+
+  @override
+  String scanMissingPrice(String name) {
+    return 'I couldn\'t find the price in this image. How much is $name?';
+  }
+
+  @override
   String get categoryStreaming => 'Streaming';
 
   @override
@@ -1613,6 +1713,11 @@ class SEn extends S {
   }
 
   @override
+  String annualSavingsHint(String name) {
+    return 'Check your $name account settings for annual billing options';
+  }
+
+  @override
   String get seeAll => 'See all';
 
   @override
@@ -1651,6 +1756,9 @@ class SEn extends S {
   String get insightLearnMore => 'Learn more';
 
   @override
+  String get insightProLabel => 'PRO INSIGHT';
+
+  @override
   String get insightUnlockPro => 'Unlock with Pro';
 
   @override
@@ -1659,4 +1767,117 @@ class SEn extends S {
 
   @override
   String get insightProTeaserTitle => 'Personalised savings tips';
+
+  @override
+  String trialBannerDays(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days left',
+      one: '1 day left',
+    );
+    return 'Pro trial · $_temp0';
+  }
+
+  @override
+  String get trialBannerExpired => 'Pro trial expired';
+
+  @override
+  String get trialBannerUpgrade => 'Upgrade';
+
+  @override
+  String get trialPromptTitle => 'Try everything free for 7 days';
+
+  @override
+  String get trialPromptSubtitle =>
+      'Full Pro access — no commitment, no payment.';
+
+  @override
+  String get trialPromptFeature1 => 'Unlimited subscriptions';
+
+  @override
+  String get trialPromptFeature2 => 'AI Trap Scanner — unlimited scans';
+
+  @override
+  String get trialPromptFeature3 => 'Advance renewal reminders (7d, 3d, 1d)';
+
+  @override
+  String get trialPromptFeature4 => 'Spending dashboard & insights';
+
+  @override
+  String get trialPromptFeature5 => 'Cancel guides & refund tips';
+
+  @override
+  String get trialPromptFeature6 => 'Smart nudges & savings cards';
+
+  @override
+  String get trialPromptLegal =>
+      'After 7 days: track up to 3 subscriptions free, or unlock everything for £4.99 — once, forever.';
+
+  @override
+  String get trialPromptCta => 'Start Free Trial';
+
+  @override
+  String get trialPromptDismiss => 'Skip for now';
+
+  @override
+  String get trialExpiredTitle => 'Your 7-day trial has ended';
+
+  @override
+  String trialExpiredSubtitle(int count, String price) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subscriptions',
+      one: '1 subscription',
+    );
+    return 'You tracked $_temp0 worth $price/month.';
+  }
+
+  @override
+  String trialExpiredFrozen(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count subscriptions are now frozen',
+      one: '1 subscription is now frozen',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trialExpiredCta => 'Unlock Chompd Pro — £4.99';
+
+  @override
+  String get trialExpiredDismiss => 'Continue with free tier';
+
+  @override
+  String get frozenSectionHeader => 'FROZEN — UPGRADE TO UNLOCK';
+
+  @override
+  String get frozenBadge => 'FROZEN';
+
+  @override
+  String get frozenTapToUpgrade => 'Tap to upgrade';
+
+  @override
+  String cancelledStatusExpires(String date) {
+    return 'Cancelled — expires $date';
+  }
+
+  @override
+  String cancelledStatusExpired(String date) {
+    return 'Cancelled — expired $date';
+  }
+
+  @override
+  String get reactivateSubscription => 'Reactivate Subscription';
+
+  @override
+  String get scanErrorGeneric =>
+      'Couldn’t read this image. Please try a different screenshot.';
+
+  @override
+  String get scanErrorEmpty =>
+      'Image file appears to be empty. Please try again.';
 }

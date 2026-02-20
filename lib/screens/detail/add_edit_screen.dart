@@ -15,10 +15,25 @@ import '../../utils/l10n_extension.dart';
 ///
 /// If [existingSub] is provided, the form pre-fills with its data.
 /// Otherwise, creates a new subscription.
+///
+/// Optional [prefillName], [prefillCategory], [prefillIcon], and
+/// [prefillBrandColor] allow pre-populating the form from a quick-add
+/// template without creating a full [Subscription] object.
 class AddEditScreen extends ConsumerStatefulWidget {
   final Subscription? existingSub;
+  final String? prefillName;
+  final String? prefillCategory;
+  final String? prefillIcon;
+  final String? prefillBrandColor;
 
-  const AddEditScreen({super.key, this.existingSub});
+  const AddEditScreen({
+    super.key,
+    this.existingSub,
+    this.prefillName,
+    this.prefillCategory,
+    this.prefillIcon,
+    this.prefillBrandColor,
+  });
 
   @override
   ConsumerState<AddEditScreen> createState() => _AddEditScreenState();
@@ -44,18 +59,18 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
   void initState() {
     super.initState();
     final sub = widget.existingSub;
-    _nameCtrl = TextEditingController(text: sub?.name ?? '');
+    _nameCtrl = TextEditingController(text: sub?.name ?? widget.prefillName ?? '');
     _priceCtrl = TextEditingController(
       text: sub != null ? sub.price.toStringAsFixed(2) : '',
     );
     _currency = sub?.currency ?? ref.read(currencyProvider);
     _cycle = sub?.cycle ?? BillingCycle.monthly;
-    _category = sub?.category ?? 'streaming';
+    _category = sub?.category ?? widget.prefillCategory ?? 'streaming';
     _nextRenewal = sub?.nextRenewal ?? DateTime.now().add(const Duration(days: 30));
     _isTrial = sub?.isTrial ?? false;
     _trialEndDate = sub?.trialEndDate;
-    _iconName = sub?.iconName;
-    _brandColor = sub?.brandColor;
+    _iconName = sub?.iconName ?? widget.prefillIcon;
+    _brandColor = sub?.brandColor ?? widget.prefillBrandColor;
   }
 
   @override
@@ -155,6 +170,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
                                 controller: _priceCtrl,
                                 hint: context.l10n.hintPrice,
                                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) => _save(),
                                 inputFormatters: [
                                   // Allow digits, dots, and commas (European decimal)
                                   FilteringTextInputFormatter.allow(RegExp(r'[\d.,]')),
@@ -509,6 +526,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     required TextEditingController controller,
     required String hint,
     TextInputType? keyboardType,
+    TextInputAction? textInputAction,
+    ValueChanged<String>? onFieldSubmitted,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
@@ -517,6 +536,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onFieldSubmitted,
       inputFormatters: inputFormatters,
       validator: validator,
       style: TextStyle(fontSize: 14, color: c.text),
@@ -642,7 +663,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     if (picked != null) setState(() => _trialEndDate = picked);
   }
 
-  void _save() {
+  void _save() async {
     if (!_formKey.currentState!.validate()) return;
 
     final name = _nameCtrl.text.trim();
@@ -650,8 +671,8 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
     final notifier = ref.read(subscriptionsProvider.notifier);
     final cacheNotifier = ref.read(serviceCacheProvider.notifier);
 
-    // Try to match against service database
-    final matchedId = cacheNotifier.matchServiceId(name);
+    // Try to match against service database (async — refreshes cache if empty)
+    final matchedId = await cacheNotifier.matchServiceIdAsync(name);
 
     if (_isEditing) {
       final updated = widget.existingSub!

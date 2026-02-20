@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart';
+
 /// Date formatting and calculation helpers.
 class DateHelpers {
   DateHelpers._();
@@ -15,21 +17,13 @@ class DateHelpers {
     return '$diff days';
   }
 
-  /// Short date format: "14 Mar 2026"
-  static String shortDate(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${date.day} ${months[date.month - 1]} ${date.year}';
+  /// Short date format: "14 Mar 2026" (locale-aware when [locale] provided).
+  static String shortDate(DateTime date, {String? locale}) {
+    return DateFormat('d MMM yyyy', locale).format(date);
   }
 
-  /// Month-year format: "Feb 2026"
-  static String monthYear(DateTime date) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-    ];
-    return '${months[date.month - 1]} ${date.year}';
+  /// Month-year format: "Feb 2026" (locale-aware when [locale] provided).
+  static String monthYear(DateTime date, {String? locale}) {
+    return DateFormat('MMM yyyy', locale).format(date);
   }
 }

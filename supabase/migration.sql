@@ -45,9 +45,12 @@ CREATE TABLE public.subscriptions (
   trap_severity TEXT,
   trial_expires_at TIMESTAMPTZ,
   trial_reminder_set BOOLEAN NOT NULL DEFAULT false,
+  matched_service_id TEXT,
+  trap_warning_message TEXT,
   last_reviewed_at TIMESTAMPTZ,
   last_nudged_at TIMESTAMPTZ,
   keep_confirmed BOOLEAN NOT NULL DEFAULT false,
+  cancelled_dismissed BOOLEAN NOT NULL DEFAULT false,
   reminders JSONB NOT NULL DEFAULT '[]'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -202,9 +205,9 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER set_updated_at_profiles
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
-CREATE TRIGGER set_updated_at_subscriptions
-  BEFORE UPDATE ON public.subscriptions
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+-- NOTE: No updated_at trigger for subscriptions — client controls updated_at
+-- for last-write-wins sync. The trigger was removed because it overwrites
+-- the client-provided timestamp, breaking conflict resolution.
 CREATE TRIGGER set_updated_at_user_settings
   BEFORE UPDATE ON public.user_settings
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();

@@ -1,0 +1,877 @@
+{
+  "@@locale": "fr",
+
+  "appName": "Chompd",
+  "tagline": "Scanne. Traque. Contre-attaque.",
+
+  "save": "Enregistrer",
+  "cancel": "Annuler",
+  "delete": "Supprimer",
+  "done": "Terminé",
+  "keep": "Garder",
+  "skip": "Passer",
+  "next": "Suivant",
+  "share": "Partager",
+  "confirm": "Confirmer",
+  "other": "Autre",
+  "close": "Fermer",
+  "edit": "Modifier",
+  "pro": "Pro",
+  "free": "Gratuit",
+  "tierTrial": "Essai",
+
+  "onboardingTitle1": "Reprends le contrôle de tes abos",
+  "onboardingSubtitle1": "Chompd traque chaque abonnement, détecte les pièges cachés et t'aide à résilier ce que tu n'utilises pas.",
+  "onboardingStatWaste": "En moyenne, {amount}/an sont gaspillés pour des abonnements oubliés",
+  "@onboardingStatWaste": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "onboardingEaseTag": "Rien à taper. Photo et c'est tracké.",
+  "onboardingTitle2": "Comment ça marche",
+  "onboardingStep1Title": "Fais une capture d'écran",
+  "onboardingStep1Subtitle": "Confirmation, e-mail ou relevé bancaire",
+  "onboardingStep2Title": "L'IA le lit instantanément",
+  "onboardingStep2Subtitle": "Prix, date de renouvellement et pièges cachés",
+  "onboardingStep3Title": "C'est fait. Traqué pour toujours.",
+  "onboardingStep3Subtitle": "On te prévient avant que tu sois débité",
+  "onboardingTitle3": "Garde une longueur d'avance",
+  "onboardingSubtitle3": "On te rappelle avant chaque renouvellement — pas de mauvaises surprises.",
+  "onboardingNotifMorning": "Le matin du renouvellement",
+  "onboardingNotif7days": "7 jours avant",
+  "onboardingNotifTrial": "Alertes de fin d'essai",
+  "allowNotifications": "Autoriser les notifications",
+  "maybeLater": "Peut-être plus tard",
+  "onboardingTitle4": "Ajoute ton premier abonnement",
+  "onboardingSubtitle4": "La plupart des gens découvrent des abos oubliés dès le premier scan. Voyons ce qui grignote ton argent.",
+  "scanAScreenshot": "Scanner une capture",
+  "addManually": "Ajouter manuellement",
+  "skipForNow": "Passer pour l'instant",
+
+  "homeStatusLine": "{active} actifs · {cancelled} résiliés",
+  "@homeStatusLine": {
+    "placeholders": { "active": {"type": "int"}, "cancelled": {"type": "int"} }
+  },
+  "overBudgetMood": "Aïe. Ça fait beaucoup.",
+  "underBudgetMood": "Super ! Bien en dessous du budget.",
+  "sectionActiveSubscriptions": "ABONNEMENTS ACTIFS",
+  "sectionCancelledSaved": "RÉSILIÉS — ÉCONOMISÉ",
+  "sectionMilestones": "OBJECTIFS",
+  "sectionYearlyBurn": "DÉPENSES ANNUELLES",
+  "sectionMonthlyBurn": "DÉPENSES MENSUELLES",
+  "sectionSavedWithChompd": "ÉCONOMISÉ AVEC CHOMPD",
+  "perYearAcrossSubs": "par an pour {count, plural, =1{1 abonnement} other{{count} abonnements}}",
+  "@perYearAcrossSubs": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "perMonthAcrossSubs": "par mois pour {count, plural, =1{1 abonnement} other{{count} abonnements}}",
+  "@perMonthAcrossSubs": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "monthlyAvg": "moy. mensuelle",
+  "yearlyTotal": "total annuel",
+  "dailyCost": "coût quotidien",
+  "fromCancelled": "de {count} résiliés",
+  "@fromCancelled": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "deleteSubscriptionTitle": "Supprimer l'abonnement ?",
+  "deleteSubscriptionMessage": "Supprimer {name} définitivement ?",
+  "@deleteSubscriptionMessage": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "cancelledMonthsAgo": "Résilié il y a {months} mois",
+  "@cancelledMonthsAgo": {
+    "placeholders": { "months": {"type": "int"} }
+  },
+  "justCancelled": "Vient d'être résilié",
+  "subsLeft": "Abos restants",
+  "scansLeft": "Scans restants",
+  "aiScanScreenshot": "Scan IA d'une capture",
+  "aiScanUpgradeToPro": "Scan IA (Passer en Pro)",
+  "quickAddManual": "Ajout rapide / Manuel",
+  "addSubUpgradeToPro": "Ajouter un abo (Passer en Pro)",
+  "trialsExpiringSoon": "{count, plural, =1{1 essai expire bientôt} other{{count} essais expirent bientôt}}",
+  "@trialsExpiringSoon": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "trialDaysLeft": "{names} — {days} jours restants",
+  "@trialDaysLeft": {
+    "placeholders": { "names": {"type": "String"}, "days": {"type": "int"} }
+  },
+  "proInfinity": "PRO ∞",
+  "scansLeftCount": "{count, plural, =1{1 scan restant} other{{count} scans restants}}",
+  "@scansLeftCount": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+
+  "scanTitle": "Scan IA",
+  "scanAnalysing": "Nom nom... je mâche ta capture d'écran 🐟",
+  "scanIdleTitle": "Scanne une capture d'écran",
+  "scanIdleSubtitle": "Partage une capture d'e-mail de confirmation,\nde relevé bancaire ou de reçu App Store.",
+  "takePhoto": "Prendre une photo",
+  "chooseFromGallery": "Choisir depuis la galerie",
+  "cameraPermError": "Pas d'accès à la caméra. Vérifie les permissions.",
+  "galleryPermError": "Pas d'accès aux photos. Vérifie les permissions.",
+  "pasteEmailText": "Coller le texte d'un e-mail",
+  "pasteTextHint": "Colle ici le texte de ton e-mail d'abonnement ou de confirmation...",
+  "scanText": "Scanner le texte",
+  "textReceived": "Nom nom... je mâche ton texte 🐟",
+  "smartMove": "Bien joué !",
+  "youSkipped": "Tu as évité {service}",
+  "@youSkipped": {
+    "placeholders": { "service": {"type": "String"} }
+  },
+  "saved": "ÉCONOMISÉ",
+  "addedToUnchompd": "Ajouté à ton total Unchompd",
+  "analysing": "Presque fini... une dernière bouchée",
+  "scanSniffing": "Je renifle les frais cachés...",
+  "scanFoundFeast": "Un festin trouvé ! Je croque tout...",
+  "scanEscalation": "J'appelle un plus gros poisson en renfort... 🦈",
+  "scanAlmostDone": "Presque fini... une dernière bouchée",
+  "scanFoundCount": "{count} abonnements trouvés",
+  "@scanFoundCount": { "placeholders": { "count": { "type": "int" } } },
+  "scanTapToExpand": "Appuie pour développer et modifier",
+  "scanCancelledHint": "Certains abonnements sont déjà résiliés et expirent bientôt — nous les avons décochés pour toi.",
+  "scanAlreadyCancelled": "Déjà résilié",
+  "scanExpires": "Expire",
+  "scanSkipAll": "Tout ignorer",
+  "scanAddSelected": "+ Ajouter {count} sélectionnés",
+  "@scanAddSelected": { "placeholders": { "count": { "type": "int" } } },
+  "confidence": "confiance",
+  "typeYourAnswer": "Tape ta réponse...",
+  "addToChompd": "Ajouter à Chompd",
+  "monthlyTotal": "Total mensuel",
+  "addAllToChompd": "Ajouter les {count} à Chompd",
+  "@addAllToChompd": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "autoTier": "AUTO",
+  "yesIts": "Oui, c'est {option}",
+  "@yesIts": {
+    "placeholders": { "option": {"type": "String"} }
+  },
+  "otherAmount": "Autre montant",
+
+  "trapDetected": "PIÈGE DÉTECTÉ",
+  "trapOfferActually": "Cette offre « {name} » est en réalité :",
+  "@trapOfferActually": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "skipItSave": "ÉVITER — ÉCONOMISER {amount}",
+  "@skipItSave": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "trackTrialAnyway": "Suivre l'essai quand même",
+  "trapReminder": "On te préviendra avant le prélèvement",
+
+  "editSubscription": "Modifier l'abonnement",
+  "addSubscription": "Ajouter un abonnement",
+  "fieldServiceName": "NOM DU SERVICE",
+  "hintServiceName": "ex. Netflix, Spotify",
+  "errorNameRequired": "Nom requis",
+  "fieldPrice": "PRIX",
+  "hintPrice": "9,99",
+  "errorPriceRequired": "Prix requis",
+  "errorInvalidPrice": "Prix invalide",
+  "fieldCurrency": "DEVISE",
+  "fieldBillingCycle": "CYCLE DE FACTURATION",
+  "fieldCategory": "CATÉGORIE",
+  "fieldNextRenewal": "PROCHAIN RENOUVELLEMENT",
+  "selectDate": "Choisir une date",
+  "freeTrialToggle": "C'est un essai gratuit",
+  "trialDurationLabel": "Durée de l'essai",
+  "trialDays7": "7 jours",
+  "trialDays14": "14 jours",
+  "trialDays30": "30 jours",
+  "trialCustomDays": "{days}j",
+  "@trialCustomDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "fieldTrialEnds": "FIN DE L'ESSAI",
+  "saveChanges": "Enregistrer",
+
+  "subscriptionDetail": "Détails de l'abonnement",
+  "thatsPerYear": "Soit {amount} par an",
+  "@thatsPerYear": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "overThreeYears": "{amount} sur 3 ans",
+  "@overThreeYears": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "trialDaysRemaining": "⚠️ Essai — {days} jours restants",
+  "@trialDaysRemaining": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "trialExpired": "⚠️ Essai expiré",
+  "nextRenewal": "PROCHAIN RENOUVELLEMENT",
+  "chargesToday": "{price} prélevé aujourd'hui",
+  "@chargesToday": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "chargesTomorrow": "{price} prélevé demain",
+  "@chargesTomorrow": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "chargesSoon": "{days} jours — {price} bientôt",
+  "@chargesSoon": {
+    "placeholders": { "days": {"type": "int"}, "price": {"type": "String"} }
+  },
+  "daysCount": "{days} jours",
+  "@daysCount": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "sectionReminders": "RAPPELS",
+  "remindersScheduled": "{count, plural, =1{1 rappel programmé} other{{count} rappels programmés}}",
+  "@remindersScheduled": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "reminderDaysBefore7": "7 jours avant",
+  "reminderDaysBefore3": "3 jours avant",
+  "reminderDaysBefore1": "1 jour avant",
+  "reminderMorningOf": "Le matin même",
+  "upgradeForReminders": "Passe en Pro pour des rappels anticipés",
+  "sectionPaymentHistory": "HISTORIQUE DES PAIEMENTS",
+  "totalPaid": "Total payé",
+  "noPaymentsYet": "Aucun paiement — ajouté le {date}",
+  "@noPaymentsYet": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "upcoming": "À venir",
+  "sectionDetails": "DÉTAILS",
+  "detailCategory": "Catégorie",
+  "detailCurrency": "Devise",
+  "detailBillingCycle": "Cycle de facturation",
+  "detailAdded": "Ajouté",
+  "addedVia": "{date} via {source}",
+  "@addedVia": {
+    "placeholders": { "date": {"type": "String"}, "source": {"type": "String"} }
+  },
+  "sourceAiScan": "Scan IA",
+  "sourceQuickAdd": "Ajout rapide",
+  "sourceManual": "Manuel",
+  "cancelSubscription": "Résilier l'abonnement",
+  "cancelSubscriptionConfirm": "Résilier {name} ?",
+  "@cancelSubscriptionConfirm": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "cancelPlatformPickerTitle": "Comment paies-tu {name} ?",
+  "@cancelPlatformPickerTitle": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "cancelPlatformIos": "Apple App Store",
+  "cancelPlatformAndroid": "Google Play",
+  "cancelPlatformWeb": "Site web / Direct",
+  "cancelPlatformNotSure": "Pas sûr",
+  "difficultyEasy": "Facile — résiliation simple",
+  "difficultyModerate": "Modéré — quelques étapes",
+  "difficultyMedium": "Moyen — prend quelques minutes",
+  "difficultyHard": "Difficile — rendu volontairement compliqué",
+  "difficultyVeryHard": "Très difficile — multiples écrans de rétention",
+  "requestRefund": "Demander un remboursement",
+  "deleteNameTitle": "Supprimer {name} ?",
+  "@deleteNameTitle": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "deleteNameMessage": "Cet abonnement sera supprimé définitivement. Cette action est irréversible.",
+  "noGuideYet": "Pas de guide pour {name} pour le moment. Cherche « {name} résilier abonnement » en ligne.",
+  "@noGuideYet": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "realAnnualCost": "Coût annuel réel : {amount}/an",
+  "@realAnnualCost": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "trialExpires": "L'essai expire le {date}",
+  "@trialExpires": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+
+  "chompdPro": "Chompd Pro",
+  "paywallTagline": "Un traqueur d'abonnements qui n'est pas un abonnement.",
+  "paywallLimitSubs": "Tu as atteint la limite gratuite de {count} abonnements.",
+  "@paywallLimitSubs": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "paywallLimitScans": "Tu as utilisé tes {count} scans IA gratuits.",
+  "@paywallLimitScans": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "paywallLimitReminders": "Les rappels anticipés sont une fonctionnalité Pro.",
+  "paywallGeneric": "Débloque l'expérience Chompd complète.",
+  "paywallFeature1": "Économise 100–500/an sur les dépenses cachées",
+  "paywallFeature2": "Ne rate plus jamais la fin d'un essai",
+  "paywallFeature3": "Scan de pièges IA illimité",
+  "paywallFeature4": "Traque chaque abonnement",
+  "paywallFeature5": "Alertes anticipées : 7j, 3j, 1j avant le prélèvement",
+  "paywallFeature6": "Cartes d'économies partageables",
+  "paywallContext": "Rentabilisé dès la résiliation d'un seul abo oublié.",
+  "oneTimePayment": "Paiement unique. Pour toujours.",
+  "lifetime": "À VIE",
+  "unlockChompdPro": "Débloquer Chompd Pro",
+  "restoring": "Restauration...",
+  "restorePurchase": "Restaurer l'achat",
+  "purchaseError": "L'achat n'a pas pu être finalisé. Réessaie.",
+  "noPreviousPurchase": "Aucun achat précédent trouvé.",
+
+  "renewalCalendar": "Calendrier des renouvellements",
+  "today": "AUJOURD'HUI",
+  "noRenewalsThisDay": "Aucun renouvellement ce jour",
+  "thisMonth": "CE MOIS",
+  "renewals": "Renouvellements",
+  "total": "Total",
+  "renewalsOnDay": "{count} renouvellements le {date} pour un total de {price}",
+  "@renewalsOnDay": {
+    "placeholders": { "count": {"type": "int"}, "date": {"type": "String"}, "price": {"type": "String"} }
+  },
+  "biggestDay": "Jour le plus cher : {date} — {price}",
+  "@biggestDay": {
+    "placeholders": { "date": {"type": "String"}, "price": {"type": "String"} }
+  },
+  "tapDayToSee": "Touche un jour pour voir les renouvellements",
+
+  "cancelGuideTitle": "Résilier {name}",
+  "@cancelGuideTitle": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "whyCancelling": "Pourquoi résilie-tu ?",
+  "whyCancellingHint": "Un petit tap — ça nous aide à améliorer Chompd.",
+  "reasonTooExpensive": "Trop cher",
+  "reasonDontUse": "Je ne l'utilise pas assez",
+  "reasonBreak": "Je fais une pause",
+  "reasonSwitching": "Je passe à autre chose",
+  "difficultyLevel": "Niveau de difficulté",
+  "cancellationSteps": "Étapes de résiliation",
+  "stepNumber": "ÉTAPE {number}",
+  "@stepNumber": {
+    "placeholders": { "number": {"type": "int"} }
+  },
+  "openCancelPage": "Ouvrir la page de résiliation",
+  "iveCancelled": "J'ai résilié",
+  "couldntCancelRefund": "Tu n'arrives pas à résilier ? Aide au remboursement →",
+  "refundTipTitle": "Astuce : Pourquoi demander un remboursement ?",
+  "refundTipBody": "Si tu as été débité de manière inattendue, inscrit par erreur, ou que le service n'a pas fonctionné comme promis — tu peux avoir droit à un remboursement. Plus tu fais ta demande tôt, meilleures sont tes chances.",
+
+  "refundRescue": "Aide au remboursement",
+  "refundIntro": "Pas de panique — la plupart des gens récupèrent leur argent. On va régler ça.",
+  "chargedYou": "{name} t'a prélevé {price}",
+  "@chargedYou": {
+    "placeholders": { "name": {"type": "String"}, "price": {"type": "String"} }
+  },
+  "howCharged": "COMMENT AS-TU ÉTÉ DÉBITÉ ?",
+  "successRate": "Taux de succès : {rate}",
+  "@successRate": {
+    "placeholders": { "rate": {"type": "String"} }
+  },
+  "copyDisputeEmail": "Copier l'e-mail de contestation",
+  "openRefundPage": "Ouvrir la page de remboursement",
+  "iveSubmittedRequest": "J'ai envoyé ma demande",
+  "requestSubmitted": "Demande envoyée !",
+  "requestSubmittedMessage": "Ta demande de remboursement a été enregistrée. Surveille ta boîte mail.",
+  "emailCopied": "E-mail copié dans le presse-papier",
+
+  "settingsTitle": "Paramètres",
+  "themeTitle": "THÈME",
+  "themeSystem": "Système",
+  "themeDark": "Sombre",
+  "themeLight": "Clair",
+  "sectionNotifications": "NOTIFICATIONS",
+  "remindersScheduledSummary": "{count, plural, =1{1 rappel programmé} other{{count} rappels programmés}}",
+  "@remindersScheduledSummary": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "pushNotifications": "Notifications push",
+  "pushNotificationsSubtitle": "Rappels de renouvellements et essais",
+  "morningDigest": "Résumé matinal",
+  "morningDigestSubtitle": "Résumé quotidien à {time}",
+  "@morningDigestSubtitle": {
+    "placeholders": { "time": {"type": "String"} }
+  },
+  "renewalReminders": "Rappels de renouvellement",
+  "trialExpiryAlerts": "Alertes de fin d'essai",
+  "trialExpirySubtitle": "Alerte à 3 jours, 1 jour et le jour même",
+  "sectionReminderSchedule": "PLANNING DES RAPPELS",
+  "sectionUpcoming": "À VENIR",
+  "noUpcomingNotifications": "Aucune notification à venir",
+  "sectionChompdPro": "CHOMPD PRO",
+  "sectionCurrency": "DEVISE",
+  "displayCurrency": "Devise d'affichage",
+  "sectionMonthlyBudget": "BUDGET MENSUEL",
+  "monthlySpendingTarget": "Objectif de dépenses mensuel",
+  "budgetHint": "Utilisé pour l'anneau de dépenses du tableau de bord",
+  "sectionHapticFeedback": "RETOUR HAPTIQUE",
+  "hapticFeedback": "Retour haptique",
+  "hapticSubtitle": "Vibrations sur les touches, bascules et célébrations",
+  "sectionDataExport": "EXPORT DE DONNÉES",
+  "exportToCsv": "Exporter en CSV",
+  "exportHint": "Télécharger tous tes abonnements en tableau",
+  "exportSuccess": "{count} abonnements exportés en CSV",
+  "@exportSuccess": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "exportFailed": "Export échoué : {error}",
+  "@exportFailed": {
+    "placeholders": { "error": {"type": "String"} }
+  },
+  "sectionAbout": "À PROPOS",
+  "version": "Version",
+  "tier": "Forfait",
+  "aiModel": "Modèle IA",
+  "aiModelValue": "Claude Haiku 4.5",
+  "setBudgetTitle": "Définir le budget mensuel",
+  "setBudgetSubtitle": "Indique ton objectif de dépenses mensuelles en abonnements.",
+  "reminderSubtitleMorningOnly": "Le matin uniquement (passe en Pro pour plus)",
+  "reminderSubtitleDays": "{schedule} avant le renouvellement",
+  "@reminderSubtitleDays": {
+    "placeholders": { "schedule": {"type": "String"} }
+  },
+  "dayOf": "Le jour même",
+  "oneDay": "1 jour",
+  "nDays": "{days} jours",
+  "@nDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "timelineLabel7d": "7j",
+  "timelineLabel3d": "3j",
+  "timelineLabel1d": "1j",
+  "timelineLabelDayOf": "Jour J",
+  "upgradeProReminders": "Passe en Pro pour les rappels 7j, 3j et 1j",
+  "proPrice": "£{price}",
+  "@proPrice": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "oneTimePaymentShort": "{price} • Paiement unique",
+  "@oneTimePaymentShort": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "sectionLanguage": "LANGUE",
+
+  "severityHigh": "RISQUE ÉLEVÉ",
+  "severityCaution": "ATTENTION",
+  "severityInfo": "INFO",
+  "trapTypeTrialBait": "Piège à l'essai",
+  "trapTypePriceFraming": "Tarification trompeuse",
+  "trapTypeHiddenRenewal": "Renouvellement caché",
+  "trapTypeCancelFriction": "Résiliation compliquée",
+  "trapTypeGeneric": "Piège d'abonnement",
+  "severityExplainHigh": "Hausse de prix extrême ou présentation trompeuse",
+  "severityExplainMedium": "Le prix d'introduction augmente significativement",
+  "severityExplainLow": "Essai standard avec renouvellement automatique",
+  "trialBadge": "{days}j essai",
+  "@trialBadge": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "emptyNoSubscriptions": "Pas encore d'abonnements",
+  "emptyNoSubscriptionsHint": "Scanne une capture ou touche + pour commencer.",
+  "emptyNoTrials": "Aucun essai actif",
+  "emptyNoTrialsHint": "Quand tu ajouteras des abonnements d'essai,\nils apparaîtront ici avec des alertes de compte à rebours.",
+  "emptyNoSavings": "Pas encore d'économies",
+  "emptyNoSavingsHint": "Résilie les abonnements inutilisés\net regarde tes économies grandir.",
+  "nudgeReview": "Vérifier",
+  "nudgeKeepIt": "Garder",
+  "trialLabel": "ESSAI",
+  "priceToday": "AUJOURD'HUI",
+  "priceNow": "MAINTENANT",
+  "priceThen": "ENSUITE",
+  "dayTrial": "Essai de {days} jours",
+  "@dayTrial": {
+    "placeholders": { "days": {"type": "String"} }
+  },
+  "monthIntro": "Offre de {months} mois",
+  "@monthIntro": {
+    "placeholders": { "months": {"type": "String"} }
+  },
+  "realCostFirstYear": "Coût réel la 1re année : {amount}",
+  "@realCostFirstYear": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+
+  "milestoneCoffeeFund": "Budget café",
+  "milestoneGamePass": "Game Pass",
+  "milestoneWeekendAway": "Week-end",
+  "milestoneNewGadget": "Nouveau gadget",
+  "milestoneDreamHoliday": "Vacances de rêve",
+  "milestoneFirstBiteBack": "Première contre-attaque",
+  "milestoneChompSpotter": "Détecteur de pièges",
+  "milestoneDarkPatternDestroyer": "Destructeur de dark patterns",
+  "milestoneSubscriptionSentinel": "Sentinelle des abos",
+  "milestoneUnchompable": "Unchompable",
+  "milestoneReached": "✓ Atteint !",
+  "milestoneToGo": "encore {amount}",
+  "@milestoneToGo": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+
+  "celebrationTitle": "Bien joué ! 🎉",
+  "celebrationSavePerYear": "Tu économiseras {amount}/an",
+  "@celebrationSavePerYear": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "celebrationByDropping": "en résiliant {name}",
+  "@celebrationByDropping": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "tapAnywhereToContinue": "touche n'importe où pour continuer",
+
+  "trapBadge": "PIÈGE",
+  "trapDays": "{days}j piège",
+  "@trapDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+
+  "unchompd": "Unchompd",
+  "fromSubscriptionTraps": "des pièges d'abonnements",
+  "trapsDodged": "{count} évités",
+  "@trapsDodged": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "trialsCancelled": "{count} résiliés",
+  "@trialsCancelled": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "refundsRecovered": "{count} remboursés",
+  "@refundsRecovered": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+
+  "ringYearly": "ANNUEL",
+  "ringMonthly": "MENSUEL",
+  "overBudget": "{amount} au-dessus du budget",
+  "@overBudget": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "ofBudget": "sur {amount} de budget",
+  "@ofBudget": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "tapForMonthly": "touche pour mensuel",
+  "tapForYearly": "touche pour annuel",
+  "budgetRange": "Budget : {min} – {max}",
+  "@budgetRange": {
+    "placeholders": { "min": {"type": "String"}, "max": {"type": "String"} }
+  },
+
+  "addSubscriptionSheet": "Ajouter un abonnement",
+  "orChooseService": "ou choisis un service",
+  "searchServices": "Rechercher un service...",
+  "priceField": "Prix",
+  "addServiceName": "Ajouter {name}",
+  "@addServiceName": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+
+  "tapForMore": "touche pour plus",
+
+  "shareYearlyBurn": "Je dépense {symbol}{amount}/an pour {count, plural, =1{1 abonnement} other{{count} abonnements}} 😳",
+  "@shareYearlyBurn": {
+    "placeholders": { "symbol": {"type": "String"}, "amount": {"type": "String"}, "count": {"type": "int"} }
+  },
+  "shareMonthlyDaily": "Soit {symbol}{monthly}/mois ou {symbol}{daily}/jour",
+  "@shareMonthlyDaily": {
+    "placeholders": { "symbol": {"type": "String"}, "monthly": {"type": "String"}, "daily": {"type": "String"} }
+  },
+  "shareSavedBy": "✓ Économisé {symbol}{amount} en résiliant {count, plural, =1{1 abonnement} other{{count} abonnements}}",
+  "@shareSavedBy": {
+    "placeholders": { "symbol": {"type": "String"}, "amount": {"type": "String"}, "count": {"type": "int"} }
+  },
+  "shareFooter": "Suivi avec Chompd — Scanne. Traque. Contre-attaque.",
+  "shareSavings": "J'ai économisé {symbol}{amount} en résiliant {count, plural, =1{1 abonnement} other{{count} abonnements}} 🎉\n\nReprends le contrôle de tes abos — getchompd.com",
+  "@shareSavings": {
+    "placeholders": { "symbol": {"type": "String"}, "amount": {"type": "String"}, "count": {"type": "int"} }
+  },
+
+  "insightBigSpenderHeadline": "Gros poste",
+  "insightBigSpenderMessage": "{name} te coûte **{amount}/an**. C'est ton abonnement le plus cher.",
+  "@insightBigSpenderMessage": {
+    "placeholders": { "name": {"type": "String"}, "amount": {"type": "String"} }
+  },
+  "insightAnnualSavingsHeadline": "Économies annuelles",
+  "insightAnnualSavingsMessage": "Passer **{count, plural, =1{1 abonnement} other{{count} abonnements}}** en facturation annuelle pourrait économiser ~**{amount}/an**.",
+  "@insightAnnualSavingsMessage": {
+    "placeholders": { "count": {"type": "int"}, "amount": {"type": "String"} }
+  },
+  "insightRealityCheckHeadline": "Vérification",
+  "insightRealityCheckMessage": "Tu as **{count} abonnements actifs**. La moyenne est de 12 — tu les utilises tous ?",
+  "@insightRealityCheckMessage": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "insightMoneySavedHeadline": "Argent économisé",
+  "insightMoneySavedMessage": "Tu as économisé **{amount}** depuis la résiliation de **{count, plural, =1{1 abonnement} other{{count} abonnements}}**. Bien joué !",
+  "@insightMoneySavedMessage": {
+    "placeholders": { "amount": {"type": "String"}, "count": {"type": "int"} }
+  },
+  "insightTrialEndingHeadline": "Essai en fin de vie",
+  "insightTrialEndingMessage": "**{names}** — {count, plural, =1{essai expire} other{essais expirent}} bientôt. Résilie maintenant ou tu seras débité.",
+  "@insightTrialEndingMessage": {
+    "placeholders": { "names": {"type": "String"}, "count": {"type": "int"} }
+  },
+  "insightDailyCostHeadline": "Coût quotidien",
+  "insightDailyCostMessage": "Tes abonnements coûtent **{amount}/jour** — c'est un café premium, chaque jour.",
+  "@insightDailyCostMessage": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+
+  "notifRenewsToday": "{name} se renouvelle aujourd'hui",
+  "@notifRenewsToday": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "notifRenewsTomorrow": "{name} se renouvelle demain",
+  "@notifRenewsTomorrow": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "notifRenewsInDays": "{name} se renouvelle dans {days} jours",
+  "@notifRenewsInDays": {
+    "placeholders": { "name": {"type": "String"}, "days": {"type": "int"} }
+  },
+  "notifChargesToday": "Tu seras débité de {price} aujourd'hui. Touche pour vérifier ou résilier.",
+  "@notifChargesToday": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "notifChargesTomorrow": "{price} sera prélevé demain. Tu veux le garder ?",
+  "@notifChargesTomorrow": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "notifCharges3Days": "Renouvellement de {price} dans 3 jours.",
+  "@notifCharges3Days": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "notifChargesInDays": "Renouvellement de {price} dans {days} jours. Envie de vérifier ?",
+  "@notifChargesInDays": {
+    "placeholders": { "price": {"type": "String"}, "days": {"type": "int"} }
+  },
+  "notifTrialEndsToday": "⚠ L'essai {name} se termine aujourd'hui !",
+  "@notifTrialEndsToday": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "notifTrialEndsTomorrow": "L'essai {name} se termine demain",
+  "@notifTrialEndsTomorrow": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "notifTrialEndsInDays": "L'essai {name} se termine dans {days} jours",
+  "@notifTrialEndsInDays": {
+    "placeholders": { "name": {"type": "String"}, "days": {"type": "int"} }
+  },
+  "notifTrialBodyToday": "Ton essai gratuit se termine aujourd'hui ! Tu seras débité de {price}. Résilie maintenant si tu ne veux pas continuer.",
+  "@notifTrialBodyToday": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "notifTrialBodyTomorrow": "Plus qu'un jour d'essai. Ensuite c'est {price}. Résilie maintenant pour éviter le prélèvement.",
+  "@notifTrialBodyTomorrow": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "notifTrialBodyDays": "Encore {days} jours d'essai gratuit. Le prix complet est {price} après.",
+  "@notifTrialBodyDays": {
+    "placeholders": { "days": {"type": "int"}, "price": {"type": "String"} }
+  },
+  "notifTrapTrialTitle3d": "L'essai {name} se termine dans 3 jours",
+  "@notifTrapTrialTitle3d": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "notifTrapTrialBody3d": "Tu seras débité de {price} automatiquement. Résilie maintenant si tu n'en veux pas.",
+  "@notifTrapTrialBody3d": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "notifTrapTrialTitleTomorrow": "⚠️ DEMAIN : {name} prélèvera {price}",
+  "@notifTrapTrialTitleTomorrow": {
+    "placeholders": { "name": {"type": "String"}, "price": {"type": "String"} }
+  },
+  "notifTrapTrialBodyTomorrow": "Résilie maintenant si tu ne veux pas le garder.",
+  "notifTrapTrialTitle2h": "🚨 {name} prélèvera {price} dans 2 HEURES",
+  "@notifTrapTrialTitle2h": {
+    "placeholders": { "name": {"type": "String"}, "price": {"type": "String"} }
+  },
+  "notifTrapTrialBody2h": "C'est ta dernière chance pour résilier.",
+  "notifTrapPostCharge": "Tu voulais garder {name} ?",
+  "@notifTrapPostCharge": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "notifTrapPostChargeBody": "Tu as été débité de {price}. Touche si tu as besoin d'aide pour un remboursement.",
+  "@notifTrapPostChargeBody": {
+    "placeholders": { "price": {"type": "String"} }
+  },
+  "notifDigestBoth": "{renewalCount} renouvellement(s) + {trialCount} essai(s) aujourd'hui",
+  "@notifDigestBoth": {
+    "placeholders": { "renewalCount": {"type": "int"}, "trialCount": {"type": "int"} }
+  },
+  "notifDigestRenewals": "{count, plural, =1{1 abonnement se renouvelle aujourd'hui} other{{count} abonnements se renouvellent aujourd'hui}}",
+  "@notifDigestRenewals": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "notifDigestTrials": "{count, plural, =1{1 essai expire aujourd'hui} other{{count} essais expirent aujourd'hui}}",
+  "@notifDigestTrials": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "notifDigestRenewalBody": "{names} — total {total}",
+  "@notifDigestRenewalBody": {
+    "placeholders": { "names": {"type": "String"}, "total": {"type": "String"} }
+  },
+  "notifDigestTrialBody": "{names} — résilie maintenant pour éviter les frais",
+  "@notifDigestTrialBody": {
+    "placeholders": { "names": {"type": "String"} }
+  },
+
+  "cycleWeekly": "Hebdomadaire",
+  "cycleMonthly": "Mensuel",
+  "cycleQuarterly": "Trimestriel",
+  "cycleYearly": "Annuel",
+  "cycleWeeklyShort": "sem.",
+  "cycleMonthlyShort": "mois",
+  "cycleQuarterlyShort": "trim.",
+  "cycleYearlyShort": "an",
+
+  "scanFound": "Trouvé : {details}",
+  "scanRenewsDate": "renouvellement le {date}",
+  "scanChargeFound": "Paiement trouvé : {price}/{cycle}.",
+  "scanWhichService": "Paiement pour {name} trouvé : {price}/{cycle}. Quel service est-ce ?",
+  "scanBilledQuestion": "Le service {name} est-il facturé mensuellement ou annuellement ?",
+  "scanMissingPrice": "Je n'ai pas trouvé le prix. Combien coûte {name} ?",
+  "priceRenewsAt": "SE RENOUVELLE À",
+
+  "categoryStreaming": "Streaming",
+  "categoryMusic": "Musique",
+  "categoryAi": "IA",
+  "categoryProductivity": "Productivité",
+  "categoryStorage": "Stockage",
+  "categoryFitness": "Fitness",
+  "categoryGaming": "Jeux",
+  "categoryReading": "Lecture",
+  "categoryCommunication": "Communication",
+  "categoryNews": "Actualités",
+  "categoryFinance": "Finance",
+  "categoryEducation": "Éducation",
+  "categoryVpn": "VPN",
+  "categoryDeveloper": "Développeur",
+  "categoryBundle": "Pack",
+  "categoryOther": "Autre",
+
+  "paymentsTrackedHint": "Les paiements seront suivis après chaque renouvellement",
+
+  "renewsToday": "Se renouvelle aujourd'hui",
+  "renewsTomorrow": "Se renouvelle demain",
+  "renewsInDays": "Se renouvelle dans {days} jours",
+  "@renewsInDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "renewsOnDate": "Se renouvelle le {date}",
+  "@renewsOnDate": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "renewedYesterday": "Renouvelé hier",
+  "renewedDaysAgo": "Renouvelé il y a {days} jours",
+  "@renewedDaysAgo": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+
+  "discoveryTipsTitle": "Où trouver tes abonnements",
+  "discoveryTipBank": "Relevé bancaire",
+  "discoveryTipBankDesc": "Fais une capture de tes transactions — on les trouvera toutes d'un coup",
+  "discoveryTipEmail": "Recherche par e-mail",
+  "discoveryTipEmailDesc": "Cherche « abonnement », « reçu » ou « renouvellement » dans ta boîte mail",
+  "discoveryTipAppStore": "App Store / Play Store",
+  "discoveryTipAppStoreDesc": "Réglages → Abonnements affiche tous les abos d'applications actifs",
+  "discoveryTipPaypal": "PayPal et applis de paiement",
+  "discoveryTipPaypalDesc": "Vérifie les paiements automatiques dans PayPal, Revolut ou ton appli de paiement",
+
+  "sectionAccount": "COMPTE",
+  "accountAnonymous": "Anonyme",
+  "accountBackupPrompt": "Sauvegarde tes données",
+  "accountBackedUp": "Sauvegardé",
+  "accountSignedInAs": "Connecté en tant que {email}",
+  "@accountSignedInAs": {
+    "placeholders": { "email": {"type": "String"} }
+  },
+  "syncStatusSyncing": "Synchronisation...",
+  "syncStatusSynced": "Synchronisé",
+  "syncStatusLastSync": "Dernière synchro : {time}",
+  "@syncStatusLastSync": {
+    "placeholders": { "time": {"type": "String"} }
+  },
+  "syncStatusOffline": "Hors ligne",
+  "syncStatusNeverSynced": "Pas encore synchronisé",
+  "signInToBackUp": "Connecte-toi pour sauvegarder tes données",
+  "signInWithApple": "Se connecter avec Apple",
+  "signInWithGoogle": "Se connecter avec Google",
+  "signInWithEmail": "Se connecter par e-mail",
+  "signOut": "Se déconnecter",
+  "signOutConfirm": "Tu veux vraiment te déconnecter ? Tes données resteront sur cet appareil.",
+
+  "annualSavingsTitle": "PASSER À L'ANNUEL",
+  "annualSavingsSubtitle": "économies potentielles en passant aux plans annuels",
+  "annualSavingsCoverage": "Basé sur {matched} de {total} abonnements",
+  "@annualSavingsCoverage": {
+    "placeholders": { "matched": {"type": "int"}, "total": {"type": "int"} }
+  },
+  "annualSavingsHint": "Vérifie les paramètres de ton compte {name} pour les options de facturation annuelle",
+  "@annualSavingsHint": {
+    "placeholders": { "name": {"type": "String"} }
+  },
+  "seeAll": "Tout voir",
+  "allSavingsTitle": "Économies annuelles",
+  "allSavingsSubtitle": "Passe ces plans mensuels en annuels pour économiser",
+  "annualPlanLabel": "PLAN ANNUEL",
+  "annualPlanAvailable": "Plan annuel disponible — économise {amount}/an",
+  "@annualPlanAvailable": {
+    "placeholders": { "amount": {"type": "String"} }
+  },
+  "noAnnualPlan": "Aucun plan annuel disponible pour ce service",
+  "monthlyVsAnnual": "{monthly}/mois → {annual}/an",
+  "@monthlyVsAnnual": {
+    "placeholders": { "monthly": {"type": "String"}, "annual": {"type": "String"} }
+  },
+  "perYear": "/an",
+
+  "insightDidYouKnow": "LE SAVAIS-TU ?",
+  "insightSaveMoney": "ÉCONOMISE",
+  "insightLearnMore": "En savoir plus",
+  "insightProLabel": "CONSEIL PRO",
+  "insightUnlockPro": "Débloquer avec Pro",
+  "insightProTeaser": "Passe en Pro pour des conseils d'économies personnalisés.",
+  "insightProTeaserTitle": "Conseils d'économies personnalisés",
+
+  "trialBannerDays": "Essai Pro · {days, plural, =1{1 jour restant} other{{days} jours restants}}",
+  "@trialBannerDays": {
+    "placeholders": { "days": {"type": "int"} }
+  },
+  "trialBannerExpired": "Essai Pro expiré",
+  "trialBannerUpgrade": "Débloquer",
+
+  "trialPromptTitle": "Essaie tout gratuitement pendant 7 jours",
+  "trialPromptSubtitle": "Accès Pro complet — sans engagement, sans paiement.",
+  "trialPromptFeature1": "Abonnements illimités",
+  "trialPromptFeature2": "Scanner de pièges IA — scans illimités",
+  "trialPromptFeature3": "Rappels anticipés (7j, 3j, 1j)",
+  "trialPromptFeature4": "Tableau de bord & statistiques",
+  "trialPromptFeature5": "Guides de résiliation & astuces remboursement",
+  "trialPromptFeature6": "Conseils intelligents & cartes d'économies",
+  "trialPromptLegal": "Après 7 jours : traque jusqu'à 3 abonnements gratuitement, ou débloque tout pour £4.99 — une fois, pour toujours.",
+  "trialPromptCta": "Commencer l'essai gratuit",
+  "trialPromptDismiss": "Passer pour l'instant",
+
+  "trialExpiredTitle": "Ton essai de 7 jours est terminé",
+  "trialExpiredSubtitle": "Tu as traqué {count, plural, =1{1 abonnement} other{{count} abonnements}} d'une valeur de {price}/mois.",
+  "@trialExpiredSubtitle": {
+    "placeholders": { "count": {"type": "int"}, "price": {"type": "String"} }
+  },
+  "trialExpiredFrozen": "{count, plural, =1{1 abonnement est maintenant gelé} other{{count} abonnements sont maintenant gelés}}",
+  "@trialExpiredFrozen": {
+    "placeholders": { "count": {"type": "int"} }
+  },
+  "trialExpiredCta": "Débloquer Chompd Pro — £4.99",
+  "trialExpiredDismiss": "Continuer avec la version gratuite",
+
+  "frozenSectionHeader": "GEL\u00c9S \u2014 PASSER EN PRO POUR D\u00c9BLOQUER",
+  "frozenBadge": "GEL\u00c9",
+  "frozenTapToUpgrade": "Appuyez pour passer en Pro",
+
+  "cancelledStatusExpires": "Résilié — expire le {date}",
+  "@cancelledStatusExpires": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "cancelledStatusExpired": "Résilié — expiré le {date}",
+  "@cancelledStatusExpired": {
+    "placeholders": { "date": {"type": "String"} }
+  },
+  "reactivateSubscription": "Réactiver l'abonnement",
+  "scanErrorGeneric": "Impossible de lire cette image. Essaie une autre capture.",
+  "scanErrorEmpty": "Le fichier image semble vide. Réessaie."
+}
