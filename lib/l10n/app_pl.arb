@@ -294,10 +294,8 @@
   "@paywallLimitSubs": {
     "placeholders": { "count": {"type": "int"} }
   },
-  "paywallLimitScans": "Wykorzystałeś wszystkie {count} darmowe skany AI.",
-  "@paywallLimitScans": {
-    "placeholders": { "count": {"type": "int"} }
-  },
+  "paywallLimitScans": "Wykorzystałeś darmowy skan AI.",
+  "@paywallLimitScans": {},
   "paywallLimitReminders": "Wcześniejsze przypomnienia to funkcja Pro.",
   "paywallGeneric": "Odblokuj pełne doświadczenie Chompd.",
   "paywallFeature1": "Oszczędź 500–2500 zł/rok na ukrytych wydatkach",
@@ -899,7 +897,7 @@
   "scanAllDoneAdded": "Gotowe! Dodano {added} z {total} subskrypcji.",
   "scanSubsConfirmed": "Potwierdzono {count} subskrypcji!",
   "scanConfirmed": "{name} potwierdzono!",
-  "scanLimitReached": "Wykorzystano wszystkie {limit} darmowe skany. Przejdź na Pro, aby skanować bez limitu!",
+  "scanLimitReached": "Wykorzystano darmowy skan. Przejdź na Pro, aby skanować bez limitu!",
   "scanUnableToProcess": "Nie udało się przetworzyć zdjęcia. Spróbuj ponownie.",
   "scanTrapDetectedIn": "\u26A0\uFE0F Wykryto pułapkę w {name}!",
   "scanTrackingTrial": "Śledzenie okresu próbnego {name}. Przypomnimy Ci przed naliczeniem opłaty!",

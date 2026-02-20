@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/dodged_trap.dart';
 import '../models/subscription.dart';
 import 'auth_service.dart';
+import 'error_logger.dart';
 import 'isar_service.dart';
 
 /// Offline-first sync engine: Isar ↔ Supabase.
@@ -42,8 +43,8 @@ class SyncService {
         sub.toSupabaseMap(userId),
         onConflict: 'user_id,uid',
       );
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'sync_error', detail: 'pushSubscription: $e', stackTrace: st.toString());
     }
   }
 
@@ -57,8 +58,8 @@ class SyncService {
       await _client.from('dodged_traps').insert(
         trap.toSupabaseMap(userId),
       );
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'sync_error', detail: 'pushDodgedTrap: $e', stackTrace: st.toString());
     }
   }
 
@@ -74,8 +75,8 @@ class SyncService {
           .delete()
           .eq('user_id', userId)
           .eq('uid', uid);
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'sync_error', detail: 'pushDelete: $e', stackTrace: st.toString());
     }
   }
 
@@ -167,13 +168,13 @@ class SyncService {
               sub.toSupabaseMap(userId),
               onConflict: 'user_id,uid',
             );
-          } catch (_) {
-            // Silently ignored
+          } catch (e, st) {
+            ErrorLogger.log(event: 'sync_error', detail: 'pullAndMerge.push: $e', stackTrace: st.toString());
           }
         }
       }
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'sync_error', detail: 'pullAndMerge: $e', stackTrace: st.toString());
     }
   }
 
@@ -224,7 +225,8 @@ class SyncService {
       }
 
       return remoteSubs.isNotEmpty || remoteTraps.isNotEmpty;
-    } catch (_) {
+    } catch (e, st) {
+      ErrorLogger.log(event: 'sync_error', detail: 'restoreFromRemote: $e', stackTrace: st.toString());
       return false;
     }
   }
@@ -244,8 +246,8 @@ class SyncService {
 
     try {
       await _client.from('profiles').update(updates).eq('id', userId);
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'sync_error', detail: 'syncProfile: $e', stackTrace: st.toString());
     }
   }
 

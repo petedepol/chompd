@@ -671,9 +671,7 @@ class SEn extends S {
   }
 
   @override
-  String paywallLimitScans(int count) {
-    return 'You’ve used all $count free AI scans.';
-  }
+  String get paywallLimitScans => 'You’ve used your free AI scan.';
 
   @override
   String get paywallLimitReminders => 'Advance reminders are a Pro feature.';
@@ -1948,9 +1946,8 @@ class SEn extends S {
   }
 
   @override
-  String scanLimitReached(String limit) {
-    return 'You’ve used all $limit free scans. Upgrade to Pro for unlimited scanning!';
-  }
+  String get scanLimitReached =>
+      'You’ve used your free scan. Upgrade to Pro for unlimited scanning!';
 
   @override
   String get scanUnableToProcess =>

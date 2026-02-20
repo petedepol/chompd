@@ -10,7 +10,7 @@ const ALLOWED_MODELS = [
   "claude-sonnet-4-5-20250929",
 ];
 
-const FREE_SCAN_LIMIT = 5;
+const FREE_SCAN_LIMIT = 1;
 
 Deno.serve(async (req: Request) => {
   // CORS preflight

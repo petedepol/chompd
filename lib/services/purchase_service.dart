@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/constants.dart';
 import 'auth_service.dart';
+import 'error_logger.dart';
 
 /// Purchase state for the one-time Pro unlock.
 enum PurchaseState {
@@ -99,8 +100,8 @@ class PurchaseService {
           _setState(PurchaseState.pro);
         }
       }
-    } catch (_) {
-      // Keep current state — don't downgrade on network failure
+    } catch (e, st) {
+      ErrorLogger.log(event: 'purchase_error', detail: 'fetchProStatus: $e', stackTrace: st.toString());
     }
   }
 
@@ -118,8 +119,8 @@ class PurchaseService {
           .from('profiles')
           .update({'is_pro': true, 'pro_purchased_at': DateTime.now().toUtc().toIso8601String()})
           .eq('id', userId);
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'purchase_error', detail: 'syncProToSupabase: $e', stackTrace: st.toString());
     }
   }
 
@@ -167,7 +168,8 @@ class PurchaseService {
       _setState(PurchaseState.pro);
       _syncProToSupabase();
       return true;
-    } catch (_) {
+    } catch (e, st) {
+      ErrorLogger.log(event: 'purchase_error', detail: 'purchasePro: $e', stackTrace: st.toString());
       _setState(PurchaseState.failed);
       return false;
     }
@@ -210,7 +212,8 @@ class PurchaseService {
       // No purchase found anywhere
       _setState(PurchaseState.free);
       return false;
-    } catch (_) {
+    } catch (e, st) {
+      ErrorLogger.log(event: 'purchase_error', detail: 'restorePurchase: $e', stackTrace: st.toString());
       _setState(PurchaseState.free);
       return false;
     }

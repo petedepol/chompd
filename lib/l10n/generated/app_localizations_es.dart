@@ -675,9 +675,7 @@ class SEs extends S {
   }
 
   @override
-  String paywallLimitScans(int count) {
-    return 'Has usado tus $count escaneos IA gratuitos.';
-  }
+  String get paywallLimitScans => 'Has usado tu escaneo IA gratuito.';
 
   @override
   String get paywallLimitReminders =>
@@ -1969,9 +1967,8 @@ class SEs extends S {
   }
 
   @override
-  String scanLimitReached(String limit) {
-    return 'Has usado tus $limit escaneos gratuitos. ¡Pasa a Pro para escaneos ilimitados!';
-  }
+  String get scanLimitReached =>
+      'Has usado tu escaneo gratuito. ¡Pasa a Pro para escaneos ilimitados!';
 
   @override
   String get scanUnableToProcess =>

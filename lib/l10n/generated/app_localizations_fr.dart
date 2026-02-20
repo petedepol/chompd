@@ -676,9 +676,7 @@ class SFr extends S {
   }
 
   @override
-  String paywallLimitScans(int count) {
-    return 'Tu as utilisé tes $count scans IA gratuits.';
-  }
+  String get paywallLimitScans => 'Tu as utilisé ton scan IA gratuit.';
 
   @override
   String get paywallLimitReminders =>
@@ -1969,9 +1967,8 @@ class SFr extends S {
   }
 
   @override
-  String scanLimitReached(String limit) {
-    return 'Tu as utilisé tes $limit scans gratuits. Passe à Pro pour des scans illimités !';
-  }
+  String get scanLimitReached =>
+      'Tu as utilisé ton scan gratuit. Passe à Pro pour des scans illimités !';
 
   @override
   String get scanUnableToProcess => 'Impossible de traiter l\'image. Réessaie.';

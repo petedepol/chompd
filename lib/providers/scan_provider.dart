@@ -12,6 +12,7 @@ import '../models/subscription.dart';
 import '../models/trap_result.dart';
 import '../services/ai_scan_service.dart';
 import '../services/dodged_trap_repository.dart';
+import '../services/error_logger.dart';
 import '../services/merchant_db.dart';
 
 // ─── Scan Phase ───
@@ -392,7 +393,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
       } else {
         await _handleFullQuestion(result, scenario);
       }
-    } on ScanLimitReachedException catch (e) {
+    } on ScanLimitReachedException {
       final ll = _l10n ?? await _getL10n();
       state = state.copyWith(
         phase: ScanPhase.error,
@@ -401,11 +402,12 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: ll.scanLimitReached(e.limit.toString()),
+            text: ll.scanLimitReached,
           ),
         ],
       );
-    } catch (e) {
+    } catch (e, st) {
+      ErrorLogger.log(event: 'scan_error', detail: 'startScan: $e', stackTrace: st.toString());
       final ll = _l10n ?? await _getL10n();
       state = state.copyWith(
         phase: ScanPhase.error,
@@ -1193,7 +1195,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
       }
 
       await _handleSingleScanOutput(bestOutput);
-    } on ScanLimitReachedException catch (e) {
+    } on ScanLimitReachedException {
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'scan_limit_reached',
@@ -1201,7 +1203,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: l.scanLimitReached(e.limit.toString()),
+            text: l.scanLimitReached,
           ),
         ],
       );
@@ -1241,7 +1243,8 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ),
         ],
       );
-    } catch (e) {
+    } catch (e, st) {
+      ErrorLogger.log(event: 'scan_error', detail: 'startTrapScan: $e', stackTrace: st.toString());
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'scan_error',
@@ -1308,7 +1311,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
       }
 
       await _handleSingleScanOutput(bestOutput);
-    } on ScanLimitReachedException catch (e) {
+    } on ScanLimitReachedException {
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'scan_limit_reached',
@@ -1316,7 +1319,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ...state.messages,
           ChatMessage(
             type: ChatMessageType.system,
-            text: l.scanLimitReached(e.limit.toString()),
+            text: l.scanLimitReached,
           ),
         ],
       );
@@ -1356,7 +1359,8 @@ class ScanNotifier extends StateNotifier<ScanState> {
           ),
         ],
       );
-    } catch (e) {
+    } catch (e, st) {
+      ErrorLogger.log(event: 'scan_error', detail: 'startTextScan: $e', stackTrace: st.toString());
       state = state.copyWith(
         phase: ScanPhase.error,
         errorMessage: 'scan_error',
@@ -1523,8 +1527,8 @@ class ScanCounterNotifier extends StateNotifier<int> {
 
   void increment() => state++;
   void reset() => state = 0;
-  bool get canScan => state < 3; // Free tier: 3 scans max
-  int get remaining => 3 - state;
+  bool get canScan => state < AppConstants.freeMaxScans;
+  int get remaining => AppConstants.freeMaxScans - state;
 }
 
 final scanCounterProvider =

@@ -1210,8 +1210,8 @@ abstract class S {
   /// No description provided for @paywallLimitScans.
   ///
   /// In en, this message translates to:
-  /// **'You’ve used all {count} free AI scans.'**
-  String paywallLimitScans(int count);
+  /// **'You’ve used your free AI scan.'**
+  String get paywallLimitScans;
 
   /// No description provided for @paywallLimitReminders.
   ///
@@ -3202,8 +3202,8 @@ abstract class S {
   /// No description provided for @scanLimitReached.
   ///
   /// In en, this message translates to:
-  /// **'You’ve used all {limit} free scans. Upgrade to Pro for unlimited scanning!'**
-  String scanLimitReached(String limit);
+  /// **'You’ve used your free scan. Upgrade to Pro for unlimited scanning!'**
+  String get scanLimitReached;
 
   /// No description provided for @scanUnableToProcess.
   ///

@@ -571,7 +571,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
             GestureDetector(
               onTap: () {
                 ref.read(scanProvider.notifier).reset();
-                Navigator.of(context).pop();
+                Navigator.of(context).popUntil((route) => route.isFirst);
               },
               child: Container(
                 width: double.infinity,
@@ -1039,14 +1039,14 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
       return SizedBox(height: bottomPadding + 8);
     }
 
-    // After multi-review finishes → show "Back to Home" button
-    if (scanState.phase == ScanPhase.result && scanState.multiOutputs != null) {
+    // Show "Done" button when scan is complete (result phase)
+    if (scanState.phase == ScanPhase.result) {
       return Container(
         padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPadding + 16),
         child: GestureDetector(
           onTap: () {
             ref.read(scanProvider.notifier).reset();
-            Navigator.of(context).pop();
+            Navigator.of(context).popUntil((route) => route.isFirst);
           },
           child: Container(
             width: double.infinity,

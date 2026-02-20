@@ -59,7 +59,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
       case PaywallTrigger.subscriptionLimit:
         return context.l10n.paywallLimitSubs(AppConstants.freeMaxSubscriptions);
       case PaywallTrigger.scanLimit:
-        return context.l10n.paywallLimitScans(AppConstants.freeMaxScans);
+        return context.l10n.paywallLimitScans;
       case PaywallTrigger.reminderUpgrade:
         return context.l10n.paywallLimitReminders;
       case PaywallTrigger.settingsUpgrade:

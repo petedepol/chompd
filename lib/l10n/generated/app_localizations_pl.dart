@@ -680,9 +680,7 @@ class SPl extends S {
   }
 
   @override
-  String paywallLimitScans(int count) {
-    return 'Wykorzystałeś wszystkie $count darmowe skany AI.';
-  }
+  String get paywallLimitScans => 'Wykorzystałeś darmowy skan AI.';
 
   @override
   String get paywallLimitReminders =>
@@ -1981,9 +1979,8 @@ class SPl extends S {
   }
 
   @override
-  String scanLimitReached(String limit) {
-    return 'Wykorzystano wszystkie $limit darmowe skany. Przejdź na Pro, aby skanować bez limitu!';
-  }
+  String get scanLimitReached =>
+      'Wykorzystano darmowy skan. Przejdź na Pro, aby skanować bez limitu!';
 
   @override
   String get scanUnableToProcess =>

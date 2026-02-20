@@ -294,10 +294,8 @@
   "@paywallLimitSubs": {
     "placeholders": { "count": {"type": "int"} }
   },
-  "paywallLimitScans": "Du hast alle {count} kostenlosen KI-Scans verbraucht.",
-  "@paywallLimitScans": {
-    "placeholders": { "count": {"type": "int"} }
-  },
+  "paywallLimitScans": "Du hast deinen kostenlosen KI-Scan verbraucht.",
+  "@paywallLimitScans": {},
   "paywallLimitReminders": "Vorab-Erinnerungen sind ein Pro-Feature.",
   "paywallGeneric": "Schalte das volle Chompd-Erlebnis frei.",
   "paywallFeature1": "100–500/Jahr an versteckter Verschwendung sparen",
@@ -899,7 +897,7 @@
   "scanAllDoneAdded": "Fertig! {added} von {total} Abonnements hinzugefügt.",
   "scanSubsConfirmed": "{count} Abonnements bestätigt!",
   "scanConfirmed": "{name} bestätigt!",
-  "scanLimitReached": "Du hast alle {limit} kostenlosen Scans verbraucht. Upgrade auf Pro für unbegrenztes Scannen!",
+  "scanLimitReached": "Du hast deinen kostenlosen Scan verbraucht. Upgrade auf Pro für unbegrenztes Scannen!",
   "scanUnableToProcess": "Bild konnte nicht verarbeitet werden. Versuche es erneut.",
   "scanTrapDetectedIn": "\u26A0\uFE0F Falle erkannt bei {name}!",
   "scanTrackingTrial": "{name}-Testphase wird überwacht. Wir erinnern dich vor der Abbuchung!",

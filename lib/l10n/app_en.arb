@@ -294,10 +294,8 @@
   "@paywallLimitSubs": {
     "placeholders": { "count": {"type": "int"} }
   },
-  "paywallLimitScans": "You\u2019ve used all {count} free AI scans.",
-  "@paywallLimitScans": {
-    "placeholders": { "count": {"type": "int"} }
-  },
+  "paywallLimitScans": "You\u2019ve used your free AI scan.",
+  "@paywallLimitScans": {},
   "paywallLimitReminders": "Advance reminders are a Pro feature.",
   "paywallGeneric": "Unlock the full Chompd experience.",
   "paywallFeature1": "Save 100\u2013500/year on hidden waste",
@@ -924,8 +922,8 @@
   "@scanSubsConfirmed": { "placeholders": { "count": {"type": "String"} } },
   "scanConfirmed": "{name} confirmed!",
   "@scanConfirmed": { "placeholders": { "name": {"type": "String"} } },
-  "scanLimitReached": "You\u2019ve used all {limit} free scans. Upgrade to Pro for unlimited scanning!",
-  "@scanLimitReached": { "placeholders": { "limit": {"type": "String"} } },
+  "scanLimitReached": "You\u2019ve used your free scan. Upgrade to Pro for unlimited scanning!",
+  "@scanLimitReached": {},
   "scanUnableToProcess": "Unable to process image. Please try again.",
   "scanTrapDetectedIn": "\u26A0\uFE0F Trap detected in {name}!",
   "@scanTrapDetectedIn": { "placeholders": { "name": {"type": "String"} } },

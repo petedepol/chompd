@@ -294,10 +294,8 @@
   "@paywallLimitSubs": {
     "placeholders": { "count": {"type": "int"} }
   },
-  "paywallLimitScans": "Tu as utilisé tes {count} scans IA gratuits.",
-  "@paywallLimitScans": {
-    "placeholders": { "count": {"type": "int"} }
-  },
+  "paywallLimitScans": "Tu as utilisé ton scan IA gratuit.",
+  "@paywallLimitScans": {},
   "paywallLimitReminders": "Les rappels anticipés sont une fonctionnalité Pro.",
   "paywallGeneric": "Débloque l'expérience Chompd complète.",
   "paywallFeature1": "Économise 100–500/an sur les dépenses cachées",
@@ -899,7 +897,7 @@
   "scanAllDoneAdded": "Terminé ! {added} sur {total} abonnements ajoutés.",
   "scanSubsConfirmed": "{count} abonnements confirmés !",
   "scanConfirmed": "{name} confirmé !",
-  "scanLimitReached": "Tu as utilisé tes {limit} scans gratuits. Passe à Pro pour des scans illimités !",
+  "scanLimitReached": "Tu as utilisé ton scan gratuit. Passe à Pro pour des scans illimités !",
   "scanUnableToProcess": "Impossible de traiter l'image. Réessaie.",
   "scanTrapDetectedIn": "\u26A0\uFE0F Piège détecté dans {name} !",
   "scanTrackingTrial": "Suivi de l'essai de {name}. On te rappellera avant le prélèvement !",

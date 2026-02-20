@@ -5,6 +5,8 @@ import 'package:crypto/crypto.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'error_logger.dart';
+
 /// Handles anonymous auth and account upgrade.
 ///
 /// Singleton following the existing service pattern.
@@ -110,14 +112,16 @@ class AuthService {
       if (e.code == AuthorizationErrorCode.canceled) {
         throw AppleSignInCancelledException();
       }
+      ErrorLogger.log(event: 'auth_error', detail: 'Apple auth exception: $e');
       throw AppleSignInException(
         'Apple sign-in failed. Please try again.',
       );
-    } catch (e) {
+    } catch (e, st) {
       // Re-throw our own exceptions unchanged.
       if (e is AppleSignInCancelledException || e is AppleSignInException) {
         rethrow;
       }
+      ErrorLogger.log(event: 'auth_error', detail: 'Apple sign-in: $e', stackTrace: st.toString());
       throw AppleSignInException(
         'Something went wrong. Please try again.',
       );

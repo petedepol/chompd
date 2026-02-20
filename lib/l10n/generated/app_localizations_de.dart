@@ -672,9 +672,8 @@ class SDe extends S {
   }
 
   @override
-  String paywallLimitScans(int count) {
-    return 'Du hast alle $count kostenlosen KI-Scans verbraucht.';
-  }
+  String get paywallLimitScans =>
+      'Du hast deinen kostenlosen KI-Scan verbraucht.';
 
   @override
   String get paywallLimitReminders =>
@@ -1962,9 +1961,8 @@ class SDe extends S {
   }
 
   @override
-  String scanLimitReached(String limit) {
-    return 'Du hast alle $limit kostenlosen Scans verbraucht. Upgrade auf Pro für unbegrenztes Scannen!';
-  }
+  String get scanLimitReached =>
+      'Du hast deinen kostenlosen Scan verbraucht. Upgrade auf Pro für unbegrenztes Scannen!';
 
   @override
   String get scanUnableToProcess =>

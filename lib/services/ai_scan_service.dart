@@ -12,6 +12,7 @@ import '../config/constants.dart';
 import '../models/scan_result.dart';
 import '../models/trap_result.dart';
 import '../models/scan_output.dart';
+import 'error_logger.dart';
 
 /// Use real API when ANTHROPIC_API_KEY or SUPABASE_URL is provided.
 /// Override with --dart-define=USE_MOCK=true to force mock.
@@ -87,8 +88,9 @@ class AiScanService {
         rethrow; // Don't fall back — rate limited everywhere
       } on ApiUnavailableException {
         rethrow; // Don't fall back — server-side issue
-      } catch (e) {
+      } catch (e, st) {
         // Edge Function not deployed or erroring — try direct if key available
+        ErrorLogger.log(event: 'ai_api_error', detail: 'Edge Function fallback: $e', stackTrace: st.toString());
         if (_hasApiKey) {
           return _callDirectApi(body);
         }
@@ -281,7 +283,8 @@ class AiScanService {
         warningMessage: data['warning_message'] as String? ?? '',
         serviceName: '',
       );
-    } catch (_) {
+    } catch (e, st) {
+      ErrorLogger.log(event: 'ai_api_error', detail: 'parseTrapResult: $e', stackTrace: st.toString());
       return TrapResult.clean;
     }
   }
@@ -1621,7 +1624,8 @@ Return ONLY valid JSON array, no markdown, no explanation.
         warningMessage: data['warning_message'] as String? ?? '',
         serviceName: '',
       );
-    } catch (_) {
+    } catch (e, st) {
+      ErrorLogger.log(event: 'ai_api_error', detail: 'parseTextTrapResult: $e', stackTrace: st.toString());
       return TrapResult.clean;
     }
   }

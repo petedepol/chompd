@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 19 Feb 2026 (Post-Sprint 20 — Calendar overhaul, detail screen overhaul, cancel/refund localisation)
+> Last updated: 20 Feb 2026 (Post-Sprint 21 — Pre-launch batch: scan limits, error logging, Done button, iOS bundle fix)
 
 ---
 
@@ -13,7 +13,7 @@
 - **Typography:** Google Fonts (Space Mono for data, system default for UI)
 - **Theme:** Dark-only — ChompdColors class with static const colours (mint, amber, red, purple, blue)
 - **Monetisation:** Freemium — one-time £4.99 Pro unlock (via PurchaseService)
-- **Free tier limits:** 3 subscriptions max, 1 AI scan max
+- **Free tier limits:** 3 subscriptions max, 1 AI scan max (enforced everywhere: constants, edge function, UI, l10n)
 - **AI:** Claude Haiku for screenshot scanning (3-tier intelligence flywheel)
 - **Mascot:** Unnamed piranha character — small, fast, sharp. Chomps through the fine print.
 - **Calendar:** table_calendar ^3.1.2 for renewal calendar view
@@ -342,6 +342,58 @@
   - Added `textAlign: TextAlign.center` to all text widgets
   - "tap anywhere to continue" upgraded: `Colors.white.withValues(alpha: 0.6)` with dark `Shadow`, font size 11→12
 
+### Sprint 21 — Pre-Launch Batch: Scan Limits, Error Logging, Done Button, iOS Bundle ✅
+
+**Session 1 (previous context): Intro Price, DebugPrint, Cleanup, Onboarding**
+
+- **Intro price l10n keys** — added `introPrice`, `introPriceExpires`, `introPriceDaysRemaining`, `introBadge` to all 5 ARB files for distinguishing intro pricing from free trials in trap scanner UI
+- **debugPrint removal** — stripped all production `debugPrint` statements from 21 files. `debugFireTestNotification()` gated with `kDebugMode`
+- **widget_test.dart** — replaced stale test with placeholder
+- **Dead isProProvider removed** — removed deprecated provider from `entitlement_provider.dart`
+- **Onboarding centering** — LayoutBuilder + ConstrainedBox pattern to vertically center content in available space
+- Commits: `b5be54b` (localise, intro price, debugPrint, cleanup), `f56ffe3` (center onboarding)
+
+**Session 2 (current context): 4 Pre-Launch Fixes**
+
+- **Fix 1: Scan limit alignment** — free tier scan limit is now consistently `1` everywhere:
+  - `constants.dart` — `freeMaxScans = 1` (was already correct)
+  - `supabase/functions/ai-scan/index.ts` — `FREE_SCAN_LIMIT` changed from `5` → `1`
+  - `scan_provider.dart` — `ScanCounterNotifier.canScan` and `.remaining` now use `AppConstants.freeMaxScans` instead of hardcoded `3`
+  - All 5 ARB files — `paywallLimitScans` and `scanLimitReached` rewritten as singular ("your free scan" not "all {count} free scans"), removed `{limit}`/`{count}` placeholder metadata
+  - `paywall_screen.dart` — removed argument from `paywallLimitScans()` call
+  - `scan_provider.dart` — `} on ScanLimitReachedException catch (e) {` → `} on ScanLimitReachedException {` (3 sites)
+- **Fix 2: Done button after trap scan** — `_buildBottomBar` in `scan_screen.dart` now shows a Done button for ALL `ScanPhase.result` states (single scan, multi scan, trap-tracked), not just multi-review. Both Done buttons (result phase + trapSkipped) use `Navigator.of(context).popUntil((route) => route.isFirst)` to return to home screen
+- **Fix 3: Error logging to Supabase** — new `lib/services/error_logger.dart` utility class:
+  - Static `log({event, detail, stackTrace})` method, outer catch never crashes the app
+  - Writes to existing `app_events` Supabase table with stack traces truncated to 500 chars
+  - Wired into 6 priority files (21 catch blocks total):
+    - `sync_service.dart` (7 blocks, `event: 'sync_error'`)
+    - `auth_service.dart` (2 blocks, `event: 'auth_error'`)
+    - `scan_provider.dart` (3 blocks, `event: 'scan_error'`)
+    - `ai_scan_service.dart` (3 blocks, `event: 'ai_api_error'`)
+    - `main.dart` (2 blocks, `event: 'startup_error'`)
+    - `purchase_service.dart` (4 blocks, `event: 'purchase_error'`)
+- **Fix 4: iOS bundle name** — changed `CFBundleName` from `subsnap` to `Chompd` in `ios/Runner/Info.plist` (`CFBundleDisplayName` was already `Chompd`)
+
+**Files modified/created:**
+- `supabase/functions/ai-scan/index.ts` — FREE_SCAN_LIMIT 5→1
+- `lib/services/error_logger.dart` — **NEW** — error logging utility
+- `lib/providers/scan_provider.dart` — AppConstants.freeMaxScans usage, ErrorLogger, scanLimitReached param removal
+- `lib/screens/scan/scan_screen.dart` — Done button for all result phases, popUntil home
+- `lib/screens/paywall/paywall_screen.dart` — removed paywallLimitScans argument
+- `lib/services/sync_service.dart` — ErrorLogger in 7 catch blocks
+- `lib/services/auth_service.dart` — ErrorLogger in 2 catch blocks
+- `lib/services/ai_scan_service.dart` — ErrorLogger in 3 catch blocks
+- `lib/main.dart` — ErrorLogger in 2 catch blocks
+- `lib/services/purchase_service.dart` — ErrorLogger in 4 catch blocks
+- `ios/Runner/Info.plist` — CFBundleName subsnap→Chompd
+- `lib/l10n/app_en.arb` — singular scan limit strings
+- `lib/l10n/app_pl.arb` — singular scan limit strings
+- `lib/l10n/app_de.arb` — singular scan limit strings
+- `lib/l10n/app_fr.arb` — singular scan limit strings
+- `lib/l10n/app_es.arb` — singular scan limit strings
+- Generated l10n files (auto-regenerated via flutter gen-l10n)
+
 ---
 
 ## Current File Structure
@@ -412,6 +464,7 @@ lib/
 │   ├── haptic_service.dart           (tactile feedback)
 │   ├── nudge_engine.dart             (5 heuristic nudge rules)
 │   ├── storage_service.dart          (Isar local DB operations)
+│   ├── error_logger.dart             (Supabase app_events error logging, stack trace truncation)
 │   ├── auth_service.dart             (anonymous + OAuth auth, Apple/Google sign-in)
 │   ├── sync_service.dart             (Supabase sync, push/pull/merge, hard delete)
 │   ├── service_insight_repository.dart (curated insight sync + dismiss)
@@ -720,7 +773,7 @@ lib/
 
 1. **No bank connection needed** — privacy-first approach; AI scan + manual entry only
 2. **One-time purchase, not subscription** — £4.99 Pro unlock
-3. **Free tier is generous** — 3 subs + 3 scans lets users experience core value
+3. **Free tier is tight** — 3 subs + 1 scan accelerates paywall conversion
 4. **Mock services throughout** — all services have mock implementations for rapid prototyping
 5. **Isar codegen deferred** — DodgedTrap is a plain Dart class; Subscription.g.dart exists but may need regeneration
 6. **Dark theme only** — no light mode planned for v1
@@ -735,7 +788,7 @@ lib/
 ## Known Issues / Tech Debt
 
 - `dodged_trap.g.dart` doesn't exist — DodgedTrap is intentionally a plain class for now. Isar annotations deferred to when persistence is wired up.
-- `widget_test.dart` references old `MyApp` class — stale test file
+- ~~`widget_test.dart` references old `MyApp` class — stale test file~~ **RESOLVED Sprint 21** — replaced with placeholder
 - Various `prefer_const_constructors` lint suggestions throughout (62 info hints, 0 errors, 0 warnings)
 - `withOpacity` → `withValues(alpha:)` migration mostly complete
 - **Pro override REVERTED** in `purchase_provider.dart` — free tier limits now enforced
@@ -745,7 +798,8 @@ lib/
 - ~~Frozen subscription UI not built~~ **RESOLVED Sprint 18** — `_FrozenCard` widget + frozen section on home screen
 - Quick add templates no longer show prices — tap opens full AddEditScreen with name/category/icon prefilled
 - ~~`flutter_local_notifications` v20.1.0 — notifications are scheduled in-memory only~~ **RESOLVED Sprint 19** — all 7 scheduling points now call `zonedSchedule` for OS-level delivery, cancel methods wired to plugin
-- `debugFireTestNotification()` in `notification_service.dart` — remove before App Store submission
-- Temporary debug `debugPrint` statements in `totalSavedProvider` (subscriptions_provider.dart) and `_runTrapScan` (ai_scan_service.dart) — remove before release
+- ~~`debugFireTestNotification()` in `notification_service.dart` — remove before App Store submission~~ **RESOLVED Sprint 21** — gated with `kDebugMode`
+- ~~Temporary debug `debugPrint` statements in `totalSavedProvider` (subscriptions_provider.dart) and `_runTrapScan` (ai_scan_service.dart) — remove before release~~ **RESOLVED Sprint 21** — all production debugPrint stripped
 - ~~Temporary debug error messages in scan_provider.dart catch blocks~~ **RESOLVED Sprint 18** — replaced with user-friendly messages per exception type
-- `isProProvider` definition still exists in `entitlement_provider.dart` (zero consumers) — can be removed in a future cleanup pass
+- ~~`isProProvider` definition still exists in `entitlement_provider.dart` (zero consumers) — can be removed in a future cleanup pass~~ **RESOLVED Sprint 21** — removed entirely
+- Error logging (ErrorLogger) covers 6 priority files — remaining silent catches in less critical code (notification_service, nudge_engine, etc.) could be wired up later

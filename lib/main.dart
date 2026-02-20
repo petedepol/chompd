@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'services/auth_service.dart';
 import 'services/dodged_trap_repository.dart';
+import 'services/error_logger.dart';
 import 'services/exchange_rate_service.dart';
 import 'services/isar_service.dart';
 import 'services/merchant_db.dart';
@@ -38,8 +39,8 @@ void main() async {
   if (supabaseUrl.isNotEmpty) {
     try {
       await AuthService.instance.ensureUser();
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'startup_error', detail: 'ensureUser: $e', stackTrace: st.toString());
     }
   }
 
@@ -69,8 +70,8 @@ void main() async {
   // Restore from remote on reinstall (if local is empty but user is signed in)
   try {
     await SyncService.instance.restoreFromRemote();
-  } catch (_) {
-    // Silently ignored
+  } catch (e, st) {
+    ErrorLogger.log(event: 'startup_error', detail: 'restoreFromRemote: $e', stackTrace: st.toString());
   }
 
   // Non-blocking initial sync (pull remote changes)
