@@ -77,7 +77,14 @@ class NotificationService {
   final List<ScheduledNotification> _scheduled = [];
 
   /// Notification ID counter.
+  /// Wraps at 2^31 − 1 to stay within Android's 32-bit notification ID limit.
   int _nextId = 1000;
+  int _generateId() {
+    final id = _nextId;
+    _nextId = (_nextId + 1) % 0x7FFFFFFF;
+    if (_nextId < 1000) _nextId = 1000; // Reserve IDs below 1000
+    return id;
+  }
 
   /// Cached l10n instance — refreshed on each scheduling call.
   S? _l10n;
@@ -276,7 +283,7 @@ class NotificationService {
         if (scheduledAt.isBefore(DateTime.now())) continue;
 
         final notification = ScheduledNotification(
-          id: _nextId++,
+          id: _generateId(),
           channelId: NotificationChannels.renewalReminder,
           title: _renewalTitle(sub, daysBefore, l),
           body: _renewalBody(sub, daysBefore, l),
@@ -319,7 +326,7 @@ class NotificationService {
         if (scheduledAt.isBefore(DateTime.now())) continue;
 
         final notification = ScheduledNotification(
-          id: _nextId++,
+          id: _generateId(),
           channelId: NotificationChannels.trialExpiry,
           title: _trialTitle(sub, daysBefore, l),
           body: _trialBody(sub, daysBefore, l),
@@ -352,7 +359,7 @@ class NotificationService {
     final alert72h = trialExpiresAt.subtract(const Duration(hours: 72));
     if (alert72h.isAfter(DateTime.now())) {
       final notification = ScheduledNotification(
-        id: _nextId++,
+        id: _generateId(),
         channelId: NotificationChannels.trialExpiry,
         title: l.notifTrapTrialTitle3d(serviceName),
         body: l.notifTrapTrialBody3d(priceStr),
@@ -368,7 +375,7 @@ class NotificationService {
     final alert24h = trialExpiresAt.subtract(const Duration(hours: 24));
     if (alert24h.isAfter(DateTime.now())) {
       final notification = ScheduledNotification(
-        id: _nextId++,
+        id: _generateId(),
         channelId: NotificationChannels.trialExpiry,
         title: l.notifTrapTrialTitleTomorrow(serviceName, priceStr),
         body: l.notifTrapTrialBodyTomorrow,
@@ -384,7 +391,7 @@ class NotificationService {
     final alert2h = trialExpiresAt.subtract(const Duration(hours: 2));
     if (alert2h.isAfter(DateTime.now())) {
       final notification = ScheduledNotification(
-        id: _nextId++,
+        id: _generateId(),
         channelId: NotificationChannels.trialExpiry,
         title: l.notifTrapTrialTitle2h(serviceName, priceStr),
         body: l.notifTrapTrialBody2h,
@@ -399,7 +406,7 @@ class NotificationService {
     // Post-conversion check-in (2h after expiry)
     final afterConvert = trialExpiresAt.add(const Duration(hours: 2));
     final afterNotif = ScheduledNotification(
-      id: _nextId++,
+      id: _generateId(),
       channelId: NotificationChannels.trialExpiry,
       title: l.notifTrapPostCharge(serviceName),
       body: l.notifTrapPostChargeBody(priceStr),
@@ -465,7 +472,7 @@ class NotificationService {
     }
 
     final notification = ScheduledNotification(
-      id: _nextId++,
+      id: _generateId(),
       channelId: NotificationChannels.morningDigest,
       title: title,
       body: body,

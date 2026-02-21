@@ -41,7 +41,7 @@ class HapticService {
   }
 
   /// Error — scan failed, network error (double-tap).
-  void error() async {
+  Future<void> error() async {
     if (!_enabled) return;
     HapticFeedback.heavyImpact();
     await Future.delayed(const Duration(milliseconds: 50));
@@ -49,7 +49,7 @@ class HapticService {
   }
 
   /// Celebration — milestone reached, confetti moment.
-  void celebration() async {
+  Future<void> celebration() async {
     if (!_enabled) return;
     HapticFeedback.heavyImpact();
     await Future.delayed(const Duration(milliseconds: 80));

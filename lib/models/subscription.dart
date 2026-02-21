@@ -55,13 +55,21 @@ enum BillingCycle {
   }
 
   /// Parse a billing cycle from a string (e.g. 'monthly', 'yearly').
+  /// Falls back to [BillingCycle.monthly] for unrecognised values.
   static BillingCycle fromString(String value) {
     return switch (value.toLowerCase()) {
       'weekly' => BillingCycle.weekly,
       'monthly' => BillingCycle.monthly,
       'quarterly' => BillingCycle.quarterly,
       'yearly' => BillingCycle.yearly,
-      _ => BillingCycle.monthly,
+      _ => () {
+        assert(() {
+          // ignore: avoid_print
+          print('BillingCycle.fromString: unknown value "$value", defaulting to monthly');
+          return true;
+        }());
+        return BillingCycle.monthly;
+      }(),
     };
   }
 }
@@ -295,10 +303,22 @@ class Subscription {
   }
 
   /// The effective price for spending calculations.
-  /// For trap subscriptions, uses realPrice (what they'll actually pay)
-  /// so that yearly burn and category totals reflect the true cost.
+  ///
+  /// For trap subscriptions:
+  /// - During an active trial → use trialPrice (what they're paying now)
+  /// - After trial expires → use realPrice (what they'll actually pay)
+  ///
+  /// This ensures the spending dashboard doesn't show inflated totals
+  /// while the user is still in a cheap trial period.
   double get effectivePrice {
     if (isTrap == true && realPrice != null && realPrice! > 0) {
+      // If trial is still active, show what they're currently paying
+      final trialActive = isTrial &&
+          trialEndDate != null &&
+          trialEndDate!.isAfter(DateTime.now());
+      if (trialActive && trialPrice != null && trialPrice! > 0) {
+        return trialPrice!;
+      }
       return realPrice!;
     }
     return price;
@@ -385,13 +405,13 @@ class Subscription {
       case 'PLN':
         return 'z\u0142';
       case 'CHF':
-        return 'CHF ';
+        return 'CHF';
       case 'SEK':
       case 'NOK':
       case 'DKK':
         return 'kr';
       default:
-        return '$code ';
+        return code;
     }
   }
 
@@ -422,7 +442,10 @@ class Subscription {
     if (isSymbolSuffix(currencyCode)) {
       return '$value $sym';
     }
-    return '$sym$value';
+    // Add a space between multi-letter prefix symbols and the number
+    // e.g. "CHF 15.99" but "£15.99", "C$15.99"
+    final needsSpace = sym.length > 2 && !sym.contains('\$');
+    return needsSpace ? '$sym $value' : '$sym$value';
   }
 
   /// Build a Subscription from AI scan + trap detection results.

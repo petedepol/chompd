@@ -98,10 +98,9 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
               ),
               child: Text(
                 context.l10n.realCostFirstYear(Subscription.formatPrice(trap.realAnnualCost!, widget.currency)),
-                style: TextStyle(
-                  fontFamily: 'SpaceMono',
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                style: ChompdTypography.mono(
+                  size: 13,
+                  weight: FontWeight.w700,
                   color: c.text,
                 ),
                 textAlign: TextAlign.center,
@@ -137,10 +136,9 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
           trap.realPrice != null
               ? Subscription.formatPrice(trap.realPrice!, widget.currency)
               : '?',
-          style: TextStyle(
-            fontFamily: 'SpaceMono',
-            fontSize: 24,
-            fontWeight: FontWeight.w700,
+          style: ChompdTypography.mono(
+            size: 24,
+            weight: FontWeight.w700,
             color: _priceColor(context),
           ),
         ),
@@ -181,10 +179,9 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
               const SizedBox(height: 8),
               Text(
                 Subscription.formatPrice(trap.trialPrice ?? 0, widget.currency),
-                style: TextStyle(
-                  fontFamily: 'SpaceMono',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                style: ChompdTypography.mono(
+                  size: 20,
+                  weight: FontWeight.w700,
                   color: c.mint,
                 ),
               ),
@@ -251,10 +248,9 @@ class _PriceBreakdownCardState extends State<PriceBreakdownCard>
                 trap.realPrice != null
                     ? Subscription.formatPrice(trap.realPrice!, widget.currency)
                     : '?',
-                style: TextStyle(
-                  fontFamily: 'SpaceMono',
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                style: ChompdTypography.mono(
+                  size: 20,
+                  weight: FontWeight.w700,
                   color: _priceColor(context),
                 ),
               ),
