@@ -35,8 +35,12 @@ class SubscriptionCard extends ConsumerStatefulWidget {
 class _SubscriptionCardState extends ConsumerState<SubscriptionCard> {
   bool _pressed = false;
 
-  /// Service description from the curated database (e.g. "Stream music, podcasts & more").
-  String? get _serviceDescription {
+  /// Service description from the curated database (English only).
+  /// Only shown when the device locale is English — for other languages
+  /// the localised category name is used instead.
+  String? _serviceDescription(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
+    if (lang != 'en') return null; // descriptions are English-only
     final id = widget.subscription.matchedServiceId;
     if (id == null) return null;
     final service = ref.read(serviceCacheProvider.notifier).findById(id);
@@ -232,7 +236,7 @@ class _SubscriptionCardState extends ConsumerState<SubscriptionCard> {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          _serviceDescription ??
+                          _serviceDescription(context) ??
                               AppConstants.localisedCategory(
                                   subscription.category, context.l10n),
                           style: TextStyle(

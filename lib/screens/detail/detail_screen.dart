@@ -66,8 +66,10 @@ class _DetailScreenState extends ConsumerState<DetailScreen>
     super.dispose();
   }
 
-  /// Service description from the curated database.
-  String? _serviceDescription(Subscription sub) {
+  /// Service description from the curated database (English only).
+  /// For non-English locales, returns null so the localised category is used.
+  String? _serviceDescription(Subscription sub, String lang) {
+    if (lang != 'en') return null; // descriptions are English-only
     final id = sub.matchedServiceId;
     if (id == null) return null;
     final service = ref.read(serviceCacheProvider.notifier).findById(id);
@@ -235,7 +237,7 @@ class _DetailScreenState extends ConsumerState<DetailScreen>
                               const SizedBox(height: 3),
                               // Description punchline (from service DB) or category fallback
                               Builder(builder: (context) {
-                                final desc = _serviceDescription(sub);
+                                final desc = _serviceDescription(sub, locale);
                                 return Text(
                                   desc ?? AppConstants.localisedCategory(sub.category, context.l10n),
                                   style: TextStyle(

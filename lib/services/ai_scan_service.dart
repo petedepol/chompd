@@ -1761,10 +1761,10 @@ RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
     {
       "type": "string",
       "severity": "low" | "medium" | "high",
-      "detail": "one sentence explaining the trap"
+      "detail": "one sentence explaining the trap, written in ${_languageName(langCode)}"
     }
   ],
-  "warning_message": "plain English summary of ALL traps found, max 3 sentences. Be specific with numbers and dates."
+  "warning_message": "summary of ALL traps found in ${_languageName(langCode)}, max 3 sentences. Be specific with numbers and dates."
 }
 
 SEVERITY GUIDE:
@@ -1841,10 +1841,10 @@ RESPOND WITH VALID JSON ONLY (no markdown, no backticks):
     {
       "type": "string",
       "severity": "low" | "medium" | "high",
-      "detail": "one sentence explaining the trap"
+      "detail": "one sentence explaining the trap, written in ${_languageName(langCode)}"
     }
   ],
-  "warning_message": "plain English summary of ALL traps found, max 3 sentences. Be specific with numbers and dates."
+  "warning_message": "summary of ALL traps found in ${_languageName(langCode)}, max 3 sentences. Be specific with numbers and dates."
 }
 
 SEVERITY GUIDE:
