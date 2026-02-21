@@ -119,7 +119,7 @@ All 9 original QA bugs + 4 prelaunch batch items verified fixed during device te
 ### Manual Tasks Only (No Code Needed)
 1. **Rotate Anthropic API key** — old key exposed in chat history. Generate new at console.anthropic.com, update `.env`
 2. **Run Supabase cleanup SQL** — delete bad YouTube aliases, old user_insights, phantom cancelled subs (SQL above)
-3. **Add OG image** — `og-image.jpg` (1200x630px) needs adding to `images/og-image.jpg` in the `getchompd-site` GitHub repo. Meta tag in index.html already points there.
+3. ~~**Add OG image**~~ ✅ Done
 4. **Uncomment Apple Smart App Banner** — line 17 in index.html, replace `YOUR_APP_STORE_ID` with real ID after submission
 5. **App Store Connect: IAP setup** — 7-day trial + £4.99 one-time Pro purchase
 6. **App Store screenshots** — 6.7" + 6.5" minimum

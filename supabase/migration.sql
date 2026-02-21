@@ -211,3 +211,70 @@ CREATE TRIGGER set_updated_at_profiles
 CREATE TRIGGER set_updated_at_user_settings
   BEFORE UPDATE ON public.user_settings
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+-- ============================================
+-- V2: AI INSIGHTS — Weekly Generation + On-Add Trigger
+-- ============================================
+
+-- Ensure last_insight_at exists on profiles (added via dashboard)
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_insight_at TIMESTAMPTZ;
+
+-- Index for dispatcher query: find Pro users due for insight refresh
+CREATE INDEX IF NOT EXISTS idx_profiles_insight_due
+  ON public.profiles (is_pro, last_insight_at)
+  WHERE is_pro = true;
+
+-- Trigger function: auto-generate insights when a subscription is added.
+-- Guards:
+--   1. Only active, non-deleted subscriptions
+--   2. Only Pro users
+--   3. Debounce: skip if insights generated within the last hour
+-- Calls insight-generator Edge Function via pg_net (async, non-blocking).
+CREATE OR REPLACE FUNCTION public.trigger_insight_on_sub_add()
+RETURNS trigger AS $$
+DECLARE
+  _is_pro BOOLEAN;
+  _last_insight TIMESTAMPTZ;
+BEGIN
+  -- Only trigger for active, non-deleted subscriptions
+  IF NEW.is_active IS NOT TRUE OR NEW.deleted_at IS NOT NULL THEN
+    RETURN NEW;
+  END IF;
+
+  -- Check if user is Pro and when insights were last generated
+  SELECT p.is_pro, p.last_insight_at
+    INTO _is_pro, _last_insight
+    FROM public.profiles p
+    WHERE p.id = NEW.user_id;
+
+  -- Skip if not Pro
+  IF _is_pro IS NOT TRUE THEN
+    RETURN NEW;
+  END IF;
+
+  -- Debounce: skip if insights were generated within the last hour
+  IF _last_insight IS NOT NULL
+     AND _last_insight > (now() - INTERVAL '1 hour') THEN
+    RETURN NEW;
+  END IF;
+
+  -- Fire async HTTP POST to insight-generator Edge Function.
+  -- URL is public; service role key is server-side only (SECURITY DEFINER).
+  -- Replace <YOUR_SERVICE_ROLE_KEY> with actual key before running.
+  PERFORM net.http_post(
+    url := 'https://bavfommuelhivrigiafg.supabase.co/functions/v1/insight-generator',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer <YOUR_SERVICE_ROLE_KEY>'
+    ),
+    body := jsonb_build_object('user_id', NEW.user_id)
+  );
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_subscription_inserted
+  AFTER INSERT ON public.subscriptions
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trigger_insight_on_sub_add();

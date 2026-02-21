@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 21 Feb 2026 (Post-Sprint 22 — L10n fixes, carousel styling, trap scan improvements, Sonnet 4.6 upgrade)
+> Last updated: 22 Feb 2026 (Post-Sprint 23 — AI insight generation: weekly cron + on-subscription-add trigger)
 
 ---
 
@@ -834,3 +834,25 @@ lib/
 - `_runTrapScan()` has a catch-all that silently returns `TrapResult.clean` on any error — no retry logic. Could cause intermittent trap detection failures. modelOverride passthrough partially addresses this (Sonnet is more reliable) but the silent swallowing remains
 - Supabase `service_aliases` cleanup still needed: `DELETE FROM service_aliases WHERE service_id = '92badf7e-...' AND alias IN ('google play', 'google youtube', 'google *youtube');`
 - `ServiceCache.description` is English-only — non-EN locales fall back to localised category names. Could add multilingual descriptions to Supabase `services` table in future
+
+### Sprint 23 — AI Insight Generation: Weekly Cron + On-Add Trigger ✅
+
+- **Dispatcher updated** — `supabase/functions/insight-dispatcher/index.ts`:
+  - `BATCH_SIZE`: 10 → 250
+  - `MIN_INTERVAL_DAYS`: 14 → 7
+  - Added pagination loop with `MAX_RUNTIME_MS = 140_000` timeout guard
+  - Deployed via `supabase functions deploy insight-dispatcher`
+- **Cron rescheduled** — daily `0 3 * * *` → weekly Monday `0 3 * * 1`
+- **On-subscription-add Postgres trigger** — `trigger_insight_on_sub_add()`:
+  - AFTER INSERT on `subscriptions` table
+  - Guards: active + non-deleted, Pro users only, 1-hour debounce via `profiles.last_insight_at`
+  - Calls `insight-generator` Edge Function via `net.http_post()` (async, non-blocking)
+  - SECURITY DEFINER with hardcoded URL + service role key (server-side only)
+- **Performance index** — `idx_profiles_insight_due ON profiles (is_pro, last_insight_at) WHERE is_pro = true`
+- **Migration SQL** — `supabase/migration.sql` appended with V2 section (trigger function, trigger, index)
+- **Cost estimate** — ~$0.003/user/call, ~$0.01-0.02/user/month at weekly cadence
+- **No Flutter client changes needed** — existing `UserInsightRepository.syncFromSupabase()` picks up new insights on app launch/reconnect
+
+**Files modified:**
+- `supabase/functions/insight-dispatcher/index.ts` — pagination, batch size, interval, timeout guard
+- `supabase/migration.sql` — V2 trigger + index documentation
