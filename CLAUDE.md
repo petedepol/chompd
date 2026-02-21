@@ -43,7 +43,7 @@ Screenshot any subscription offer. Chompd reads the fine print, spots the trap, 
 Your subscriptions shouldn't be smarter than you."
 
 ## Business Model
-- **Free tier:** 3 subscriptions max, manual entry only, 3 free AI scans, basic reminders (day-of only)
+- **Free tier:** 3 subscriptions max, manual entry only, 1 free AI scan, basic reminders (day-of only)
 - **Pro unlock:** £4.99 one-time purchase — unlimited subs, unlimited AI scans, smart escalating reminders (7d/3d/1d/morning-of), trial countdown, money saved gamification, widgets + Siri Shortcuts
 - **AI costs:** Claude Haiku 4.5 at ~$0.0015/scan — negligible even at scale
 
@@ -278,7 +278,7 @@ static const chompMilestones = [
 
 ## Free Tier Limits
 - Max 3 subscriptions (accelerates paywall)
-- Max 3 AI scans lifetime (enough to experience magic, then paywall)
+- Max 1 AI scan lifetime (enough to experience magic, then paywall)
 - Reminders: morning-of only (Pro gets 7d/3d/1d/morning-of)
 
 ## Sprint Plan

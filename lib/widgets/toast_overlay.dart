@@ -159,7 +159,12 @@ class _ScanToastState extends State<ScanToast>
                     Row(
                       children: [
                         Text(
-                          '${Subscription.formatPrice(r.price ?? 0, r.currency)}/${r.billingCycle == 'monthly' ? 'mo' : r.billingCycle ?? 'mo'}',
+                          '${Subscription.formatPrice(r.price ?? 0, r.currency)}/${switch (r.billingCycle) {
+                            'yearly' => context.l10n.cycleYearlyShort,
+                            'weekly' => context.l10n.cycleWeeklyShort,
+                            'quarterly' => context.l10n.cycleQuarterlyShort,
+                            _ => context.l10n.cycleMonthlyShort,
+                          }}',
                           style: ChompdTypography.mono(
                             size: 12,
                             weight: FontWeight.w700,

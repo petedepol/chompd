@@ -110,8 +110,8 @@ Deno.serve(async (req: Request) => {
     const result = await anthropicResponse.json();
     const durationMs = Date.now() - startTime;
 
-    // 4. Increment scan count for free users + log
-    if (!isPro) {
+    // 4. Increment scan count for free users (only on successful AI response)
+    if (!isPro && anthropicResponse.ok) {
       await supabaseAdmin
         .from("user_settings")
         .update({ scan_count_used: scanCount + 1 })

@@ -3,6 +3,7 @@ import 'package:isar/isar.dart';
 
 import '../config/constants.dart';
 import '../models/subscription.dart';
+import '../services/error_logger.dart';
 import '../services/isar_service.dart';
 import '../services/sync_service.dart';
 import 'currency_provider.dart';
@@ -118,8 +119,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
       }
 
       state = subs;
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'subs_error', detail: 'loadFromIsar: $e', stackTrace: st.toString());
     }
   }
 
@@ -143,8 +144,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         await _isar.subscriptions.put(sub);
       });
       SyncService.instance.pushSubscription(sub);
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'subs_error', detail: 'add: $e', stackTrace: st.toString());
     }
   }
 
@@ -162,8 +163,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
             .deleteAll();
       });
       SyncService.instance.pushDelete(uid);
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'subs_error', detail: 'remove: $e', stackTrace: st.toString());
     }
   }
 
@@ -178,8 +179,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         await _isar.subscriptions.put(updated);
       });
       SyncService.instance.pushSubscription(updated);
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'subs_error', detail: 'update: $e', stackTrace: st.toString());
     }
   }
 
@@ -234,8 +235,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         await _isar.subscriptions.put(sub);
       });
       SyncService.instance.pushSubscription(sub);
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'subs_error', detail: 'cancel: $e', stackTrace: st.toString());
     }
   }
 
@@ -257,8 +258,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
         await _isar.subscriptions.put(sub);
       });
       SyncService.instance.pushSubscription(sub);
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'subs_error', detail: 'reactivate: $e', stackTrace: st.toString());
     }
   }
 
@@ -282,8 +283,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
       for (final sub in frozen) {
         SyncService.instance.pushSubscription(sub);
       }
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'subs_error', detail: 'unfreezeAll: $e', stackTrace: st.toString());
     }
   }
 
@@ -312,8 +313,8 @@ class SubscriptionsNotifier extends StateNotifier<List<Subscription>> {
       for (final sub in toFreeze) {
         SyncService.instance.pushSubscription(sub);
       }
-    } catch (_) {
-      // Silently ignored
+    } catch (e, st) {
+      ErrorLogger.log(event: 'subs_error', detail: 'freezeExcess: $e', stackTrace: st.toString());
     }
   }
 }

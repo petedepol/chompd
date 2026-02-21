@@ -717,6 +717,7 @@ class _AddEditScreenState extends ConsumerState<AddEditScreen> {
       }
     }
 
+    if (!mounted) return;
     Navigator.of(context).pop();
     if (_isEditing) Navigator.of(context).pop(); // Also pop detail screen
   }

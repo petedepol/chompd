@@ -163,13 +163,15 @@ class PurchaseService {
     // Sync to Supabase as secondary backup.
     _syncProToSupabase();
 
-    // Resolve any waiting completer.
+    // Resolve any waiting completer, then null to prevent stale references.
     if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
       _purchaseCompleter!.complete(true);
     }
+    _purchaseCompleter = null;
     if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
       _restoreCompleter!.complete(true);
     }
+    _restoreCompleter = null;
   }
 
   void _handlePurchaseError(PurchaseDetails purchase) {
@@ -188,9 +190,11 @@ class PurchaseService {
     if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
       _purchaseCompleter!.complete(false);
     }
+    _purchaseCompleter = null;
     if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
       _restoreCompleter!.complete(false);
     }
+    _restoreCompleter = null;
   }
 
   void _handlePurchaseCancelled(PurchaseDetails purchase) {
@@ -204,9 +208,11 @@ class PurchaseService {
     if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
       _purchaseCompleter!.complete(false);
     }
+    _purchaseCompleter = null;
     if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
       _restoreCompleter!.complete(false);
     }
+    _restoreCompleter = null;
   }
 
   // ─── Supabase Pro Status ───

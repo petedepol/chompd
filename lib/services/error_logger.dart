@@ -13,7 +13,7 @@ class ErrorLogger {
   }) async {
     try {
       final supabase = Supabase.instance.client;
-      final userId = supabase.auth.currentUser?.id;
+      final userId = supabase.auth.currentUser?.id ?? 'anonymous';
 
       await supabase.from('app_events').insert({
         'user_id': userId,
