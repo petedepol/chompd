@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 22 Feb 2026 (Post-Sprint 24 — Pre-launch audit, AI consent, UX polish)
+> Last updated: 21 Feb 2026 (Post-Sprint 25 — Real IAP integration, full code audit, 16 fixes)
 
 ---
 
@@ -841,8 +841,11 @@ lib/
 - ~~Screen goes dark during scans causing errors~~ **RESOLVED Sprint 24** — wakelock_plus
 - ~~Cancelled savings shows monthly equivalent instead of billing period price~~ **RESOLVED Sprint 24** — uses `priceIn × periods`
 - ~~Insights don't refresh without full restart~~ **RESOLVED Sprint 24** — refresh signal on app resume
-- Pro price hardcoded as £4.99 — will fix when wiring RevenueCat
-- RevenueCat not integrated — purchase flow is simulated (last job before submission)
+- ~~Pro price hardcoded as £4.99~~ **RESOLVED Sprint 25** — dynamic price from App Store via `PurchaseService.instance.priceDisplay`
+- ~~RevenueCat not integrated — purchase flow is simulated~~ **RESOLVED Sprint 25** — replaced with native `in_app_purchase` plugin (StoreKit 2), no RevenueCat needed
+- Edge Function `ai-scan` modified locally (`anthropicResponse.ok` guard) — needs `supabase functions deploy ai-scan`
+- Dead `CurrencyUtils` class in `lib/utils/currency.dart` — never imported, harmless
+- 9 dead convenience providers (lazy-evaluated, zero runtime cost) — kept for potential future use
 
 ### Sprint 23 — AI Insight Generation: Weekly Cron + On-Add Trigger ✅
 
@@ -945,3 +948,70 @@ lib/
 - `ios/Runner/PrivacyInfo.xcprivacy` — collected photo data type
 - `pubspec.yaml` — added `wakelock_plus: ^1.3.3`
 - All 5 ARB files + generated l10n — 10 `aiConsent*` keys
+
+### Sprint 25 — Real IAP Integration + Full Code Audit ✅
+
+**Phase 1: Real IAP via `in_app_purchase` Plugin (StoreKit 2)**
+
+- **Key decision:** Dropped `7_day_trial` as IAP product — Apple doesn't support $0 non-consumable products. Trial stays local via SharedPreferences + EntitlementNotifier.
+- **`purchase_service.dart` full rewrite** — replaced `Future.delayed` simulations with real `InAppPurchase.instance` integration:
+  - `init()` — checks availability, listens to `purchaseStream`, queries product details
+  - `purchasePro()` — Completer pattern bridges async stream to `Future<bool>` API
+  - `restorePurchase()` — checks Supabase first (cross-device), falls back to App Store with 15s timeout
+  - `priceDisplay` — returns App Store-localised price (e.g. "€4.99", "24,99 zł"), GBP fallback
+  - Stream handlers for purchased/restored/error/cancelled — all call `completePurchase()` (critical for transaction queue)
+  - Source of truth: App Store → Supabase `profiles.is_pro` → local `_state`
+- **`constants.dart`** — removed `trialProductId = '7_day_trial'`
+- **`paywall_screen.dart`** — dynamic price from `PurchaseService.instance.priceDisplay`, cancel no longer shows error
+- **`settings_screen.dart`** — dynamic price display
+- **`app_*.arb` (5 files)** — added `purchaseCancelled` key
+- Added `in_app_purchase: ^3.2.3` to `pubspec.yaml`
+
+**Phase 2: Comprehensive Code Audit**
+
+Ran manual audit + cross-referenced with Codex 5.3 findings. Produced unified priority list: 7 red (must fix), 12 yellow (should fix), 8 green (can wait).
+
+**Phase 3: Audit Fixes — Must-Fix (7 items)**
+
+1. **Subscriptions provider silent errors** — ErrorLogger.log() added to all 8 catch blocks in `subscriptions_provider.dart`
+2. **Purchase completers never nulled** — `_purchaseCompleter = null` / `_restoreCompleter = null` after resolution in all 3 stream handlers
+3. **AddEditScreen missing mounted check** — `if (!mounted) return;` before `Navigator.pop()` after async gap
+4. **Toast hardcoded /mo** — localised with `cycleWeeklyShort`/`Monthly`/`Quarterly`/`Yearly` l10n keys
+5. **Edge function scan count on failed AI** — only increments when `anthropicResponse.ok` is true
+6. **ErrorLogger null user_id** — uses `'anonymous'` sentinel when `currentUser` is null (pre-auth)
+7. **CLAUDE.md stale docs** — "3 free AI scans" → "1 free AI scan" (2 locations)
+
+**Phase 3: Audit Fixes — Should-Fix (9 items, 2 skipped)**
+
+8. **SyncService soft-deleted data** — already handled correctly (`.isFilter('deleted_at', null)` + cleanup logic). SKIPPED.
+9. **Entitlement listener dispose** — Riverpod auto-cleans `ref.listen()`. SKIPPED.
+10. **HapticService async return types** — `error()` + `celebration()` now return `Future<void>`
+11. **effectivePrice during trap trials** — shows `trialPrice` during active trial, `realPrice` after expiry
+12. **BillingCycle.fromString silent fallback** — debug-assert log for unknown values
+13. **PriceBreakdownCard hardcoded fontFamily** — replaced 4 instances of `fontFamily: 'SpaceMono'` with `ChompdTypography.mono()`
+14. **OnboardingScreen PageController listener** — `removeListener(_onPageChanged)` before `dispose()`
+15. **NotificationService ID overflow** — `_generateId()` wraps at 2^31-1 for Android 32-bit notification ID limit
+16. **Dead providers** — SKIPPED (9 convenience selectors, harmless, lazy-evaluated)
+17. **Dead currency.dart** — SKIPPED (harmless dead file)
+18. **CHF currency spacing** — removed trailing space from symbol, `formatPrice()` now handles multi-letter prefix spacing via `needsSpace` logic
+19. **Info.plist landscape orientations** — restricted to portrait-only on both iPhone and iPad (matches `SystemChrome.setPreferredOrientations` in `main.dart`)
+
+**Files modified:**
+- `pubspec.yaml` — `in_app_purchase: ^3.2.3`
+- `lib/services/purchase_service.dart` — full IAP rewrite + completer nulling
+- `lib/config/constants.dart` — removed `trialProductId`
+- `lib/screens/paywall/paywall_screen.dart` — dynamic price, cancel handling
+- `lib/screens/settings/settings_screen.dart` — dynamic price
+- `lib/l10n/app_*.arb` (5 files) — `purchaseCancelled` key
+- `lib/providers/subscriptions_provider.dart` — ErrorLogger in 8 catch blocks
+- `lib/screens/detail/add_edit_screen.dart` — mounted check
+- `lib/services/error_logger.dart` — `'anonymous'` sentinel
+- `lib/widgets/toast_overlay.dart` — localised cycle text
+- `supabase/functions/ai-scan/index.ts` — scan count on success only
+- `CLAUDE.md` — free scan count docs
+- `lib/services/haptic_service.dart` — `Future<void>` return types
+- `lib/models/subscription.dart` — effectivePrice trial-aware, BillingCycle debug log, CHF spacing fix
+- `lib/widgets/price_breakdown_card.dart` — `ChompdTypography.mono()`
+- `lib/screens/onboarding/onboarding_screen.dart` — `removeListener` before dispose
+- `lib/services/notification_service.dart` — ID counter wrap via `_generateId()`
+- `ios/Runner/Info.plist` — portrait-only orientations
