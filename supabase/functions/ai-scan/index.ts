@@ -7,7 +7,7 @@ const SUPABASE_SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const ALLOWED_MODELS = [
   "claude-haiku-4-5-20251001",
-  "claude-sonnet-4-5-20250929",
+  "claude-sonnet-4-6",
 ];
 
 const FREE_SCAN_LIMIT = 1;

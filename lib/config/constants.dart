@@ -10,7 +10,7 @@ class AppConstants {
 
   // ─── AI Configuration ───
   static const String aiModel = 'claude-haiku-4-5-20251001';
-  static const String aiModelFallback = 'claude-sonnet-4-5-20250929';
+  static const String aiModelFallback = 'claude-sonnet-4-6';
   static const double scanCostEstimate = 0.006; // USD per scan (Haiku 4.5)
 
   // ─── Animation Durations ───
