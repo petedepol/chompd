@@ -1303,19 +1303,17 @@ class _CancelledCard extends ConsumerWidget {
 
   const _CancelledCard({required this.cancelled});
 
-  int get _monthsSinceCancelled {
-    final cancelDate = cancelled.cancelledDate ?? cancelled.createdAt;
-    final days = DateTime.now().difference(cancelDate).inDays;
-    // At least 1 — the next payment you avoided by cancelling.
-    return (days ~/ 30).clamp(1, days + 30);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
     final displayCurrency = ref.watch(currencyProvider);
-    // Use monthlyEquivalentIn so card amounts match totalSavedProvider header
-    final saved = cancelled.monthlyEquivalentIn(displayCurrency) * _monthsSinceCancelled;
+    // Match totalSavedProvider formula: billing-period price × avoided periods
+    final cancelDate = cancelled.cancelledDate ?? cancelled.createdAt;
+    final daysSinceCancelled = DateTime.now().difference(cancelDate).inDays;
+    final cycleDays = cancelled.cycle.approximateDays;
+    final periods = (daysSinceCancelled / cycleDays).clamp(1.0, double.infinity);
+    final saved = cancelled.priceIn(displayCurrency) * periods;
+    final monthsSinceCancelled = (daysSinceCancelled ~/ 30).clamp(1, daysSinceCancelled + 30);
 
     final brandColor = () {
       if (cancelled.brandColor == null) return c.textDim;
@@ -1369,8 +1367,8 @@ class _CancelledCard extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    _monthsSinceCancelled > 0
-                        ? context.l10n.cancelledMonthsAgo(_monthsSinceCancelled)
+                    monthsSinceCancelled > 0
+                        ? context.l10n.cancelledMonthsAgo(monthsSinceCancelled)
                         : context.l10n.justCancelled,
                     style: TextStyle(
                       fontSize: 10,
