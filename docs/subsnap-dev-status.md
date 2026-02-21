@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 22 Feb 2026 (Post-Sprint 23 — AI insight generation: weekly cron + on-subscription-add trigger)
+> Last updated: 22 Feb 2026 (Post-Sprint 24 — Pre-launch audit, AI consent, UX polish)
 
 ---
 
@@ -834,6 +834,15 @@ lib/
 - `_runTrapScan()` has a catch-all that silently returns `TrapResult.clean` on any error — no retry logic. Could cause intermittent trap detection failures. modelOverride passthrough partially addresses this (Sonnet is more reliable) but the silent swallowing remains
 - Supabase `service_aliases` cleanup still needed: `DELETE FROM service_aliases WHERE service_id = '92badf7e-...' AND alias IN ('google play', 'google youtube', 'google *youtube');`
 - `ServiceCache.description` is English-only — non-EN locales fall back to localised category names. Could add multilingual descriptions to Supabase `services` table in future
+- ~~Scan counter resets on app restart~~ **RESOLVED Sprint 24** — persisted to SharedPreferences
+- ~~notificationSchedulerProvider never watched~~ **RESOLVED Sprint 24** — wired in home screen
+- ~~Google Sign-In no error handling / no restore~~ **RESOLVED Sprint 24** — removed entirely (iOS-only launch)
+- ~~AM/PM hardcoded in settings~~ **RESOLVED Sprint 24** — uses `TimeOfDay.format(context)`
+- ~~Screen goes dark during scans causing errors~~ **RESOLVED Sprint 24** — wakelock_plus
+- ~~Cancelled savings shows monthly equivalent instead of billing period price~~ **RESOLVED Sprint 24** — uses `priceIn × periods`
+- ~~Insights don't refresh without full restart~~ **RESOLVED Sprint 24** — refresh signal on app resume
+- Pro price hardcoded as £4.99 — will fix when wiring RevenueCat
+- RevenueCat not integrated — purchase flow is simulated (last job before submission)
 
 ### Sprint 23 — AI Insight Generation: Weekly Cron + On-Add Trigger ✅
 
@@ -856,3 +865,83 @@ lib/
 **Files modified:**
 - `supabase/functions/insight-dispatcher/index.ts` — pagination, batch size, interval, timeout guard
 - `supabase/migration.sql` — V2 trigger + index documentation
+
+### Sprint 23b — Unmatched Info L10n + Carousel Polish ✅
+
+- **Unmatched service info banner localised** — `_UnmatchedInfoBanner` in `detail_screen.dart` had hardcoded English text ("We don't have specific data for this service yet..."). Replaced with `context.l10n.unmatchedServiceNote` and added translations to all 5 ARB files (EN, PL, DE, FR, ES).
+- **Carousel directional slide transition** — replaced simple crossfade with `SlideTransition` + `FadeTransition` that slides cards left/right matching swipe direction. Tracks `_carouselForward` bool for direction.
+- **Smoother animation curves** — `easeIn`/`easeOut` → `easeOutCubic`/`easeInCubic`, duration 300ms → 350ms for more natural feel.
+- **Animated pagination dots** — `Container` → `AnimatedContainer` (300ms `easeOutCubic`) so dot width/colour transitions are smooth instead of snapping.
+- **Yearly Burn card moved to last** — reordered carousel: Annual Savings → Trap Stats → Smart Insights → Combined Insights → Nudges → Yearly Burn (was first).
+
+**Files modified:**
+- `lib/screens/detail/detail_screen.dart` — `unmatchedServiceNote` l10n key
+- `lib/screens/home/home_screen.dart` — carousel animation + card reorder
+- `lib/l10n/app_en.arb` — new `unmatchedServiceNote` key
+- `lib/l10n/app_pl.arb` — Polish translation
+- `lib/l10n/app_de.arb` — German translation
+- `lib/l10n/app_fr.arb` — French translation
+- `lib/l10n/app_es.arb` — Spanish translation
+
+### Sprint 24 — Pre-Launch Audit, AI Consent, UX Polish ✅
+
+**App Store Compliance:**
+
+- **AI consent screen** (Apple Guideline 5.1.2i) — new `lib/screens/scan/ai_consent_screen.dart` with `checkAiConsent(BuildContext)` gate. Piranha mascot, 5 bullet points explaining data use, green CTA, one-time consent persisted via SharedPreferences. All 4 scan entry points gated (camera, gallery, paste text, OS share sheet).
+- **Info.plist purpose strings** — `NSCameraUsageDescription` and `NSPhotoLibraryUsageDescription` now explicitly mention "(Anthropic Claude)"
+- **Privacy manifest** — added `NSPrivacyCollectedDataTypePhotosOrVideos` to `PrivacyInfo.xcprivacy`
+- **10 new l10n keys** (`aiConsent*`) in all 5 ARB files
+
+**Audit Fixes (MUST FIX):**
+
+- **Scan counter persisted** — `ScanCounterNotifier` now uses SharedPreferences (key: `free_scan_count`). Was resettable by restarting the app.
+- **Text trap modelOverride passthrough** — `analyseTextWithTrap()` trap body was hardcoding `AppConstants.aiModel` instead of using `modelOverride`. Now matches image path behaviour.
+- **Deleted backup file** — removed `lib/providers/scan_provider.dart.bak`
+- **Notification scheduler wired** — `notificationSchedulerProvider` was defined but never watched. Added `ref.watch()` in home screen `build()` so notifications reschedule reactively.
+- **Stale trackTrapTrial comments cleaned** — removed empty block and prototype comments (real implementation lives in `trap_warning_card.dart`)
+- **Isar crash recovery** — `IsarService.init()` now wraps `Isar.open()` in try/catch. On failure, deletes corrupt DB files and retries. Logs via ErrorLogger.
+
+**Audit Fixes (SHOULD FIX):**
+
+- **Google Sign-In removed** — not needed for iOS-only launch. Removed `linkGoogleSignIn()` from `auth_service.dart` and button from `settings_screen.dart`.
+- **AM/PM locale-aware** — `_formatTime()` in settings replaced hardcoded 12-hour format with `TimeOfDay.format(context)` which respects device locale.
+
+**Bug Fixes:**
+
+- **Wakelock during scans** — added `wakelock_plus` to prevent iOS process suspension during long multi-sub scans (was causing errors when screen went dark)
+- **Stale scan state on re-entry** — `initState` now resets scan state if not idle/scanning (error/result states no longer persist)
+- **Cancelled savings calculation** — was using `monthlyEquivalentIn × months` which showed ~12 for a yearly sub at 149. Now uses `priceIn × billing periods` — correctly shows 149.
+- **Insight refresh on app resume** — added `insightRefreshSignal` StateProvider. `_AppEntry.didChangeAppLifecycleState` syncs user insights from Supabase on resume and bumps the signal so `combinedInsightsProvider` re-reads from Isar. No full restart needed.
+
+**UX Polish:**
+
+- **Trap warning positioning** — removed `SafeArea` from `TrapWarningCard` (parent scan screen already handles safe-area padding). Trap card now starts from top.
+- **Multi-scan double plus** — removed `Icons.add_rounded` icon from "Add X selected" button (l10n string already has `+` prefix).
+- **Carousel reorder** — Yearly Burn → Annual Savings → Combined Insights → Smart Insights → Trap Stats → Nudges
+
+**Deferred:**
+
+- RevenueCat integration (last job before submission)
+- Pro price hardcoded GBP (will fix with RevenueCat)
+- CAN WAIT items: dead code, notification ID collisions, data orphaning, stale comments, locale cache
+
+**Files created:**
+- `lib/screens/scan/ai_consent_screen.dart` — AI consent screen + `checkAiConsent()` function
+
+**Files modified:**
+- `lib/app.dart` — insight refresh on resume, UserInsightRepository + insightRefreshSignal imports
+- `lib/providers/combined_insights_provider.dart` — `insightRefreshSignal` StateProvider
+- `lib/providers/scan_provider.dart` — persisted scan counter, cleaned trackTrapTrial comments
+- `lib/providers/subscriptions_provider.dart` — billing-period savings calculation
+- `lib/screens/home/home_screen.dart` — carousel reorder, notification scheduler watch
+- `lib/screens/scan/scan_screen.dart` — consent gate, wakelock, initState reset, removed duplicate plus icon
+- `lib/screens/scan/trap_warning_card.dart` — removed SafeArea (double padding fix)
+- `lib/screens/settings/settings_screen.dart` — removed Google Sign-In button, locale-aware time format
+- `lib/services/ai_scan_service.dart` — text trap modelOverride fix
+- `lib/services/auth_service.dart` — removed `linkGoogleSignIn()`
+- `lib/services/isar_service.dart` — crash recovery with DB deletion + retry
+- `lib/utils/share_handler.dart` — consent gate for share sheet scans
+- `ios/Runner/Info.plist` — AI provider in purpose strings
+- `ios/Runner/PrivacyInfo.xcprivacy` — collected photo data type
+- `pubspec.yaml` — added `wakelock_plus: ^1.3.3`
+- All 5 ARB files + generated l10n — 10 `aiConsent*` keys

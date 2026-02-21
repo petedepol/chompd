@@ -1,101 +1,96 @@
 # Chompd — Session Handover (22 Feb 2026)
 
 ## Session Summary
-Reviewed AI insight generation infrastructure (3 systems: local logic, curated service insights, AI-generated user insights). Discovered existing Edge Functions (`insight-generator` with 15 deployments, `insight-dispatcher`) and Supabase `user_insights` table already set up but not in local repo. Updated dispatcher from daily/14-day/batch-10 to **weekly/7-day/batch-250 with pagination**. Added **Postgres trigger** for instant insight generation on subscription add (Pro users only, 1-hour debounce). All deployed and live.
+Two sessions today. First: reviewed AI insight infrastructure and added weekly cron + on-subscription-add trigger. Second: comprehensive pre-launch audit, Apple AI consent compliance, 10+ bug fixes, and UX polish.
 
 ---
 
 ## Build Status
-- **Latest commit:** `27cb609` (pre-session, no new commits yet)
-- **Branch:** main
+- **Latest commit:** `25b108d` — Pre-launch audit fixes + AI consent + UX polish
+- **Branch:** main (2 commits ahead of origin)
 - **Supabase changes:** Deployed via dashboard + CLI (not committed)
 
 ---
 
-## Changes This Session
+## Changes — Session 1 (AI Insights)
 
 ### 1. Insight Dispatcher Updated
 **File:** `supabase/functions/insight-dispatcher/index.ts`
 - `BATCH_SIZE`: 10 → **250**
 - `MIN_INTERVAL_DAYS`: 14 → **7**
-- Added **pagination loop** — processes all due users across multiple batches
-- Added **timeout guard** (`MAX_RUNTIME_MS = 140s`) — stops cleanly before 150s Edge Function limit
-- Logs elapsed time in response
-- Deployed via `supabase functions deploy insight-dispatcher`
+- Added **pagination loop** with **timeout guard** (`MAX_RUNTIME_MS = 140s`)
 
 ### 2. Cron Rescheduled (Daily → Weekly)
-**SQL run in Supabase SQL Editor:**
-- Unscheduled `insight-dispatcher-daily` (was `0 3 * * *`)
-- Created `insight-dispatcher-weekly` (`0 3 * * 1` — Monday 3am UTC)
-- Uses hardcoded Supabase URL + service role key (no `ALTER DATABASE SET` on hosted Supabase)
+- `0 3 * * 1` — Monday 3am UTC
 
-### 3. On-Subscription-Add Trigger Created
-**SQL run in Supabase SQL Editor:**
-- `trigger_insight_on_sub_add()` — SECURITY DEFINER function
-- Guards: active + non-deleted subs only, Pro users only, 1-hour debounce via `last_insight_at`
-- Calls `insight-generator` Edge Function via `net.http_post()` (async, non-blocking)
-- `on_subscription_inserted` trigger on `subscriptions` table (AFTER INSERT)
+### 3. On-Subscription-Add Trigger
+- `trigger_insight_on_sub_add()` — SECURITY DEFINER, Pro only, 1-hour debounce
 
-### 4. Performance Index Added
-```sql
-CREATE INDEX idx_profiles_insight_due ON profiles (is_pro, last_insight_at) WHERE is_pro = true;
-```
-
-### 5. Migration SQL Updated
-**File:** `supabase/migration.sql`
-- Appended V2 section: trigger function, trigger, and index for documentation
+### 4. Carousel + L10n Polish
+- Directional slide transitions, animated dots
+- Unmatched service info banner localised
 
 ---
 
-## Files Changed This Session
+## Changes — Session 2 (Pre-Launch Audit + UX)
+
+### App Store Compliance
+- **AI consent screen** (`ai_consent_screen.dart`) — Apple Guideline 5.1.2(i). All 4 scan entry points gated. 10 new l10n keys.
+- **Info.plist** — purpose strings now mention "(Anthropic Claude)"
+- **PrivacyInfo.xcprivacy** — added collected photo data type
+
+### Audit Fixes (MUST FIX)
+1. **Scan counter persisted** to SharedPreferences (was resettable on restart)
+2. **Text trap modelOverride** — trap body now uses `modelOverride ?? AppConstants.aiModel`
+3. **Deleted** `scan_provider.dart.bak`
+4. **Notification scheduler wired** — `ref.watch(notificationSchedulerProvider)` in home screen
+5. **Stale comments cleaned** in `trackTrapTrial()`
+6. **Isar crash recovery** — try/catch + delete corrupt DB + retry
+
+### Audit Fixes (SHOULD FIX)
+7. **Google Sign-In removed** (not needed for iOS-only launch)
+8. **AM/PM locale-aware** — `TimeOfDay.format(context)` replaces hardcoded format
+
+### Bug Fixes
+9. **Wakelock during scans** — prevents iOS process suspension (`wakelock_plus`)
+10. **Stale scan state reset** on screen re-entry
+11. **Cancelled savings** — uses billing period price, not monthly equivalent (149 zł/yr → 149, not 12)
+12. **Insight refresh on resume** — `insightRefreshSignal` bumped after Supabase sync in `didChangeAppLifecycleState`
+
+### UX Polish
+13. **Trap card positioning** — removed double SafeArea padding
+14. **Multi-scan double plus** — removed icon (l10n string already has `+`)
+15. **Carousel reorder** — Yearly Burn → Annual Savings → Insights → Trap Stats → Nudges
+
+---
+
+## Files Changed — Session 2
 
 | File | Change |
 |------|--------|
-| `supabase/functions/insight-dispatcher/index.ts` | BATCH_SIZE 250, MIN_INTERVAL_DAYS 7, pagination + timeout guard |
-| `supabase/migration.sql` | V2 section: trigger function + trigger + index |
-
-## Supabase Changes (not in repo — run manually)
-- `insight-dispatcher` Edge Function redeployed
-- pg_cron: daily → weekly Monday 3am
-- Postgres trigger `on_subscription_inserted` created
-- Index `idx_profiles_insight_due` created
-- Service role key hardcoded in trigger function (SECURITY DEFINER, server-side only)
-
----
-
-## Architecture: AI Insight Generation
-
-```
-Weekly (Monday 3am UTC)
-  pg_cron → insight-dispatcher Edge Function
-    → queries profiles WHERE is_pro AND last_insight_at < 7 days ago
-    → calls insight-generator for each user (batch 250, paginated)
-
-On Subscription Add
-  INSERT INTO subscriptions
-    → Postgres trigger fires
-    → checks: is_active? not deleted? is_pro? last_insight_at > 1hr ago?
-    → calls insight-generator via pg_net.http_post()
-
-insight-generator (unchanged)
-  → fetches user profile (currency, locale)
-  → fetches active subs with has_annual from services table
-  → sends to Claude Haiku 4.5
-  → parses 2-3 JSON insights
-  → inserts into user_insights
-  → updates profiles.last_insight_at
-
-Flutter client (unchanged)
-  → syncs user_insights on app launch + reconnect
-  → combinedInsightsProvider merges AI + curated (max 3)
-  → displays in carousel with AI badge
-```
+| `lib/screens/scan/ai_consent_screen.dart` | **NEW** — AI consent screen + `checkAiConsent()` |
+| `lib/app.dart` | Insight refresh on resume |
+| `lib/providers/combined_insights_provider.dart` | `insightRefreshSignal` StateProvider |
+| `lib/providers/scan_provider.dart` | Persisted scan counter, cleaned comments |
+| `lib/providers/subscriptions_provider.dart` | Billing-period savings calculation |
+| `lib/screens/home/home_screen.dart` | Carousel reorder, notification scheduler watch |
+| `lib/screens/scan/scan_screen.dart` | Consent gate, wakelock, reset, removed duplicate plus |
+| `lib/screens/scan/trap_warning_card.dart` | Removed SafeArea |
+| `lib/screens/settings/settings_screen.dart` | Removed Google button, locale-aware time |
+| `lib/services/ai_scan_service.dart` | Text trap modelOverride fix |
+| `lib/services/auth_service.dart` | Removed `linkGoogleSignIn()` |
+| `lib/services/isar_service.dart` | Crash recovery |
+| `lib/utils/share_handler.dart` | Consent gate |
+| `ios/Runner/Info.plist` | AI provider in purpose strings |
+| `ios/Runner/PrivacyInfo.xcprivacy` | Collected photo data type |
+| `pubspec.yaml` | Added `wakelock_plus` |
+| All 5 ARB files + generated l10n | 10 `aiConsent*` keys |
 
 ---
 
-## Infrastructure
-- **Supabase:** https://bavfommuelhivrigiafg.supabase.co
-- **Edge Functions:** insight-generator (15 deploys), insight-dispatcher (3 deploys), ai-scan, + 2 legacy (Chompd-i8/i9)
-- **pg_cron:** Weekly Monday 3am UTC
-- **pg_net:** Enabled, used by trigger for async HTTP calls
-- **AI:** Haiku 4.5 for insights (~$0.003/user/call)
+## What's Left Before Submission
+
+1. **RevenueCat integration** — wire real IAP (last big job)
+2. **Rotate API key** — generate fresh key for production
+3. **Supabase SQL cleanup** — delete YouTube/Google Play aliases
+4. **App Store Connect** — screenshots, listing copy, submit
