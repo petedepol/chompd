@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../config/theme.dart';
 import '../../models/scan_output.dart';
@@ -23,6 +24,7 @@ import '../../widgets/mascot_image.dart';
 import '../../widgets/scan_shimmer.dart';
 import '../../widgets/toast_overlay.dart';
 import '../paywall/paywall_screen.dart';
+import 'ai_consent_screen.dart';
 import 'trap_warning_card.dart';
 
 /// Localised short cycle label for scan result display.
@@ -62,11 +64,22 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     super.initState();
     // Seed the merchant DB if not already done
     MerchantDb.instance.seed();
+
+    // Reset stale scan state when re-entering the screen
+    // (e.g. previous error or result from a prior scan session).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final phase = ref.read(scanProvider).phase;
+      if (phase != ScanPhase.idle && phase != ScanPhase.scanning) {
+        ref.read(scanProvider.notifier).reset();
+      }
+    });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    // Ensure wakelock is released when leaving the screen.
+    WakelockPlus.disable();
     super.dispose();
   }
 
@@ -88,10 +101,18 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     final scanState = ref.watch(scanProvider);
     final scanCounter = ref.watch(scanCounterProvider);
 
-    // Auto-scroll when messages change
+    // Auto-scroll when messages change + manage wakelock
     ref.listen<ScanState>(scanProvider, (prev, next) {
       if (prev?.messages.length != next.messages.length) {
         _scrollToBottom();
+      }
+      // Keep screen awake while scanning to prevent iOS suspension.
+      if (prev?.phase != next.phase) {
+        if (next.phase == ScanPhase.scanning) {
+          WakelockPlus.enable();
+        } else {
+          WakelockPlus.disable();
+        }
       }
     });
 
@@ -390,6 +411,10 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
 
   /// Pick an image from camera or gallery and start a real AI scan.
   Future<void> _pickImage(ImageSource source) async {
+    // AI consent check (Apple Guideline 5.1.2(i))
+    final consented = await checkAiConsent(context);
+    if (!consented || !mounted) return;
+
     final canScan = ref.read(canScanProvider);
     if (!canScan) {
       await showPaywall(context, trigger: PaywallTrigger.scanLimit);
@@ -437,7 +462,11 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
   }
 
   /// Show bottom sheet for pasting email/confirmation text.
-  void _showPasteTextSheet() {
+  Future<void> _showPasteTextSheet() async {
+    // AI consent check (Apple Guideline 5.1.2(i))
+    final consented = await checkAiConsent(context);
+    if (!consented || !mounted) return;
+
     final canScan = ref.read(canScanProvider);
     if (!canScan) {
       showPaywall(context, trigger: PaywallTrigger.scanLimit);
@@ -2364,12 +2393,6 @@ class _MultiChecklistMessageState extends State<_MultiChecklistMessage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.add_rounded,
-                              size: 15,
-                              color: _selectedCount > 0 ? c.bg : c.textDim,
-                            ),
-                            const SizedBox(width: 4),
                             Text(
                               _selectedCount > 0
                                   ? context.l10n.scanAddSelected(_selectedCount)

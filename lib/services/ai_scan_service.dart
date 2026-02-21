@@ -1476,7 +1476,7 @@ Return ONLY valid JSON array, no markdown, no explanation.
 
     // Build trap detection request body (text-only, no image)
     final trapBody = {
-      'model': AppConstants.aiModel,
+      'model': modelOverride ?? AppConstants.aiModel,
       'max_tokens': 1000,
       'messages': [
         {

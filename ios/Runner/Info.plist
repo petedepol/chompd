@@ -46,9 +46,9 @@
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Chompd uses the camera to scan subscription screenshots, receipts, and confirmation emails.</string>
+	<string>Chompd uses your camera to photograph subscription confirmations, receipts, and signup pages. These images are sent to our AI analysis service (Anthropic Claude) to identify subscription details like service names, prices, billing dates, and hidden terms.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Chompd needs access to your photo library to scan subscription screenshots.</string>
+	<string>Chompd needs access to your photo library so you can select screenshots of subscription confirmations, receipts, and signup pages. Selected images are sent to our AI analysis service (Anthropic Claude) to extract subscription details and detect hidden traps.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 </dict>

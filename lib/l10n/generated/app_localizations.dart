@@ -3288,6 +3288,72 @@ abstract class S {
   /// In en, this message translates to:
   /// **'⚠️ Intro price — {days} days remaining'**
   String introPriceDaysRemaining(int days);
+
+  /// No description provided for @unmatchedServiceNote.
+  ///
+  /// In en, this message translates to:
+  /// **'We don’t have specific data for this service yet. Cancel and refund guides show general steps for your platform.'**
+  String get unmatchedServiceNote;
+
+  /// No description provided for @aiConsentTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-Powered Scanning'**
+  String get aiConsentTitle;
+
+  /// No description provided for @aiConsentBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Chompd uses Anthropic Claude, a third-party AI service, to analyse your screenshots and text for subscription details.'**
+  String get aiConsentBody;
+
+  /// No description provided for @aiConsentBullet1.
+  ///
+  /// In en, this message translates to:
+  /// **'Your image or text is sent to Anthropic’s servers for analysis'**
+  String get aiConsentBullet1;
+
+  /// No description provided for @aiConsentBullet2.
+  ///
+  /// In en, this message translates to:
+  /// **'AI extracts subscription info: name, price, dates, and hidden traps'**
+  String get aiConsentBullet2;
+
+  /// No description provided for @aiConsentBullet3.
+  ///
+  /// In en, this message translates to:
+  /// **'Anthropic may retain data for up to 30 days for safety monitoring'**
+  String get aiConsentBullet3;
+
+  /// No description provided for @aiConsentBullet4.
+  ///
+  /// In en, this message translates to:
+  /// **'Your data is not used to train AI models'**
+  String get aiConsentBullet4;
+
+  /// No description provided for @aiConsentBullet5.
+  ///
+  /// In en, this message translates to:
+  /// **'No personal identifiers are attached to the data'**
+  String get aiConsentBullet5;
+
+  /// No description provided for @aiConsentLocalNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Your subscription data is stored locally on your device only.'**
+  String get aiConsentLocalNote;
+
+  /// No description provided for @aiConsentAccept.
+  ///
+  /// In en, this message translates to:
+  /// **'I Understand, Continue'**
+  String get aiConsentAccept;
+
+  /// No description provided for @aiConsentCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get aiConsentCancel;
 }
 
 class _SDelegate extends LocalizationsDelegate<S> {

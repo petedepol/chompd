@@ -2008,4 +2008,44 @@ class SEn extends S {
   String introPriceDaysRemaining(int days) {
     return '⚠️ Intro price — $days days remaining';
   }
+
+  @override
+  String get unmatchedServiceNote =>
+      'We don’t have specific data for this service yet. Cancel and refund guides show general steps for your platform.';
+
+  @override
+  String get aiConsentTitle => 'AI-Powered Scanning';
+
+  @override
+  String get aiConsentBody =>
+      'Chompd uses Anthropic Claude, a third-party AI service, to analyse your screenshots and text for subscription details.';
+
+  @override
+  String get aiConsentBullet1 =>
+      'Your image or text is sent to Anthropic’s servers for analysis';
+
+  @override
+  String get aiConsentBullet2 =>
+      'AI extracts subscription info: name, price, dates, and hidden traps';
+
+  @override
+  String get aiConsentBullet3 =>
+      'Anthropic may retain data for up to 30 days for safety monitoring';
+
+  @override
+  String get aiConsentBullet4 => 'Your data is not used to train AI models';
+
+  @override
+  String get aiConsentBullet5 =>
+      'No personal identifiers are attached to the data';
+
+  @override
+  String get aiConsentLocalNote =>
+      'Your subscription data is stored locally on your device only.';
+
+  @override
+  String get aiConsentAccept => 'I Understand, Continue';
+
+  @override
+  String get aiConsentCancel => 'Cancel';
 }

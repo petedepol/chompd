@@ -43,9 +43,8 @@ class TrapWarningCard extends ConsumerWidget {
       color: c.bg.withValues(alpha: 0.95),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
+        child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
             child: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -249,7 +248,6 @@ class TrapWarningCard extends ConsumerWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }

@@ -47,8 +47,15 @@ extension _StringExt on String {
 /// Also drops `annual_saving` insights when the user's subscription is
 /// already on a yearly billing cycle.
 ///
+/// Bump this to force [combinedInsightsProvider] to re-read from Isar.
+/// Called after insight sync completes.
+final insightRefreshSignal = StateProvider<int>((ref) => 0);
+
 /// Used by [ServiceInsightCard] to render the unified insight carousel.
 final combinedInsightsProvider = Provider<List<InsightDisplayData>>((ref) {
+  // Watch refresh signal so we re-read Isar after sync.
+  ref.watch(insightRefreshSignal);
+
   // 1. AI-generated user insights (reads synchronously from Isar)
   final aiInsights = UserInsightRepository.instance.getActiveInsights();
 

@@ -179,7 +179,7 @@ class SettingsScreen extends ConsumerWidget {
                           _SettingsToggle(
                             icon: Icons.wb_sunny_outlined,
                             title: context.l10n.morningDigest,
-                            subtitle: context.l10n.morningDigestSubtitle(_formatTime(prefs.digestTime)),
+                            subtitle: context.l10n.morningDigestSubtitle(_formatTime(context, prefs.digestTime)),
                             value: prefs.morningDigestEnabled,
                             onChanged:
                                 prefsNotifier.toggleMorningDigest,
@@ -201,7 +201,7 @@ class SettingsScreen extends ConsumerWidget {
                                           c.border),
                                 ),
                                 child: Text(
-                                  _formatTime(prefs.digestTime),
+                                  _formatTime(context, prefs.digestTime),
                                   style: ChompdTypography.mono(
                                     size: 11,
                                     weight: FontWeight.w700,
@@ -575,12 +575,7 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _formatTime(TimeOfDay time) {
-    final hour = time.hourOfPeriod == 0 ? 12 : time.hourOfPeriod;
-    final minute = time.minute.toString().padLeft(2, '0');
-    final period = time.period == DayPeriod.am ? 'AM' : 'PM';
-    return '$hour:$minute $period';
-  }
+  String _formatTime(BuildContext context, TimeOfDay time) => time.format(context);
 
   String _reminderSubtitle(BuildContext context, NotificationPreferences prefs) {
     final days = prefs.activeReminderDays;
@@ -984,16 +979,6 @@ class _AccountSection extends ConsumerWidget {
                         );
                       }
                     }
-                  },
-                ),
-                const SizedBox(height: 10),
-                _SignInButton(
-                  icon: Icons.g_mobiledata_rounded,
-                  label: context.l10n.signInWithGoogle,
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await AuthService.instance.linkGoogleSignIn();
-                    ref.invalidate(authProvider);
                   },
                 ),
               ] else ...[

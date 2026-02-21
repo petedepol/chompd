@@ -8,6 +8,7 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import '../providers/purchase_provider.dart';
 import '../providers/scan_provider.dart';
 import '../screens/paywall/paywall_screen.dart';
+import '../screens/scan/ai_consent_screen.dart';
 import '../screens/scan/scan_screen.dart';
 
 /// Handles images shared from other apps via the OS Share Sheet.
@@ -72,10 +73,14 @@ class ShareHandler {
       return;
     }
 
+    // AI consent check (Apple Guideline 5.1.2(i))
+    final context = nav.context;
+    final consented = await checkAiConsent(context);
+    if (!consented) return;
+
     // Check scan limits.
     final canScan = cont.read(canScanProvider);
     if (!canScan) {
-      final context = nav.context;
       await showPaywall(context, trigger: PaywallTrigger.scanLimit);
       return;
     }

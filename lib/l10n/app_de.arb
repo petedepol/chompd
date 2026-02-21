@@ -914,5 +914,18 @@
   "introPriceExpires": "Aktionspreis endet am {date}",
   "@introPriceExpires": { "placeholders": { "date": {"type": "String"} } },
   "introPriceDaysRemaining": "\u26A0\uFE0F Aktionspreis \u2014 noch {days} Tage",
-  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } }
+  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } },
+
+  "unmatchedServiceNote": "Wir haben noch keine spezifischen Daten für diesen Dienst. Kündigungs- und Erstattungsanleitungen zeigen allgemeine Schritte für Ihre Plattform.",
+
+  "aiConsentTitle": "KI-gestütztes Scannen",
+  "aiConsentBody": "Chompd nutzt Anthropic Claude, einen externen KI-Dienst, um deine Screenshots und Texte auf Abo-Details zu analysieren.",
+  "aiConsentBullet1": "Dein Bild oder Text wird zur Analyse an die Server von Anthropic gesendet",
+  "aiConsentBullet2": "Die KI erkennt Abo-Infos: Name, Preis, Daten und versteckte Fallen",
+  "aiConsentBullet3": "Anthropic kann Daten bis zu 30 Tage zur Sicherheitsüberwachung speichern",
+  "aiConsentBullet4": "Deine Daten werden nicht zum Trainieren von KI-Modellen verwendet",
+  "aiConsentBullet5": "Es werden keine persönlichen Daten an die Anfrage angehängt",
+  "aiConsentLocalNote": "Deine Abo-Daten werden nur lokal auf deinem Gerät gespeichert.",
+  "aiConsentAccept": "Verstanden, weiter",
+  "aiConsentCancel": "Abbrechen"
 }

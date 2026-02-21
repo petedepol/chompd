@@ -914,5 +914,18 @@
   "introPriceExpires": "Cena promocyjna kończy się {date}",
   "@introPriceExpires": { "placeholders": { "date": {"type": "String"} } },
   "introPriceDaysRemaining": "\u26A0\uFE0F Cena promocyjna \u2014 zostało {days} dni",
-  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } }
+  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } },
+
+  "unmatchedServiceNote": "Nie mamy jeszcze szczegółowych danych dla tej usługi. Poradniki anulowania i zwrotów pokazują ogólne kroki dla Twojej platformy.",
+
+  "aiConsentTitle": "Skanowanie AI",
+  "aiConsentBody": "Chompd używa Anthropic Claude, zewnętrznej usługi AI, do analizy zrzutów ekranu i tekstu w celu identyfikacji szczegółów subskrypcji.",
+  "aiConsentBullet1": "Twój obraz lub tekst jest wysyłany na serwery Anthropic do analizy",
+  "aiConsentBullet2": "AI wyodrębnia informacje: nazwę, cenę, daty i ukryte pułapki",
+  "aiConsentBullet3": "Anthropic może przechowywać dane do 30 dni w celach bezpieczeństwa",
+  "aiConsentBullet4": "Twoje dane nie są używane do trenowania modeli AI",
+  "aiConsentBullet5": "Do wysyłanych danych nie są dołączane dane osobowe",
+  "aiConsentLocalNote": "Dane o subskrypcjach są przechowywane wyłącznie na Twoim urządzeniu.",
+  "aiConsentAccept": "Rozumiem, kontynuuj",
+  "aiConsentCancel": "Anuluj"
 }

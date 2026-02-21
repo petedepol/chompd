@@ -63,8 +63,8 @@ final expiringTrialsProvider = Provider<List<Subscription>>((ref) {
 
 /// Provider: total money saved from VISIBLE cancelled subs (excludes dismissed).
 ///
-/// Calculated as: monthlyEquivalentIn(displayCurrency) × months since cancellation,
-/// with a minimum of 1 month (the next avoided payment).
+/// Calculated as: number of avoided billing periods × actual renewal price.
+/// Minimum 1 period (the next payment you dodged by cancelling).
 /// Uses cancelledSubsProvider (not _allCancelledSubsProvider) so the header
 /// total matches the sum of the individual cancelled cards the user can see.
 final totalSavedProvider = Provider<double>((ref) {
@@ -74,10 +74,11 @@ final totalSavedProvider = Provider<double>((ref) {
     final cancelDate = sub.cancelledDate ?? sub.createdAt;
     final daysSinceCancelled =
         DateTime.now().difference(cancelDate).inDays;
-    // At least 1 month — the next payment you avoided by cancelling.
-    final months = (daysSinceCancelled / 30).clamp(1.0, double.infinity);
-    final monthlyInCurrency = sub.monthlyEquivalentIn(displayCurrency);
-    final contribution = monthlyInCurrency * months;
+    final cycleDays = sub.cycle.approximateDays;
+    // At least 1 billing period — the next payment you avoided.
+    final periods = (daysSinceCancelled / cycleDays).clamp(1.0, double.infinity);
+    final priceInCurrency = sub.priceIn(displayCurrency);
+    final contribution = priceInCurrency * periods;
     return sum + contribution;
   });
 });

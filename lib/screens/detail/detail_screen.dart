@@ -1817,7 +1817,7 @@ class _UnmatchedInfoBanner extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'We don\'t have specific data for this service yet. Cancel and refund guides show general steps for your platform.',
+              context.l10n.unmatchedServiceNote,
               style: TextStyle(fontSize: 12, color: c.textMid, height: 1.4),
             ),
           ),

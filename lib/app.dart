@@ -5,11 +5,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'l10n/generated/app_localizations.dart';
 
 import 'config/theme.dart';
+import 'providers/combined_insights_provider.dart';
 import 'providers/entitlement_provider.dart';
 import 'providers/locale_provider.dart';
 import 'providers/service_cache_provider.dart';
 import 'providers/theme_provider.dart';
 import 'services/service_sync_service.dart';
+import 'services/user_insight_repository.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/onboarding/onboarding_screen.dart';
 import 'screens/scan/scan_screen.dart';
@@ -97,6 +99,11 @@ class _AppEntryState extends State<_AppEntry> with WidgetsBindingObserver {
       // Recheck trial expiry on app resume
       final container = ProviderScope.containerOf(context);
       container.read(entitlementProvider.notifier).recheck();
+
+      // Refresh insights (may have arrived via cron while app was backgrounded)
+      UserInsightRepository.instance.syncFromSupabase().then((_) {
+        container.read(insightRefreshSignal.notifier).state++;
+      });
 
       // If trial just expired, show the expired screen once
       _checkTrialExpired();

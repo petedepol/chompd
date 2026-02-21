@@ -914,5 +914,18 @@
   "introPriceExpires": "Prix de lancement expire le {date}",
   "@introPriceExpires": { "placeholders": { "date": {"type": "String"} } },
   "introPriceDaysRemaining": "\u26A0\uFE0F Prix de lancement \u2014 {days} jours restants",
-  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } }
+  "@introPriceDaysRemaining": { "placeholders": { "days": {"type": "int"} } },
+
+  "unmatchedServiceNote": "Nous n\u2019avons pas encore de données spécifiques pour ce service. Les guides d\u2019annulation et de remboursement affichent les étapes générales pour votre plateforme.",
+
+  "aiConsentTitle": "Scan alimenté par l\u2019IA",
+  "aiConsentBody": "Chompd utilise Anthropic Claude, un service d\u2019IA tiers, pour analyser vos captures d\u2019écran et textes afin d\u2019identifier les détails d\u2019abonnement.",
+  "aiConsentBullet1": "Votre image ou texte est envoyé aux serveurs d\u2019Anthropic pour analyse",
+  "aiConsentBullet2": "L\u2019IA extrait les infos : nom, prix, dates et pièges cachés",
+  "aiConsentBullet3": "Anthropic peut conserver les données jusqu\u2019à 30 jours pour la sécurité",
+  "aiConsentBullet4": "Vos données ne sont pas utilisées pour entraîner des modèles d\u2019IA",
+  "aiConsentBullet5": "Aucune donnée personnelle n\u2019est jointe aux données envoyées",
+  "aiConsentLocalNote": "Vos données d\u2019abonnement sont stockées uniquement sur votre appareil.",
+  "aiConsentAccept": "Je comprends, continuer",
+  "aiConsentCancel": "Annuler"
 }

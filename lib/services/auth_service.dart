@@ -128,14 +128,6 @@ class AuthService {
     }
   }
 
-  /// Link anonymous account to Google Sign-In via OAuth.
-  Future<void> linkGoogleSignIn() async {
-    await _client.auth.signInWithOAuth(
-      OAuthProvider.google,
-      redirectTo: 'io.chompd.app://login-callback/',
-    );
-  }
-
   /// Link anonymous account to email/password.
   Future<void> linkEmail(String email, String password) async {
     await _client.auth.updateUser(

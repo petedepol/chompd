@@ -2029,4 +2029,45 @@ class SEs extends S {
   String introPriceDaysRemaining(int days) {
     return '⚠️ Precio de lanzamiento — quedan $days días';
   }
+
+  @override
+  String get unmatchedServiceNote =>
+      'Aún no tenemos datos específicos para este servicio. Las guías de cancelación y reembolso muestran pasos generales para tu plataforma.';
+
+  @override
+  String get aiConsentTitle => 'Escaneo con IA';
+
+  @override
+  String get aiConsentBody =>
+      'Chompd utiliza Anthropic Claude, un servicio de IA externo, para analizar tus capturas de pantalla y texto en busca de detalles de suscripción.';
+
+  @override
+  String get aiConsentBullet1 =>
+      'Tu imagen o texto se envía a los servidores de Anthropic para su análisis';
+
+  @override
+  String get aiConsentBullet2 =>
+      'La IA extrae información: nombre, precio, fechas y trampas ocultas';
+
+  @override
+  String get aiConsentBullet3 =>
+      'Anthropic puede retener datos hasta 30 días para monitoreo de seguridad';
+
+  @override
+  String get aiConsentBullet4 =>
+      'Tus datos no se usan para entrenar modelos de IA';
+
+  @override
+  String get aiConsentBullet5 =>
+      'No se adjuntan identificadores personales a los datos enviados';
+
+  @override
+  String get aiConsentLocalNote =>
+      'Los datos de suscripción se almacenan solo en tu dispositivo.';
+
+  @override
+  String get aiConsentAccept => 'Entendido, continuar';
+
+  @override
+  String get aiConsentCancel => 'Cancelar';
 }

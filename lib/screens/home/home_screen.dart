@@ -33,6 +33,7 @@ import '../../widgets/trap_stats_card.dart';
 import '../../widgets/trial_banner.dart';
 import '../../providers/combined_insights_provider.dart';
 import '../../providers/budget_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../detail/add_edit_screen.dart';
 import '../detail/detail_screen.dart';
 import '../paywall/paywall_screen.dart';
@@ -63,6 +64,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   bool _showConfetti = false;
   final Set<String> _dismissedCards = {};
   int _carouselPage = 0;
+  bool _carouselForward = true; // swipe direction for slide animation
   bool _scanPressed = false;
 
   // ─── Scan hint state ───
@@ -284,6 +286,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Activate notification scheduler — reschedules when subs change.
+    ref.watch(notificationSchedulerProvider);
+
     final c = context.colors;
     final subscriptions = ref.watch(subscriptionsProvider);
     final cancelledSubs = ref.watch(cancelledSubsProvider);
@@ -620,7 +625,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                 // Build the list of carousel cards
                 final cards = <Widget>[];
 
-                // 1. Yearly Burn
+                // 1. Yearly Burn (overview card — first)
                 if (activeSubs.isNotEmpty) {
                   cards.add(_YearlyBurnBanner(
                     yearlyTotal: ref.watch(yearlySpendProvider),
@@ -631,28 +636,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ));
                 }
 
-                // 2. Annual Savings (switch to annual)
+                // 2. Annual Savings (switch to annual, if available)
                 if (!annualSavings.isEmpty) {
                   cards.add(const AnnualSavingsCard());
                 }
 
-                // 3. Trap Stats (Unchompd)
-                if (trapStats.hasStats && !_dismissedCards.contains('trap_stats')) {
-                  cards.add(const TrapStatsCard(embedded: true));
-                }
-
-                // 4. Smart Insights
-                if (insights.isNotEmpty && !_dismissedCards.contains('insights')) {
-                  cards.add(InsightCard(insights: insights));
-                }
-
-                // 4.5 Combined Insights (AI-generated + curated)
+                // 3. Combined Insights (AI-generated + curated)
                 final combinedInsights = ref.watch(combinedInsightsProvider);
                 if (combinedInsights.isNotEmpty) {
                   cards.add(const ServiceInsightCard(embedded: true));
                 }
 
-                // 5. Nudge cards
+                // 4. Smart Insights (hardcoded logic-based)
+                if (insights.isNotEmpty && !_dismissedCards.contains('insights')) {
+                  cards.add(InsightCard(insights: insights));
+                }
+
+                // 5. Trap Stats (Unchompd)
+                if (trapStats.hasStats && !_dismissedCards.contains('trap_stats')) {
+                  cards.add(const TrapStatsCard(embedded: true));
+                }
+
+                // 6. Nudge cards
                 for (final nudge in nudges) {
                   cards.add(NudgeCard(nudge: nudge, embedded: true));
                 }
@@ -679,25 +684,44 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               ? (details) {
                                   final v = details.primaryVelocity ?? 0;
                                   if (v < -200 && _carouselPage < cards.length - 1) {
-                                    setState(() => _carouselPage++);
+                                    setState(() {
+                                      _carouselForward = true;
+                                      _carouselPage++;
+                                    });
                                     HapticService.instance.selection();
                                   } else if (v > 200 && _carouselPage > 0) {
-                                    setState(() => _carouselPage--);
+                                    setState(() {
+                                      _carouselForward = false;
+                                      _carouselPage--;
+                                    });
                                     HapticService.instance.selection();
                                   }
                                 }
                               : null,
                           behavior: HitTestBehavior.opaque,
                           child: AnimatedSize(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
+                            duration: const Duration(milliseconds: 350),
+                            curve: Curves.easeOutCubic,
                             alignment: Alignment.topCenter,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20),
                               child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 300),
-                                switchInCurve: Curves.easeIn,
-                                switchOutCurve: Curves.easeOut,
+                                duration: const Duration(milliseconds: 350),
+                                switchInCurve: Curves.easeOutCubic,
+                                switchOutCurve: Curves.easeInCubic,
+                                transitionBuilder: (child, animation) {
+                                  final isIncoming = child.key == ValueKey('carousel_$_carouselPage');
+                                  final slideOffset = _carouselForward ? 1.0 : -1.0;
+                                  final begin = Offset(isIncoming ? slideOffset : -slideOffset, 0);
+                                  return SlideTransition(
+                                    position: Tween<Offset>(begin: begin, end: Offset.zero)
+                                        .animate(animation),
+                                    child: FadeTransition(
+                                      opacity: animation,
+                                      child: child,
+                                    ),
+                                  );
+                                },
                                 child: KeyedSubtree(
                                   key: ValueKey('carousel_$_carouselPage'),
                                   child: cards[_carouselPage],
@@ -712,7 +736,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: List.generate(cards.length, (i) {
                               final isActive = i == _carouselPage;
-                              return Container(
+                              return AnimatedContainer(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
                                 width: isActive ? 18 : 6,
                                 height: 6,
                                 margin: const EdgeInsets.symmetric(horizontal: 3),

@@ -1461,19 +1461,11 @@ class ScanNotifier extends StateNotifier<ScanState> {
     HapticFeedback.heavyImpact();
   }
 
-  /// User chose "Track Trial Anyway" — add subscription with trap metadata
-  /// and schedule aggressive trial alerts.
+  /// User chose "Track Trial Anyway" — transitions UI to result phase.
+  ///
+  /// Subscription saving and trial alert scheduling are handled by
+  /// TrapWarningCard's onTap callback in trap_warning_card.dart.
   void trackTrapTrial(ScanResult subscription, TrapResult trap) {
-    // In a full implementation, we'd create a Subscription with trap fields
-    // and save it via the subscriptions provider. For the prototype,
-    // we transition to result phase and schedule alerts.
-
-    // Schedule aggressive trial alerts if there's an expiry
-    if (trap.trialDurationDays != null) {
-      // Notification service will handle the 72h/24h/2h alerts
-      // (integrated in Phase 5)
-    }
-
     final l = _l10n;
     state = state.copyWith(
       phase: ScanPhase.result,
@@ -1519,14 +1511,31 @@ final scanMessagesProvider = Provider<List<ChatMessage>>((ref) {
   return ref.watch(scanProvider).messages;
 });
 
-/// Free scan counter — tracks how many AI scans the user has used.
-///
-/// For v1 this is in-memory. Sprint 5+ will persist in SharedPreferences.
+/// Free scan counter — persisted in SharedPreferences so it survives restarts.
 class ScanCounterNotifier extends StateNotifier<int> {
-  ScanCounterNotifier() : super(0);
+  static const _key = 'free_scan_count';
 
-  void increment() => state++;
-  void reset() => state = 0;
+  ScanCounterNotifier() : super(0) {
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getInt(_key) ?? 0;
+  }
+
+  Future<void> increment() async {
+    state++;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_key, state);
+  }
+
+  Future<void> reset() async {
+    state = 0;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_key, 0);
+  }
+
   bool get canScan => state < AppConstants.freeMaxScans;
   int get remaining => AppConstants.freeMaxScans - state;
 }
