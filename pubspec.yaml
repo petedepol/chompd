@@ -1,7 +1,7 @@
 name: chompd
 description: AI-powered subscription defence. Bite back at subscriptions.
 publish_to: 'none'
-version: 1.0.0+35
+version: 1.0.0+37
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -57,7 +57,7 @@ dependencies:
   receive_sharing_intent: ^1.8.0
 
   # Share — generate + share branded stat cards
-  share_plus: ^7.2.1
+  share_plus: ^10.1.4
 
   # App info
   package_info_plus: ^8.0.0
