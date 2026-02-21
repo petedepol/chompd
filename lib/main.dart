@@ -36,7 +36,7 @@ void main() async {
   }
 
   // Anonymous auth — deferred if offline or Supabase not configured
-  if (supabaseUrl.isNotEmpty) {
+  if (supabaseUrl.isNotEmpty && supabaseAnonKey.isNotEmpty) {
     try {
       await AuthService.instance.ensureUser();
     } catch (e, st) {
