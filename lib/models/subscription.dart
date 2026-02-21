@@ -258,8 +258,13 @@ class Subscription {
   }
 
   /// Days until next renewal from now (can be negative if overdue).
+  /// Compares calendar dates only (strips time) so "tomorrow" is always
+  /// the next calendar day regardless of what time it is right now.
   int get daysUntilRenewal {
-    return nextRenewal.difference(DateTime.now()).inDays;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final renewal = DateTime(nextRenewal.year, nextRenewal.month, nextRenewal.day);
+    return renewal.difference(today).inDays;
   }
 
   /// Human-friendly renewal label.
