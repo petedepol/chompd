@@ -49,7 +49,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return calendar.entries
         .where((e) => !e.key.isBefore(monthStart) && !e.key.isAfter(monthEnd))
         .fold(0.0, (sum, e) =>
-            sum + e.value.fold(0.0, (s, sub) => s + sub.priceIn(_currencyCode)));
+            sum + e.value.fold(0.0, (s, sub) => s + sub.priceInOnDate(_currencyCode, e.key)));
   }
 
   @override
@@ -379,7 +379,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       _selectedDay!.day,
     );
     final subs = calendar[key] ?? [];
-    final dayTotal = subs.fold(0.0, (sum, s) => sum + s.priceIn(_currencyCode));
+    final dayTotal = subs.fold(0.0, (sum, s) => sum + s.priceInOnDate(_currencyCode, key));
     final isToday = isSameDay(_selectedDay!, DateTime.now());
 
     return Column(
@@ -462,6 +462,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ...List.generate(subs.length, (i) => _StaggeredSubCard(
             key: ValueKey('${_selectedDay}_${subs[i].id}'),
             sub: subs[i],
+            date: key,
             index: i,
             currencyCode: _currencyCode,
             brandColorFn: _brandColor,
@@ -485,17 +486,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         monthEntries.fold(0, (sum, e) => sum + e.value.length);
     final totalSpend = monthEntries.fold(
       0.0,
-      (sum, e) => sum + e.value.fold(0.0, (s, sub) => s + sub.priceIn(_currencyCode)),
+      (sum, e) => sum + e.value.fold(0.0, (s, sub) => s + sub.priceInOnDate(_currencyCode, e.key)),
     );
 
     // Category breakdown
     final categorySpend = <String, double>{};
     for (final entry in monthEntries) {
       for (final sub in entry.value) {
+        final p = sub.priceInOnDate(_currencyCode, entry.key);
         categorySpend.update(
           sub.category,
-          (v) => v + sub.priceIn(_currencyCode),
-          ifAbsent: () => sub.priceIn(_currencyCode),
+          (v) => v + p,
+          ifAbsent: () => p,
         );
       }
     }
@@ -517,7 +519,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     double priciestSpend = 0;
     for (final entry in monthEntries) {
       final daySpend =
-          entry.value.fold(0.0, (sum, s) => sum + s.priceIn(_currencyCode));
+          entry.value.fold(0.0, (sum, s) => sum + s.priceInOnDate(_currencyCode, entry.key));
       if (daySpend > priciestSpend) {
         priciestSpend = daySpend;
         priciest = entry;
@@ -628,8 +630,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ],
 
           // ─── Row 3: Busiest day pill ───
-          if (busiest != null && busiest.value.length > 1 &&
-              !(_selectedDay != null && isSameDay(busiest.key, _selectedDay!))) ...[
+          if (busiest case final b? when b.value.length > 1 &&
+              !(_selectedDay != null && isSameDay(b.key, _selectedDay!))) ...[
             const SizedBox(height: 14),
             Container(
               padding: const EdgeInsets.symmetric(
@@ -654,9 +656,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   Expanded(
                     child: Text(
                       context.l10n.renewalsOnDay(
-                        busiest.value.length,
-                        DateHelpers.shortDate(busiest.key, locale: locale),
-                        Subscription.formatPrice(busiest.value.fold(0.0, (s, sub) => s + sub.priceIn(_currencyCode)), _currencyCode),
+                        b.value.length,
+                        DateHelpers.shortDate(b.key, locale: locale),
+                        Subscription.formatPrice(b.value.fold(0.0, (s, sub) => s + sub.priceInOnDate(_currencyCode, b.key)), _currencyCode),
                       ),
                       style: TextStyle(
                         fontSize: 11,
@@ -817,7 +819,7 @@ class _HeatMapDayCellState extends State<_HeatMapDayCell>
     final c = context.colors;
     final hasRenewal = widget.renewals.isNotEmpty;
     final daySpend =
-        widget.renewals.fold(0.0, (sum, s) => sum + s.priceIn(widget.currencyCode));
+        widget.renewals.fold(0.0, (sum, s) => sum + s.priceInOnDate(widget.currencyCode, widget.day));
 
     // ─── Heat-map intensity (spend relative to month total) ───
     double heatAlpha = 0;
@@ -935,6 +937,7 @@ class _HeatMapDayCellState extends State<_HeatMapDayCell>
 /// Uses a category-color accent bar on the left and elevated background.
 class _StaggeredSubCard extends StatefulWidget {
   final Subscription sub;
+  final DateTime date;
   final int index;
   final String currencyCode;
   final Color Function(Subscription) brandColorFn;
@@ -942,6 +945,7 @@ class _StaggeredSubCard extends StatefulWidget {
   const _StaggeredSubCard({
     super.key,
     required this.sub,
+    required this.date,
     required this.index,
     required this.currencyCode,
     required this.brandColorFn,
@@ -1079,9 +1083,9 @@ class _StaggeredSubCardState extends State<_StaggeredSubCard>
                         ),
                       ),
 
-                      // Price (bold)
+                      // Price (bold) — date-aware for intro/trial subs
                       Text(
-                        sub.priceDisplay,
+                        '${Subscription.formatPrice(sub.effectivePriceOn(widget.date), sub.currency)}/${sub.cycle.shortLabel}',
                         style: ChompdTypography.mono(
                           size: 13,
                           weight: FontWeight.w700,

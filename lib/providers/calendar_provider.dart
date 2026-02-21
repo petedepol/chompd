@@ -28,6 +28,7 @@ final renewalCalendarProvider =
 });
 
 /// Provider: total spend for a given day (converted to display currency).
+/// Uses date-aware pricing so intro/trial subs show realPrice after expiry.
 final daySpendProvider =
     Provider.family<double, DateTime>((ref, day) {
   final calendar = ref.watch(renewalCalendarProvider);
@@ -35,7 +36,7 @@ final daySpendProvider =
   final key = _normalise(day);
   final subs = calendar[key];
   if (subs == null || subs.isEmpty) return 0;
-  return subs.fold(0.0, (sum, s) => sum + s.priceIn(currency));
+  return subs.fold(0.0, (sum, s) => sum + s.priceInOnDate(currency, day));
 });
 
 /// Projects future renewal dates for a subscription across N months.

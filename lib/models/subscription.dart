@@ -315,12 +315,18 @@ class Subscription {
   ///
   /// This ensures the spending dashboard doesn't show inflated totals
   /// while the user is still in a cheap trial period.
-  double get effectivePrice {
+  double get effectivePrice => effectivePriceOn(DateTime.now());
+
+  /// Price that applies on [date].
+  ///
+  /// Calendar uses this to show realPrice for future dates after the
+  /// intro/trial period expires, instead of the current trialPrice.
+  double effectivePriceOn(DateTime date) {
     if (isTrap == true && realPrice != null && realPrice! > 0) {
-      // If trial is still active, show what they're currently paying
+      // If trial is still active on [date], show what they're paying then
       final trialActive = isTrial &&
           trialEndDate != null &&
-          trialEndDate!.isAfter(DateTime.now());
+          trialEndDate!.isAfter(date);
       if (trialActive && trialPrice != null && trialPrice! > 0) {
         return trialPrice!;
       }
@@ -375,6 +381,11 @@ class Subscription {
   /// Effective price converted to a target currency.
   double priceIn(String targetCurrency) =>
       ExchangeRateService.instance.convert(effectivePrice, currency, targetCurrency);
+
+  /// Effective price on a specific [date], converted to a target currency.
+  /// Used by calendar to show realPrice for dates after trial/intro expiry.
+  double priceInOnDate(String targetCurrency, DateTime date) =>
+      ExchangeRateService.instance.convert(effectivePriceOn(date), currency, targetCurrency);
 
   /// Monthly equivalent converted to a target currency.
   double monthlyEquivalentIn(String targetCurrency) =>
