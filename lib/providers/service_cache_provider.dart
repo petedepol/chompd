@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
 
+import '../data/cancel_guides_data.dart';
 import '../models/cancel_guide_v2.dart';
 import '../models/refund_template_v2.dart';
 import '../models/service_cache.dart';
@@ -101,7 +102,16 @@ class ServiceCacheNotifier extends StateNotifier<List<ServiceCache>> {
   }
 
   /// Find the best matching cancel guide for a subscription.
+  ///
+  /// Prefers in-app translated guides (from cancel_guides_data.dart) which
+  /// have full PL/DE/FR/ES translations. Falls back to Supabase data
+  /// (English-only) if no in-app match exists.
   CancelGuideData? findCancelGuide(String name, {bool isIOS = true}) {
+    // 1. Try in-app data with full translations first
+    final translated = findTranslatedCancelGuide(name);
+    if (translated != null) return translated;
+
+    // 2. Try Supabase service data (English-only)
     final service = findByName(name);
     if (service != null) {
       final guides = service.parsedCancelGuides;
@@ -134,7 +144,15 @@ class ServiceCacheNotifier extends StateNotifier<List<ServiceCache>> {
   }
 
   /// Find ALL cancel guides for a service (all platforms).
+  ///
+  /// Prefers in-app translated guides when available. Falls back to
+  /// Supabase data (English-only).
   List<CancelGuideData> findAllCancelGuides(String name) {
+    // 1. Try in-app data with full translations first
+    final translated = findTranslatedCancelGuide(name);
+    if (translated != null) return [translated];
+
+    // 2. Fall back to Supabase service data
     final service = findByName(name);
     if (service == null) return [];
     return service.parsedCancelGuides;

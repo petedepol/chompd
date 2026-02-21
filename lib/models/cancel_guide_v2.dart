@@ -26,7 +26,17 @@ class CancelGuideStep {
       title: json['title'] as String? ?? '',
       detail: json['detail'] as String? ?? json['title'] as String? ?? '',
       deeplink: json['deeplink'] as String?,
+      titleLocalized: _parseLocMap(json['title_localized']),
+      detailLocalized: _parseLocMap(json['detail_localized']),
     );
+  }
+
+  /// Parse a nullable JSON map into a typed Map<String, String>.
+  static Map<String, String> _parseLocMap(dynamic raw) {
+    if (raw is Map) {
+      return raw.map((k, v) => MapEntry(k.toString(), v.toString()));
+    }
+    return const {};
   }
 
   /// Returns the localised title for [langCode], falling back to English.
@@ -85,6 +95,10 @@ class CancelGuideData {
       estimatedMinutes: json['estimated_minutes'] as int?,
       warningText: json['warning_text'] as String?,
       proTip: json['pro_tip'] as String?,
+      warningTextLocalized:
+          CancelGuideStep._parseLocMap(json['warning_text_localized']),
+      proTipLocalized:
+          CancelGuideStep._parseLocMap(json['pro_tip_localized']),
     );
   }
 

@@ -1,4 +1,5 @@
 import '../models/cancel_guide.dart';
+import '../models/cancel_guide_v2.dart';
 
 /// Pre-loaded cancel guides for the most common services.
 ///
@@ -1031,4 +1032,68 @@ CancelGuide? findGuideForSubscription(String name, {bool isIOS = true}) {
   return cancelGuidesData.firstWhere(
     (g) => g.serviceName == 'google_play_generic',
   );
+}
+
+/// Convert a v1 [CancelGuide] to v2 [CancelGuideData] with translations.
+///
+/// The v1 data has full translations for PL, DE, FR, ES as flat step lists.
+/// This converter maps them into the v2 per-step localisation maps so the
+/// cancel guide screen renders localised content.
+CancelGuideData cancelGuideToV2(CancelGuide guide) {
+  final steps = <CancelGuideStep>[];
+
+  for (var i = 0; i < guide.steps.length; i++) {
+    final titleLocalised = <String, String>{};
+    final detailLocalised = <String, String>{};
+
+    for (final entry in guide.stepsLocalized.entries) {
+      final langCode = entry.key;
+      final langSteps = entry.value;
+      if (i < langSteps.length) {
+        titleLocalised[langCode] = langSteps[i];
+        detailLocalised[langCode] = langSteps[i];
+      }
+    }
+
+    steps.add(CancelGuideStep(
+      step: i + 1,
+      title: guide.steps[i],
+      detail: guide.steps[i],
+      deeplink: i == 0 ? (guide.deepLink ?? guide.cancellationUrl) : null,
+      titleLocalized: titleLocalised,
+      detailLocalized: detailLocalised,
+    ));
+  }
+
+  return CancelGuideData(
+    platform: guide.platform,
+    steps: steps,
+    cancelDeeplink: guide.deepLink,
+    cancelWebUrl: guide.cancellationUrl,
+    warningText: guide.notes,
+    warningTextLocalized: guide.notesLocalized,
+  );
+}
+
+/// Find a v1 cancel guide for [name] and convert to v2 with translations.
+///
+/// Returns null if no matching v1 guide exists.
+CancelGuideData? findTranslatedCancelGuide(String name) {
+  final normalised = name.toLowerCase().trim();
+  final slug = normalised.replaceAll(' ', '_');
+
+  // Direct slug match
+  for (final g in cancelGuidesData) {
+    if (g.serviceName == slug) return cancelGuideToV2(g);
+  }
+
+  // Partial match
+  for (final g in cancelGuidesData) {
+    final gName = g.serviceName.replaceAll('_', ' ');
+    if (normalised.contains(gName) || gName.contains(normalised)) {
+      return cancelGuideToV2(g);
+    }
+  }
+
+  return null;
 }
