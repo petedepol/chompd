@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 21 Feb 2026 (Post-Sprint 25 — Real IAP integration, full code audit, 16 fixes)
+> Last updated: 22 Feb 2026 (Post-Sprint 26 — Final audit, cleanup, App Store ready for TestFlight)
 
 ---
 
@@ -1015,3 +1015,47 @@ Ran manual audit + cross-referenced with Codex 5.3 findings. Produced unified pr
 - `lib/screens/onboarding/onboarding_screen.dart` — `removeListener` before dispose
 - `lib/services/notification_service.dart` — ID counter wrap via `_generateId()`
 - `ios/Runner/Info.plist` — portrait-only orientations
+
+### Sprint 26 — Final Audit, Cleanup & App Store Readiness ✅
+
+**Comprehensive 5-Agent Code Audit:**
+
+- Ran parallel audit agents covering: project structure, code quality, security, l10n consistency, and business logic
+- All areas passed clean — no critical issues found
+
+**Codebase Cleanup:**
+
+- **Deleted backup directories** — `lib/services/backup/` (4 files), `lib/providers/backup/` (2 files)
+- **Deleted stale Supabase function dirs** — `Chompd-i8-insight-generator/`, `Chompd-i9-insight-dispatcher-/`
+- **Removed `.DS_Store` files** from lib/ tree
+- **Fixed Android app label** — `AndroidManifest.xml` still said "subsnap", changed to "Chompd"
+
+**Bug Fix — Scan L10n Cache:**
+
+- Changing app language between scans left scan status messages in the old language
+- Root cause: `ScanNotifier._l10n` was cached and never cleared on `reset()`
+- Fix: `_l10n = null` in `reset()` forces `_getL10n()` to re-read locale from SharedPreferences
+
+**External Tasks Completed:**
+
+- **Edge Function `ai-scan` deployed** to Supabase (with `anthropicResponse.ok` guard fix)
+- **Supabase SQL cleanup** — deleted incorrect YouTube/Google Play aliases from `service_aliases`
+- **IAP product created** — `chompd_pro_lifetime` (Non-Consumable) in App Store Connect
+- **App Store Connect listing completed** — screenshots, description, keywords, category, privacy URL, support URL
+- **Privacy/support website live** — `getchompd.com`
+- **API key rotated** — fresh Anthropic production key
+
+**Build:** `1.0.0+35`
+
+**Files modified:**
+- `lib/providers/scan_provider.dart` — clear `_l10n` cache on `reset()`
+- `android/app/src/main/AndroidManifest.xml` — app label fix
+- `pubspec.yaml` — build number +35
+
+**Files deleted:**
+- `lib/services/backup/` (4 files)
+- `lib/providers/backup/` (2 files)
+- `supabase/functions/Chompd-i8-insight-generator/`
+- `supabase/functions/Chompd-i9-insight-dispatcher-/`
+
+**Status:** Ready for TestFlight family testing. After 1-week testing period, fix any bugs and submit for App Review.
