@@ -96,6 +96,19 @@ Ran comprehensive audit + cross-referenced with Codex 5.3 findings. Produced uni
 
 ---
 
+## Codex Re-Audit (Post-Push)
+
+Codex re-audited and reported 4 issues "still present" — but it was reading a **stale checkout** (branch `work` at commit `27cb609`, 8 commits behind, no remote configured). All 4 issues were verified fixed on `origin/main` at `66e1068`:
+
+| Finding | Status | Proof |
+|---------|--------|-------|
+| Pro entitlement self-upgrade | **Fixed** `4bb0a73` | `_iap.buyNonConsumable()` — real StoreKit 2 |
+| Scan count no ok check | **Fixed** `49014e8` | `if (!isPro && anthropicResponse.ok)` line 114 |
+| Auth guard mismatch | **Fixed** `66e1068` | Both guards now check `URL && anonKey` |
+| ErrorLogger null user_id | **Fixed** `49014e8` | `?? 'anonymous'` line 16 |
+
+---
+
 ## What's Left Before Submission
 
 ### App Store Connect (Manual)
