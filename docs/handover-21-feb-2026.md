@@ -1,7 +1,7 @@
 # Chompd — Session Handover (21 Feb 2026)
 
 ## Session Summary
-Two-part session: (1) Night session fixed YouTube alias matching bug + reinstated service description punchlines. (2) Day session fixed trap warning localisation, English descriptions on non-EN locales, annual savings card styling, trap scan modelOverride passthrough, and upgraded Sonnet to 4.6.
+Two-part session: (1) Night session fixed YouTube alias matching bug + reinstated service description punchlines. (2) Day session fixed trap warning localisation, English descriptions on non-EN locales, annual savings card styling, trap scan modelOverride passthrough, and upgraded Sonnet to 4.6. All 9 original QA bugs + 4 prelaunch batch items verified fixed during device testing. OG image created for website. Google Search Console submitted. **App is ready for App Store submission — manual tasks only remain.**
 
 ---
 
@@ -104,12 +104,8 @@ DELETE FROM user_insights;
 DELETE FROM subscriptions WHERE cancelled_date IS NOT NULL;
 ```
 
-### Outstanding Bugs (From Previous Handovers)
-- **Scan results language mix:** Needs Polish device test
-- **Currency dropdown blank:** Needs test
-- **Sonnet double-call:** "Bigger fish" message appeared twice
-- **Carousel cards in English:** YEARLY BURN, SWITCH TO ANNUAL etc.
-- **Scan message language revert:** Messages start correct then flip to English
+### Outstanding Bugs — ALL CLEARED ✅
+All 9 original QA bugs + 4 prelaunch batch items verified fixed during device testing on 21 Feb. No outstanding bugs.
 
 ### Trap Scan Resilience (Deferred)
 - `_runTrapScan()` has catch-all returning `TrapResult.clean` on any error — no retry logic
@@ -120,21 +116,15 @@ DELETE FROM subscriptions WHERE cancelled_date IS NOT NULL;
 - Change "Trial" → "Intro price" label on trap card when `trialPrice > 0`
 - Remove remaining `debugPrint` statements (if any)
 
-### Testing Checklist
-- [ ] Delete app, reinstall → verify YouTube insight gone, money saved counter reset
-- [ ] Scan Google Play receipt → single sub, correct dates/prices, no YouTube match
-- [ ] Service descriptions visible on home cards + detail screen for matched services (EN only)
-- [ ] Category fallback visible for unmatched/manual subs + all non-EN locales
-- [ ] Trap scan in Polish → warning message in Polish, not English
-- [ ] Annual savings card styling matches other carousel cards
-- [ ] Onboarding flow on fresh install
-- [ ] Full l10n check in Polish
-
-### Manual Tasks (No Code)
-- Rotate Anthropic API key (exposed in chats)
-- Website SEO: robots.txt, sitemap.xml
-- App Store Connect: IAP setup, screenshots, listing
-- Delete test data from Supabase (SQL above)
+### Manual Tasks Only (No Code Needed)
+1. **Rotate Anthropic API key** — old key exposed in chat history. Generate new at console.anthropic.com, update `.env`
+2. **Run Supabase cleanup SQL** — delete bad YouTube aliases, old user_insights, phantom cancelled subs (SQL above)
+3. **Add OG image** — `og-image.jpg` (1200x630px) needs adding to `images/og-image.jpg` in the `getchompd-site` GitHub repo. Meta tag in index.html already points there.
+4. **Uncomment Apple Smart App Banner** — line 17 in index.html, replace `YOUR_APP_STORE_ID` with real ID after submission
+5. **App Store Connect: IAP setup** — 7-day trial + £4.99 one-time Pro purchase
+6. **App Store screenshots** — 6.7" + 6.5" minimum
+7. **App Store listing** — spec in `chompd-app-store-listing.md`
+8. **Submit for review**
 
 ---
 
