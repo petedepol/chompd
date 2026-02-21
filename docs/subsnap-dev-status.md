@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 22 Feb 2026 (Post-Sprint 26 — Final audit, cleanup, App Store ready for TestFlight)
+> Last updated: 22 Feb 2026 (Post-Sprint 27 — TestFlight bug fixes, cancel guide l10n)
 
 ---
 
@@ -1059,3 +1059,36 @@ Ran manual audit + cross-referenced with Codex 5.3 findings. Produced unified pr
 - `supabase/functions/Chompd-i9-insight-dispatcher-/`
 
 **Status:** Ready for TestFlight family testing. After 1-week testing period, fix any bugs and submit for App Review.
+
+### Sprint 27 — TestFlight Bug Fixes + Cancel Guide L10n ✅
+
+**Testing session on device. Found and fixed 7 bugs:**
+
+1. **share_plus ITMS-91061** — Apple rejected build due to missing privacy manifest in `share_plus` 7.x. Upgraded to `^10.1.4` (includes `PrivacyInfo.xcprivacy` since v8.0.2).
+
+2. **Renewal date off-by-one** — "Renews tomorrow" showing for renewal 2 days away. `daysUntilRenewal` compared `DateTime.now()` (with time component) against `nextRenewal`. Fixed by stripping time from both dates before comparing.
+
+3. **Cancelled savings mismatch** — Yearly sub at 149 zł showing "+12 zł" on card (was using `monthlyEquivalentIn × months` = 149/12 ≈ 12) but header showed "150 zł" (using `priceIn × periods`). Aligned card to use header formula.
+
+4. **Calendar intro pricing for future dates** — Calendar showing intro price (£3.49) for dates after trial expires, should show real price (£6.99). Added `effectivePriceOn(DateTime date)` and `priceInOnDate(String currency, DateTime date)` to Subscription model. Updated all calendar price references.
+
+5. **Notification l10n after language switch** — Push notifications showed English text even after switching to Polish. Same caching pattern as scan provider. Fixed: `locale_provider.dart` calls `NotificationService.instance.refreshLocale()` on language change; `notification_provider.dart` watches `localeProvider` to trigger full reschedule.
+
+6. **Cancel guide steps in English** — Cancel guide step content from Supabase was English-only (UI labels were localised). The v1 `cancel_guides_data.dart` had full translations for 20 services but wasn't being used by the v2 cancel guide screen. Added `cancelGuideToV2()` converter + `findTranslatedCancelGuide()` matcher. Updated `service_cache_provider.dart` to prefer in-app translated data. Future-proofed `fromJson()` to parse localised fields when Supabase adds them.
+
+7. **Build number bumps** — `1.0.0+35` → `1.0.0+40`
+
+**Files modified:**
+- `pubspec.yaml` — share_plus upgrade, build +40
+- `ios/Podfile.lock` — share_plus pod update
+- `lib/models/subscription.dart` — `daysUntilRenewal` fix, `effectivePriceOn()`, `priceInOnDate()`
+- `lib/screens/home/home_screen.dart` — cancelled card savings formula
+- `lib/providers/calendar_provider.dart` — date-aware pricing
+- `lib/screens/calendar/calendar_screen.dart` — `priceIn` → `priceInOnDate`
+- `lib/providers/locale_provider.dart` — `refreshLocale()` on language change
+- `lib/providers/notification_provider.dart` — watch `localeProvider`
+- `lib/data/cancel_guides_data.dart` — v1→v2 converter + translated guide finder
+- `lib/models/cancel_guide_v2.dart` — `fromJson()` parses localised fields
+- `lib/providers/service_cache_provider.dart` — prefer in-app translated guides
+
+**Status:** In TestFlight family testing. Android build preparation next week.
