@@ -723,6 +723,9 @@ class SEn extends S {
   String get noPreviousPurchase => 'No previous purchase found.';
 
   @override
+  String get purchaseCancelled => 'Purchase was cancelled.';
+
+  @override
   String get renewalCalendar => 'Renewal Calendar';
 
   @override

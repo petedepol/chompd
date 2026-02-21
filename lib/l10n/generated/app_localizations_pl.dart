@@ -735,6 +735,9 @@ class SPl extends S {
   String get noPreviousPurchase => 'Nie znaleziono poprzedniego zakupu.';
 
   @override
+  String get purchaseCancelled => 'Zakup został anulowany.';
+
+  @override
   String get renewalCalendar => 'Kalendarz odnowień';
 
   @override

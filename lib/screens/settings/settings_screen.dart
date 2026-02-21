@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../config/constants.dart';
 import '../../config/theme.dart';
 import '../../models/subscription.dart';
 import '../../providers/auth_provider.dart';
@@ -370,7 +369,7 @@ class SettingsScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '${Subscription.formatPrice(AppConstants.proPrice, 'GBP')} \u2022 ${context.l10n.oneTimePayment}',
+                                    '${PurchaseService.instance.priceDisplay} \u2022 ${context.l10n.oneTimePayment}',
                                     style: ChompdTypography.mono(
                                       size: 11,
                                       color: c.textDim,

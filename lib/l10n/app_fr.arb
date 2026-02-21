@@ -312,6 +312,7 @@
   "restorePurchase": "Restaurer l'achat",
   "purchaseError": "L'achat n'a pas pu être finalisé. Réessaie.",
   "noPreviousPurchase": "Aucun achat précédent trouvé.",
+  "purchaseCancelled": "L'achat a été annulé.",
 
   "renewalCalendar": "Calendrier des renouvellements",
   "today": "AUJOURD'HUI",

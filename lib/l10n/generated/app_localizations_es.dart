@@ -730,6 +730,9 @@ class SEs extends S {
   String get noPreviousPurchase => 'No se encontró compra anterior.';
 
   @override
+  String get purchaseCancelled => 'Compra cancelada.';
+
+  @override
   String get renewalCalendar => 'Calendario de renovaciones';
 
   @override

@@ -28,8 +28,9 @@ class AppConstants {
 
   // ─── Trial ───
   static const int trialDurationDays = 7;
-  static const String trialProductId = '7_day_trial';       // Tier 0 non-consumable
-  static const String proProductId = 'chompd_pro_lifetime';  // £4.99 non-consumable
+
+  // ─── IAP Product IDs ───
+  static const String proProductId = 'chompd_pro_lifetime'; // Non-consumable
 
   // ─── Reminder Schedule (Pro) ───
   static const List<int> proReminderDays = [7, 3, 1, 0]; // 0 = morning-of

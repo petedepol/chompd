@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../config/constants.dart';
@@ -16,39 +19,42 @@ enum PurchaseState {
   /// Successfully purchased.
   pro,
 
-  /// Purchase failed or was cancelled.
+  /// Purchase failed.
   failed,
 
   /// Restoring a previous purchase.
   restoring,
 }
 
-/// RevenueCat placeholder for in-app purchase management.
+/// In-app purchase service using Flutter's `in_app_purchase` plugin
+/// (StoreKit 2 on iOS).
 ///
-/// For v1 prototype, this manages purchase state in-memory.
-/// In production, this wraps RevenueCat SDK for:
-/// - One-time £4.99 Pro unlock
-/// - Receipt validation
-/// - Purchase restoration
-/// - Cross-platform entitlement management
+/// Manages a single non-consumable product: `chompd_pro_lifetime`.
 ///
-/// The Supabase `profiles.is_pro` flag is the single source of truth.
-/// On startup, [fetchProStatus] reads it before sync runs.
-/// On purchase, [purchasePro] writes it back.
+/// Source of truth hierarchy:
+/// 1. App Store (StoreKit 2) — primary
+/// 2. Supabase `profiles.is_pro` — secondary backup for cross-device
+/// 3. Local `_state` — in-memory, derived from the above
 class PurchaseService {
   PurchaseService._();
   static final instance = PurchaseService._();
 
-  /// Current purchase state.
+  // ─── Internal state ───
+
   PurchaseState _state = PurchaseState.free;
-
-  /// Whether the service has been initialised.
   bool _initialised = false;
-
-  /// Callbacks for state changes.
   final List<VoidCallback> _listeners = [];
 
-  /// Whether Supabase is configured.
+  // ─── IAP state ───
+
+  final InAppPurchase _iap = InAppPurchase.instance;
+  StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
+  ProductDetails? _proProduct;
+  Completer<bool>? _purchaseCompleter;
+  Completer<bool>? _restoreCompleter;
+
+  // ─── Supabase ───
+
   bool get _hasSupabase =>
       const String.fromEnvironment('SUPABASE_URL').isNotEmpty;
 
@@ -58,26 +64,156 @@ class PurchaseService {
 
   /// Initialise the purchase service.
   ///
-  /// In production: configure RevenueCat, check entitlements,
-  /// restore previous purchases silently.
+  /// Checks IAP availability, starts listening to the purchase stream
+  /// (which also catches interrupted/pending transactions from previous
+  /// sessions), and queries product details from the App Store.
   Future<void> init() async {
     if (_initialised) return;
 
-    // In production:
-    // await Purchases.configure(PurchasesConfiguration('revenuecat_api_key'));
-    // final info = await Purchases.getCustomerInfo();
-    // if (info.entitlements.all['pro']?.isActive == true) {
-    //   _state = PurchaseState.pro;
-    // }
+    final available = await _iap.isAvailable();
+    if (!available) {
+      debugPrint('PurchaseService: IAP not available');
+      _initialised = true;
+      return;
+    }
+
+    // Listen to the purchase stream for the lifetime of the app.
+    // This catches completed purchases, failed purchases, pending
+    // transactions, and interrupted purchases from previous sessions.
+    _purchaseSubscription = _iap.purchaseStream.listen(
+      _handlePurchaseUpdate,
+      onError: (Object error) {
+        ErrorLogger.log(
+          event: 'purchase_error',
+          detail: 'purchaseStream error: $error',
+        );
+      },
+    );
+
+    // Query product details from App Store.
+    await _loadProducts();
 
     _initialised = true;
+  }
+
+  /// Query product details from the App Store.
+  Future<void> _loadProducts() async {
+    try {
+      final response = await _iap.queryProductDetails(
+        {AppConstants.proProductId},
+      );
+
+      if (response.error != null) {
+        ErrorLogger.log(
+          event: 'purchase_error',
+          detail: 'queryProductDetails error: ${response.error!.message}',
+        );
+        return;
+      }
+
+      if (response.notFoundIDs.isNotEmpty) {
+        debugPrint(
+          'PurchaseService: products not found: ${response.notFoundIDs}',
+        );
+      }
+
+      if (response.productDetails.isNotEmpty) {
+        _proProduct = response.productDetails.first;
+      }
+    } catch (e, st) {
+      ErrorLogger.log(
+        event: 'purchase_error',
+        detail: 'loadProducts: $e',
+        stackTrace: st.toString(),
+      );
+    }
+  }
+
+  // ─── Purchase Stream Handler ───
+
+  void _handlePurchaseUpdate(List<PurchaseDetails> purchaseDetailsList) {
+    for (final purchase in purchaseDetailsList) {
+      switch (purchase.status) {
+        case PurchaseStatus.purchased:
+        case PurchaseStatus.restored:
+          _handleSuccessfulPurchase(purchase);
+
+        case PurchaseStatus.error:
+          _handlePurchaseError(purchase);
+
+        case PurchaseStatus.pending:
+          // Transaction pending (e.g. parental approval, payment processing).
+          // Keep state as purchasing — do not resolve completer yet.
+          debugPrint('PurchaseService: purchase pending');
+
+        case PurchaseStatus.canceled:
+          _handlePurchaseCancelled(purchase);
+      }
+    }
+  }
+
+  Future<void> _handleSuccessfulPurchase(PurchaseDetails purchase) async {
+    // CRITICAL: Must complete the purchase to clear the transaction queue.
+    if (purchase.pendingCompletePurchase) {
+      await _iap.completePurchase(purchase);
+    }
+
+    _setState(PurchaseState.pro);
+
+    // Sync to Supabase as secondary backup.
+    _syncProToSupabase();
+
+    // Resolve any waiting completer.
+    if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
+      _purchaseCompleter!.complete(true);
+    }
+    if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
+      _restoreCompleter!.complete(true);
+    }
+  }
+
+  void _handlePurchaseError(PurchaseDetails purchase) {
+    ErrorLogger.log(
+      event: 'purchase_error',
+      detail: 'purchase error: ${purchase.error?.message ?? "unknown"}',
+    );
+
+    // Must still complete the purchase to clear the transaction queue.
+    if (purchase.pendingCompletePurchase) {
+      _iap.completePurchase(purchase);
+    }
+
+    _setState(PurchaseState.failed);
+
+    if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
+      _purchaseCompleter!.complete(false);
+    }
+    if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
+      _restoreCompleter!.complete(false);
+    }
+  }
+
+  void _handlePurchaseCancelled(PurchaseDetails purchase) {
+    // User cancelled the purchase sheet — this is not an error.
+    if (purchase.pendingCompletePurchase) {
+      _iap.completePurchase(purchase);
+    }
+
+    _setState(PurchaseState.free);
+
+    if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
+      _purchaseCompleter!.complete(false);
+    }
+    if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
+      _restoreCompleter!.complete(false);
+    }
   }
 
   // ─── Supabase Pro Status ───
 
   /// Fetch `is_pro` from the Supabase `profiles` table.
   ///
-  /// This is the single source of truth for Pro status. Must be called
+  /// This is the secondary source of truth for Pro status. Must be called
   /// after auth is ready and BEFORE sync runs, so push logic sees the
   /// correct state.
   ///
@@ -101,7 +237,11 @@ class PurchaseService {
         }
       }
     } catch (e, st) {
-      ErrorLogger.log(event: 'purchase_error', detail: 'fetchProStatus: $e', stackTrace: st.toString());
+      ErrorLogger.log(
+        event: 'purchase_error',
+        detail: 'fetchProStatus: $e',
+        stackTrace: st.toString(),
+      );
     }
   }
 
@@ -117,10 +257,17 @@ class PurchaseService {
     try {
       await _client
           .from('profiles')
-          .update({'is_pro': true, 'pro_purchased_at': DateTime.now().toUtc().toIso8601String()})
+          .update({
+            'is_pro': true,
+            'pro_purchased_at': DateTime.now().toUtc().toIso8601String(),
+          })
           .eq('id', userId);
     } catch (e, st) {
-      ErrorLogger.log(event: 'purchase_error', detail: 'syncProToSupabase: $e', stackTrace: st.toString());
+      ErrorLogger.log(
+        event: 'purchase_error',
+        detail: 'syncProToSupabase: $e',
+        stackTrace: st.toString(),
+      );
     }
   }
 
@@ -130,47 +277,78 @@ class PurchaseService {
   bool get isPro => _state == PurchaseState.pro;
   bool get isFree => _state == PurchaseState.free;
 
-  /// Product info for display.
-  String get priceDisplay =>
-      '\u00A3${AppConstants.proPrice.toStringAsFixed(2)}';
+  /// Localised price from App Store (e.g. "€4.99", "$4.99", "24,99 zł").
+  /// Falls back to hardcoded constant if products haven't loaded.
+  String get priceDisplay {
+    if (_proProduct != null) {
+      return _proProduct!.price;
+    }
+    // Fallback: hardcoded (only if App Store query failed).
+    return '\u00A3${AppConstants.proPrice.toStringAsFixed(2)}';
+  }
+
   String get productName => 'Chompd Pro';
   String get productDescription => 'One-time payment. Unlock everything.';
 
+  /// Whether the product has been loaded from the App Store.
+  bool get isProductAvailable => _proProduct != null;
+
   // ─── Purchase Flow ───
 
-  /// Initiate a Pro purchase.
+  /// Initiate a Pro purchase via the App Store.
   ///
-  /// In production: launches RevenueCat purchase flow.
-  /// For prototype: simulates a successful purchase after 1.5s delay.
-  /// On success, writes `is_pro = true` to Supabase profiles.
+  /// Returns `true` if the purchase was successful, `false` if cancelled
+  /// or failed. The result comes asynchronously from the purchase stream.
   Future<bool> purchasePro() async {
     if (_state == PurchaseState.pro) return true;
 
+    if (_proProduct == null) {
+      // Products failed to load — try once more.
+      await _loadProducts();
+      if (_proProduct == null) {
+        ErrorLogger.log(
+          event: 'purchase_error',
+          detail: 'purchasePro: product not available',
+        );
+        _setState(PurchaseState.failed);
+        return false;
+      }
+    }
+
     _setState(PurchaseState.purchasing);
 
+    // Create a completer that the stream handler will resolve.
+    _purchaseCompleter = Completer<bool>();
+
     try {
-      // Simulate purchase flow
-      await Future.delayed(const Duration(milliseconds: 1500));
+      final purchaseParam = PurchaseParam(
+        productDetails: _proProduct!,
+      );
 
-      // In production:
-      // final offerings = await Purchases.getOfferings();
-      // final package = offerings.current?.lifetime;
-      // if (package != null) {
-      //   final result = await Purchases.purchasePackage(package);
-      //   if (result.entitlements.all['pro']?.isActive == true) {
-      //     _setState(PurchaseState.pro);
-      //     _syncProToSupabase();
-      //     return true;
-      //   }
-      // }
+      // buyNonConsumable triggers the App Store payment sheet.
+      // The result comes back on the purchaseStream, not from this call.
+      final initiated = await _iap.buyNonConsumable(
+        purchaseParam: purchaseParam,
+      );
 
-      // Simulate success
-      _setState(PurchaseState.pro);
-      _syncProToSupabase();
-      return true;
+      if (!initiated) {
+        _setState(PurchaseState.failed);
+        if (!_purchaseCompleter!.isCompleted) {
+          _purchaseCompleter!.complete(false);
+        }
+      }
+
+      return await _purchaseCompleter!.future;
     } catch (e, st) {
-      ErrorLogger.log(event: 'purchase_error', detail: 'purchasePro: $e', stackTrace: st.toString());
+      ErrorLogger.log(
+        event: 'purchase_error',
+        detail: 'purchasePro: $e',
+        stackTrace: st.toString(),
+      );
       _setState(PurchaseState.failed);
+      if (_purchaseCompleter != null && !_purchaseCompleter!.isCompleted) {
+        _purchaseCompleter!.complete(false);
+      }
       return false;
     }
   }
@@ -178,13 +356,13 @@ class PurchaseService {
   /// Restore a previous purchase.
   ///
   /// Checks Supabase `profiles.is_pro` first (covers cross-device restore),
-  /// then falls back to App Store / RevenueCat restore.
+  /// then falls back to App Store restore which triggers the sign-in prompt.
   Future<bool> restorePurchase() async {
     _setState(PurchaseState.restoring);
 
-    try {
-      // 1. Check Supabase first (cross-device source of truth)
-      if (_hasSupabase && AuthService.instance.userId != null) {
+    // 1. Check Supabase first (cross-device source of truth).
+    if (_hasSupabase && AuthService.instance.userId != null) {
+      try {
         final userId = AuthService.instance.userId!;
         final row = await _client
             .from('profiles')
@@ -196,25 +374,46 @@ class PurchaseService {
           _setState(PurchaseState.pro);
           return true;
         }
+      } catch (e, st) {
+        ErrorLogger.log(
+          event: 'purchase_error',
+          detail: 'restorePurchase supabase check: $e',
+          stackTrace: st.toString(),
+        );
+        // Continue to App Store restore.
       }
+    }
 
-      // 2. Fall back to App Store / RevenueCat restore
-      await Future.delayed(const Duration(milliseconds: 1000));
+    // 2. App Store restore.
+    _restoreCompleter = Completer<bool>();
 
-      // In production:
-      // final info = await Purchases.restorePurchases();
-      // if (info.entitlements.all['pro']?.isActive == true) {
-      //   _setState(PurchaseState.pro);
-      //   _syncProToSupabase();
-      //   return true;
-      // }
+    try {
+      // This triggers the App Store sign-in prompt on iOS.
+      // Results come back on the purchaseStream.
+      await _iap.restorePurchases();
 
-      // No purchase found anywhere
-      _setState(PurchaseState.free);
-      return false;
+      // Wait for stream results with a timeout.
+      // If no purchases are found, the stream may not fire at all,
+      // so we use a timeout to avoid hanging forever.
+      final result = await _restoreCompleter!.future.timeout(
+        const Duration(seconds: 15),
+        onTimeout: () => false,
+      );
+
+      if (!result) {
+        _setState(PurchaseState.free);
+      }
+      return result;
     } catch (e, st) {
-      ErrorLogger.log(event: 'purchase_error', detail: 'restorePurchase: $e', stackTrace: st.toString());
+      ErrorLogger.log(
+        event: 'purchase_error',
+        detail: 'restorePurchase: $e',
+        stackTrace: st.toString(),
+      );
       _setState(PurchaseState.free);
+      if (_restoreCompleter != null && !_restoreCompleter!.isCompleted) {
+        _restoreCompleter!.complete(false);
+      }
       return false;
     }
   }
@@ -260,5 +459,12 @@ class PurchaseService {
   int remainingScans(int usedScans) {
     if (isPro) return 999;
     return (AppConstants.freeMaxScans - usedScans).clamp(0, 999);
+  }
+
+  // ─── Cleanup ───
+
+  /// Cancel the purchase stream subscription.
+  void dispose() {
+    _purchaseSubscription?.cancel();
   }
 }

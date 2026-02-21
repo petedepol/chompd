@@ -1309,6 +1309,12 @@ abstract class S {
   /// **'No previous purchase found.'**
   String get noPreviousPurchase;
 
+  /// No description provided for @purchaseCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase was cancelled.'**
+  String get purchaseCancelled;
+
   /// No description provided for @renewalCalendar.
   ///
   /// In en, this message translates to:

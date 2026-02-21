@@ -727,6 +727,9 @@ class SDe extends S {
   String get noPreviousPurchase => 'Kein früherer Kauf gefunden.';
 
   @override
+  String get purchaseCancelled => 'Kauf abgebrochen.';
+
+  @override
   String get renewalCalendar => 'Verlängerungskalender';
 
   @override

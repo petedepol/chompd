@@ -730,6 +730,9 @@ class SFr extends S {
   String get noPreviousPurchase => 'Aucun achat précédent trouvé.';
 
   @override
+  String get purchaseCancelled => 'L\'achat a été annulé.';
+
+  @override
   String get renewalCalendar => 'Calendrier des renouvellements';
 
   @override

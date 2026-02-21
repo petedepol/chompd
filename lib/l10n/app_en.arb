@@ -312,6 +312,7 @@
   "restorePurchase": "Restore Purchase",
   "purchaseError": "Purchase could not be completed. Try again.",
   "noPreviousPurchase": "No previous purchase found.",
+  "purchaseCancelled": "Purchase was cancelled.",
 
   "renewalCalendar": "Renewal Calendar",
   "today": "TODAY",

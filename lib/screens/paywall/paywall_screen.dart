@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../config/constants.dart';
 import '../../config/theme.dart';
-import '../../models/subscription.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/purchase_provider.dart';
 import '../../services/purchase_service.dart';
@@ -317,7 +316,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                                           CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          Subscription.formatPrice(AppConstants.proPrice, AppConstants.proCurrency),
+                                          PurchaseService.instance.priceDisplay,
                                           style: ChompdTypography.mono(
                                             size: 28,
                                             weight: FontWeight.w700,
@@ -472,8 +471,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     if (mounted) {
       setState(() => _purchasing = false);
       if (!success) {
-        setState(() =>
-            _errorMessage = context.l10n.purchaseError);
+        // Only show error if it actually failed (not just cancelled).
+        final currentState = ref.read(purchaseProvider);
+        if (currentState == PurchaseState.failed) {
+          setState(() => _errorMessage = context.l10n.purchaseError);
+        }
       }
     }
   }
