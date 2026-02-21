@@ -1,7 +1,7 @@
 # Chompd — Development Status & What's Already Built
 
 > Share this with anyone writing a roadmap so they know what exists.
-> Last updated: 20 Feb 2026 (Post-Sprint 21 — Pre-launch batch: scan limits, error logging, Done button, iOS bundle fix)
+> Last updated: 21 Feb 2026 (Post-Sprint 22 — L10n fixes, carousel styling, trap scan improvements, Sonnet 4.6 upgrade)
 
 ---
 
@@ -14,7 +14,7 @@
 - **Theme:** Dark-only — ChompdColors class with static const colours (mint, amber, red, purple, blue)
 - **Monetisation:** Freemium — one-time £4.99 Pro unlock (via PurchaseService)
 - **Free tier limits:** 3 subscriptions max, 1 AI scan max (enforced everywhere: constants, edge function, UI, l10n)
-- **AI:** Claude Haiku for screenshot scanning (3-tier intelligence flywheel)
+- **AI:** Claude Haiku 4.5 (primary) + Sonnet 4.6 (fallback/escalation) for screenshot scanning (3-tier intelligence flywheel)
 - **Mascot:** Unnamed piranha character — small, fast, sharp. Chomps through the fine print.
 - **Calendar:** table_calendar ^3.1.2 for renewal calendar view
 
@@ -743,6 +743,34 @@ lib/
 - `lib/data/cancel_guides_data.dart` — PL/DE/FR/ES translations for ~30 cancel guides
 - `lib/screens/cancel/cancel_guide_screen.dart` — locale-aware rendering
 
+### Sprint 22 — L10n Bug Fixes, Carousel Polish, Trap Scan Improvements, Sonnet 4.6 ✅
+
+**Session 1 (20 Feb night): YouTube Alias Bug + Description Punchlines**
+
+- **YouTube insight bug** — Supabase `service_aliases` had "google play" as alias for YouTube Premium. When user scanned Google Play receipt, `findByName("Google Play")` matched YouTube Premium via alias step. Fix: added `_billingPlatforms` blocklist to `findByName()` in `service_cache_provider.dart`. Supabase cleanup SQL still needed.
+- **Service description punchlines reinstated** — Sprint 19 had removed `_serviceDescription` from subscription_card.dart and detail_screen.dart. Re-added with `ServiceCache.description` lookup via `matchedServiceId`, falling back to `AppConstants.localisedCategory()`.
+- **API key typo** — `.env` had `ssk-ant-api03-` (double s) → fixed to `sk-ant-api03-`
+- Commits: `e1a96b6`
+
+**Session 2 (21 Feb): L10n Fixes, Carousel, Trap Scan**
+
+- **Trap warning localisation** — trap scan JSON schema had "plain English summary" in `warning_message` and `detail` field descriptions, overriding `_langInstruction` at top of prompt. Replaced with `${_languageName(langCode)}` in 4 locations (image + text trap prompts)
+- **English descriptions gated on locale** — `_serviceDescription()` in both subscription_card.dart and detail_screen.dart now checks `lang != 'en'` → returns null → falls back to localised category. Prevents English-only descriptions showing on non-EN devices
+- **Annual savings card styling** — switched from custom `_green` (#1B8F6A) to theme `c.mint`, added gradient background (`mint@0.08 → bgCard`) matching yearly burn card pattern. Padding 16→18
+- **Trap scan modelOverride passthrough** — `_runTrapScan()` now accepts `modelOverride` parameter so Sonnet escalation benefits trap detection (was hardcoded Haiku only). 3-line change in `ai_scan_service.dart`
+- **Sonnet 4.6 upgrade** — updated `aiModelFallback` from `claude-sonnet-4-5-20250929` to `claude-sonnet-4-6` in both `constants.dart` and Edge Function `ALLOWED_MODELS`. Same pricing, newer training data (Jan 2026 cutoff)
+- Commits: `79aa930`, `6fc8457`, `5bec0d4`
+
+**Files modified:**
+- `lib/providers/service_cache_provider.dart` — billing platforms blocklist
+- `lib/widgets/subscription_card.dart` — `_serviceDescription(BuildContext)` with EN-only gate
+- `lib/screens/detail/detail_screen.dart` — `_serviceDescription(sub, lang)` with EN-only gate
+- `lib/services/ai_scan_service.dart` — trap prompt l10n fix + modelOverride passthrough
+- `lib/widgets/annual_savings_card.dart` — mint colour + gradient styling
+- `lib/config/constants.dart` — `aiModelFallback` → `claude-sonnet-4-6`
+- `supabase/functions/ai-scan/index.ts` — `ALLOWED_MODELS` updated
+- `pubspec.yaml` — build +25 → +28
+
 ---
 
 ## What's Left To Build
@@ -803,3 +831,6 @@ lib/
 - ~~Temporary debug error messages in scan_provider.dart catch blocks~~ **RESOLVED Sprint 18** — replaced with user-friendly messages per exception type
 - ~~`isProProvider` definition still exists in `entitlement_provider.dart` (zero consumers) — can be removed in a future cleanup pass~~ **RESOLVED Sprint 21** — removed entirely
 - Error logging (ErrorLogger) covers 6 priority files — remaining silent catches in less critical code (notification_service, nudge_engine, etc.) could be wired up later
+- `_runTrapScan()` has a catch-all that silently returns `TrapResult.clean` on any error — no retry logic. Could cause intermittent trap detection failures. modelOverride passthrough partially addresses this (Sonnet is more reliable) but the silent swallowing remains
+- Supabase `service_aliases` cleanup still needed: `DELETE FROM service_aliases WHERE service_id = '92badf7e-...' AND alias IN ('google play', 'google youtube', 'google *youtube');`
+- `ServiceCache.description` is English-only — non-EN locales fall back to localised category names. Could add multilingual descriptions to Supabase `services` table in future
