@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/constants.dart';
 import '../services/notification_service.dart';
 import 'currency_provider.dart';
+import 'locale_provider.dart';
 import 'subscriptions_provider.dart';
 
 // ─── Notification Preferences ───
@@ -159,6 +160,7 @@ final notificationSchedulerProvider = Provider<void>((ref) {
   final subs = ref.watch(subscriptionsProvider);
   final prefs = ref.watch(notificationPrefsProvider);
   final displayCurrency = ref.watch(currencyProvider);
+  ref.watch(localeProvider); // Reschedule when language changes
 
   if (!prefs.enabled) return;
 

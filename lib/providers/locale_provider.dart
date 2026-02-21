@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../services/notification_service.dart';
 import '../services/sync_service.dart';
 
 const _kLocaleKey = 'user_locale';
@@ -60,6 +61,7 @@ class LocaleNotifier extends StateNotifier<Locale> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kLocaleKey, locale.languageCode);
     SyncService.instance.syncProfile(locale: locale.languageCode);
+    NotificationService.instance.refreshLocale(); // Clear cached l10n
   }
 }
 
