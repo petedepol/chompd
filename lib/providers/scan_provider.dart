@@ -254,6 +254,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
   /// Reset to idle state for a new scan.
   void reset() {
     _escalationMessageShown = false;
+    _l10n = null; // Re-read locale on next scan (user may have changed language)
     state = const ScanState();
   }
 
