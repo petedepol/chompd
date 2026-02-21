@@ -183,10 +183,11 @@ class AiScanService {
     required String base64Image,
     required String mimeType,
     String langCode = 'en',
+    String? modelOverride,
   }) async {
     try {
       final body = {
-        'model': AppConstants.aiModel,
+        'model': modelOverride ?? AppConstants.aiModel,
         'max_tokens': 1000,
         'messages': [
           {
@@ -454,7 +455,7 @@ class AiScanService {
     // Run both calls in parallel
     final results = await Future.wait<dynamic>([
       _callApi(subBody),
-      _runTrapScan(base64Image: base64Image, mimeType: normalised.mime, langCode: langCode),
+      _runTrapScan(base64Image: base64Image, mimeType: normalised.mime, langCode: langCode, modelOverride: modelOverride),
     ]);
 
     // Parse subscription result (call 1)

@@ -13,8 +13,6 @@ import '../utils/l10n_extension.dart';
 class AnnualSavingsCard extends ConsumerWidget {
   const AnnualSavingsCard({super.key});
 
-  static const _green = Color(0xFF1B8F6A);
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = context.colors;
@@ -24,12 +22,19 @@ class AnnualSavingsCard extends ConsumerWidget {
     if (result.isEmpty) return const SizedBox.shrink();
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: c.bgCard,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            c.mint.withValues(alpha: 0.08),
+            c.bgCard,
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: _green.withValues(alpha: 0.15),
+          color: c.mint.withValues(alpha: 0.15),
         ),
       ),
       child: Column(
@@ -41,7 +46,7 @@ class AnnualSavingsCard extends ConsumerWidget {
               Text(
                 context.l10n.annualSavingsTitle,
                 style: ChompdTypography.sectionLabel.copyWith(
-                  color: _green,
+                  color: c.mint,
                 ),
               ),
               const Spacer(),
@@ -57,7 +62,7 @@ class AnnualSavingsCard extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: _green,
+                      color: c.mint,
                     ),
                   ),
                 ),
@@ -71,7 +76,7 @@ class AnnualSavingsCard extends ConsumerWidget {
             style: ChompdTypography.mono(
               size: 28,
               weight: FontWeight.w700,
-              color: _green,
+              color: c.mint,
             ),
           ),
           const SizedBox(height: 2),
@@ -169,7 +174,7 @@ class _ServiceRow extends StatelessWidget {
             style: ChompdTypography.mono(
               size: 12,
               weight: FontWeight.w700,
-              color: AnnualSavingsCard._green,
+              color: c.mint,
             ),
           ),
         ],
